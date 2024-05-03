@@ -1,6 +1,8 @@
 package brainwine.gameserver.zone;
 
 import java.time.OffsetDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -28,18 +30,22 @@ public class ZoneConfigFile {
     
     @JsonSetter(nulls = Nulls.SKIP)
     private OffsetDateTime creationDate = OffsetDateTime.now();
+
+    @JsonSetter(nulls = Nulls.SKIP)
+    private Map<String, Integer> ecologicalMachineParts = new HashMap<>();
     
     public ZoneConfigFile(Zone zone) {
-        this(zone.getName(), zone.getBiome(), zone.getWidth(), zone.getHeight(), zone.getAcidity(), zone.getCreationDate());
+        this(zone.getName(), zone.getBiome(), zone.getWidth(), zone.getHeight(), zone.getAcidity(), zone.getCreationDate(), zone.getEcologicalMachineParts());
     }
     
-    public ZoneConfigFile(String name, Biome biome, int width, int height, float acidity, OffsetDateTime creationDate) {
+    public ZoneConfigFile(String name, Biome biome, int width, int height, float acidity, OffsetDateTime creationDate, Map<String, Integer> ecologicalMachineParts) {
         this.name = name;
         this.biome = biome;
         this.width = width;
         this.height = height;
         this.acidity = acidity;
         this.creationDate = creationDate;
+        this.ecologicalMachineParts = ecologicalMachineParts;
     }
     
     @JsonCreator
@@ -73,5 +79,9 @@ public class ZoneConfigFile {
     
     public OffsetDateTime getCreationDate() {
         return creationDate;
+    }
+
+    public Map<? extends String, ? extends Integer> getEcologicalMachineParts() {
+        return ecologicalMachineParts;
     }
 }

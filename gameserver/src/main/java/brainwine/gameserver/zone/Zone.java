@@ -63,6 +63,7 @@ public class Zone {
     private final Biome biome;
     private final int width;
     private final int height;
+    private Map<String, Integer> ecologicalMachineParts = new HashMap<>();
     private final int chunkWidth = DEFAULT_CHUNK_WIDTH;
     private final int chunkHeight = DEFAULT_CHUNK_HEIGHT;
     private final int numChunksWidth;
@@ -91,6 +92,7 @@ public class Zone {
     
     protected Zone(String documentId, ZoneConfigFile config, ZoneDataFile data) {
         this(documentId, config.getName(), config.getBiome(), config.getWidth(), config.getHeight());
+        this.ecologicalMachineParts.putAll(config.getEcologicalMachineParts());
         int[] surface = data.getSurface();
         int[] sunlight = data.getSunlight();
         int[] depths = data.getDepths();
@@ -1577,5 +1579,20 @@ public class Zone {
         };
         
         return player.hasClientVersion("2.1.0") ? MapHelper.map("w", status) : status;
+    }
+
+    public void installEcologicalMachinePart(Item item, Integer quantity) {
+        final Map<String, String> PART_ID_TO_MACHINE_ID = Map.of(
+            "accessories/eco", "purifier"
+        );
+
+        String machineId = PART_ID_TO_MACHINE_ID.get(item.getId());
+
+        int old = ecologicalMachineParts.computeIfAbsent(machineId, k -> 0);
+        ecologicalMachineParts.put(machineId, old + quantity);
+    }
+
+    public Map<String, Integer> getEcologicalMachineParts() {
+        return ecologicalMachineParts;
     }
 }
