@@ -1583,7 +1583,10 @@ public class Zone {
 
     public void installEcologicalMachinePart(Item item, Integer quantity) {
         final Map<String, String> PART_ID_TO_MACHINE_ID = Map.of(
-            "accessories/eco", "purifier"
+            "accessories/eco", "common_machine_part_pool",
+            "accessories/purifier", "purifier",
+            "accessories/composter", "composter",
+            "accessories/recycler", "recycler"
         );
 
         String machineId = PART_ID_TO_MACHINE_ID.get(item.getId());

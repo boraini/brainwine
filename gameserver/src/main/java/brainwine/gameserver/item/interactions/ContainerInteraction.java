@@ -75,15 +75,19 @@ public class ContainerInteraction implements ItemInteraction {
                     
                     if (firstLoot.getKey().getId().startsWith("accessories/eco")) {
                         // ecological machine. loot is for the world
-                        zone.installEcologicalMachinePart(firstLoot.getKey(), firstLoot.getValue());
-                        String itemTitle = firstLoot.getKey().getTitle();
-                        int itemQuantity = firstLoot.getValue();
-                        player.notify(String.format(
-                            "You discovered %d %s%s!",
-                            itemQuantity,
-                            itemTitle,
-                            itemQuantity == 1 ? "" : (java.util.List.of("a", "e", "i", "o", "u").stream().anyMatch(itemTitle::endsWith) ? "s" : "es")
-                        ), NotificationType.ACHIEVEMENT);
+                        loot.getItems().forEach((myLoot, quantity) -> {
+                            zone.installEcologicalMachinePart(myLoot, quantity);
+                        });
+
+                        loot.getItems().forEach((myLoot, quantity) -> {
+                            String itemTitle = myLoot.getTitle();
+                            player.notify(String.format(
+                                "You discovered %d %s%s!",
+                                quantity,
+                                itemTitle,
+                                quantity == 1 ? "" : (java.util.List.of("a", "e", "i", "o", "u").stream().anyMatch(itemTitle::endsWith) ? "s" : "es")
+                            ), NotificationType.ACCOMPLISHMENT);
+                        });
                     } else {
                         // loot is for the player
                         player.awardLoot(loot, item.getLootGraphic());
