@@ -2,6 +2,7 @@ package brainwine.gameserver.item.interactions;
 
 import brainwine.gameserver.GameServer;
 import brainwine.gameserver.entity.Entity;
+import brainwine.gameserver.entity.player.NotificationType;
 import brainwine.gameserver.entity.player.Player;
 import brainwine.gameserver.item.Item;
 import brainwine.gameserver.item.ItemUseType;
@@ -69,8 +70,29 @@ public class ContainerInteraction implements ItemInteraction {
                         metaBlock.removeProperty("$");
                         metaBlock.removeProperty("xp"); 
                     }
+
+                    var firstLoot = loot.getItems().entrySet().iterator().next();
                     
-                    player.awardLoot(loot, item.getLootGraphic());
+                    if (firstLoot.getKey().getId().startsWith("accessories/eco")) {
+                        // ecological machine. loot is for the world
+                        loot.getItems().forEach((myLoot, quantity) -> {
+                            zone.installEcologicalMachinePart(myLoot, quantity);
+                        });
+
+                        loot.getItems().forEach((myLoot, quantity) -> {
+                            String itemTitle = myLoot.getTitle();
+                            player.notify(String.format(
+                                "You discovered %d %s%s!",
+                                quantity,
+                                itemTitle,
+                                quantity == 1 ? "" : (java.util.List.of("a", "e", "i", "o", "u").stream().anyMatch(itemTitle::endsWith) ? "s" : "es")
+                            ), NotificationType.ACCOMPLISHMENT);
+                        });
+                    } else {
+                        // loot is for the player
+                        player.awardLoot(loot, item.getLootGraphic());
+                    }
+
                     player.addExperience(experience);
                     player.getStatistics().trackContainerLooted(item);
                 } else {

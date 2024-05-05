@@ -15,6 +15,7 @@ import brainwine.gameserver.item.interactions.SwitchInteraction;
 import brainwine.gameserver.item.interactions.TargetTeleportInteraction;
 import brainwine.gameserver.item.interactions.TeleportInteraction;
 import brainwine.gameserver.item.interactions.TransmitInteraction;
+import brainwine.gameserver.item.interactions.WorldMachineActivationInteraction;
 
 /**
  * Much like with {@link Action}, block interactions depend on their use type.
@@ -47,6 +48,7 @@ public enum ItemUseType {
     TRANSMIT(new TransmitInteraction()),
     TRANSMITTED,
     ZONE_TELEPORT,
+    WORLD_MACHINE_ACTIVATION(new WorldMachineActivationInteraction()),
     
     @JsonEnumDefaultValue
     UNKNOWN;
