@@ -14,7 +14,9 @@ import brainwine.gameserver.item.Layer;
 import brainwine.gameserver.server.Message;
 import brainwine.gameserver.server.messages.EffectMessage;
 import brainwine.gameserver.server.messages.EntityChangeMessage;
+import brainwine.gameserver.server.messages.EntityPositionMessage;
 import brainwine.gameserver.server.messages.EntityStatusMessage;
+import brainwine.gameserver.server.messages.PlayerPositionMessage;
 import brainwine.gameserver.util.MapHelper;
 import brainwine.gameserver.util.MathUtils;
 import brainwine.gameserver.zone.Block;
@@ -61,6 +63,9 @@ public abstract class Entity {
     public void tick(float deltaTime) {
         long now = System.currentTimeMillis();
         
+        // Do mechanical movement if necessary
+        doMechanicalMovement(deltaTime);
+
         // Update block position
         updateBlockPosition();
         
@@ -164,6 +169,37 @@ public abstract class Entity {
             if(item.hasUse(ItemUseType.TRIGGER)) {
                 ItemUseType.SWITCH.getInteraction().interact(zone, this, blockX, blockY, Layer.FRONT, item, mod, metaBlock, null, null);
             }
+        }
+    }
+
+    /**
+     * Adjust entity position and velocity according to game mechanics, like items
+     * with a MOVE use.
+     *
+     * @param deltaTime change in time since last server tick in seconds
+     */
+    public void doMechanicalMovement(float deltaTime) {
+        float deltaVelocityX = 0.0f;
+        float deltaVelocityY = 0.0f;
+
+        Item frontItem = zone.findItem(blockX, blockY + 1, Layer.FRONT, item -> item.hasUse(ItemUseType.MOVE));
+
+        if (frontItem != null) {
+            if ("mirror".equals(frontItem.getRotation())) {
+                deltaVelocityX += frontItem.getPower();
+            } else {
+                deltaVelocityX += frontItem.getPower();
+            }
+        }
+
+        if (Math.abs(deltaVelocityX) > 0.01 || Math.abs(deltaVelocityY) > 0.01) {
+            setPosition(getX() + deltaTime * deltaVelocityX, getY() + deltaTime * deltaVelocityY);
+
+            if (this instanceof Player) {
+                ((Player) this).sendMessage(new PlayerPositionMessage(getX(), getY() + 1));
+            }
+
+            zone.sendLocalMessage(new EntityPositionMessage(this), blockX, blockY);
         }
     }
     

@@ -498,6 +498,10 @@ public class Item {
     public float getDamage() {
         return isWeapon() ? damageInfo.getLast() : 0;
     }
+
+    public String getRotation() {
+        return rotation;
+    }
     
     public boolean hasTimer() {
         return timer != null;
