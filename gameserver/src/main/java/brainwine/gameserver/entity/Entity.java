@@ -65,7 +65,7 @@ public abstract class Entity {
         
         // Do mechanical movement if necessary.
         // Only for V3 clients (cocos2d client handles these client side)
-        if (isPlayer() && ((Player) this).isV3()) {
+        if (isPlayer() && ((Player) this).isV3() && !((Player) this).isGodMode()) {
             doMechanicalMovement(deltaTime);
         }
 
