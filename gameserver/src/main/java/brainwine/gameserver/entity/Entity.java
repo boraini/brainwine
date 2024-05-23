@@ -63,8 +63,11 @@ public abstract class Entity {
     public void tick(float deltaTime) {
         long now = System.currentTimeMillis();
         
-        // Do mechanical movement if necessary
-        doMechanicalMovement(deltaTime);
+        // Do mechanical movement if necessary.
+        // Only for V3 clients (cocos2d client handles these client side)
+        if (isPlayer() && ((Player) this).isV3()) {
+            doMechanicalMovement(deltaTime);
+        }
 
         // Update block position
         updateBlockPosition();
@@ -182,22 +185,41 @@ public abstract class Entity {
         float deltaVelocityX = 0.0f;
         float deltaVelocityY = 0.0f;
 
-        Item frontItem = zone.findItem(blockX, blockY + 1, Layer.FRONT, item -> item.hasUse(ItemUseType.MOVE));
+        float groundHeight = -1.0f;
+        boolean hasDistance = false;
 
-        if (frontItem != null) {
-            if ("mirror".equals(frontItem.getRotation())) {
-                deltaVelocityX += frontItem.getPower();
+        Block block = zone.findBlock(blockX, blockY + 1, Layer.FRONT, item -> item.hasUse(ItemUseType.MOVE));
+        if (block == null && getY() - Math.floor(getY()) > 0.4) {
+            block = zone.findBlock(blockX, blockY + 2, Layer.FRONT, item -> item.hasUse(ItemUseType.MOVE));
+            hasDistance = true;
+        } 
+
+        if (block != null) {
+            Item frontItem = block.getFrontItem();
+
+            // item is assumed to be a conveyor belt
+            // character jumps every third frame so we multiply by 1.5
+            if (block.getMod(Layer.FRONT) == 0) {
+                deltaVelocityX += 1.5 * frontItem.getPower(); 
             } else {
-                deltaVelocityX += frontItem.getPower();
+                deltaVelocityX -= 1.5 * frontItem.getPower();
+            }
+
+            if (getVelocityY() < -0.001) {
+                deltaVelocityY -= getVelocityY();
+                groundHeight = 0.82f;
+                setVelocity(getVelocityX(), 0.0f);
             }
         }
 
         if (Math.abs(deltaVelocityX) > 0.01 || Math.abs(deltaVelocityY) > 0.01) {
-            setPosition(getX() + deltaTime * deltaVelocityX, getY() + deltaTime * deltaVelocityY);
+            float yPosition  = groundHeight < 0
+              ? getY() + deltaTime * deltaVelocityY
+              : blockY + (hasDistance ? 2.7f : 1.8f) - groundHeight;
 
-            if (this instanceof Player) {
-                ((Player) this).sendMessage(new PlayerPositionMessage(getX(), getY() + 1));
-            }
+            setPosition(getX() + deltaTime * deltaVelocityX, yPosition);
+
+            if (isPlayer()) ((Player) this).sendMessage(new PlayerPositionMessage(getX(), getY()));
 
             zone.sendLocalMessage(new EntityPositionMessage(this), blockX, blockY);
         }

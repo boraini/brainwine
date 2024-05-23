@@ -574,10 +574,10 @@ public class Zone {
     }
 
     /**
-     * Find block item occupying the block position that satisfies the predicate.
+     * Find block with item occupying the block position that satisfies the predicate.
      * Closer blocks are prioritized in row major order.
      */
-    public Item findItem(int x, int y, Layer layer, Predicate<Item> predicate) {
+    public Block findBlock(int x, int y, Layer layer, Predicate<Item> predicate) {
         Block block;
         Item item;
 
@@ -595,7 +595,7 @@ public class Zone {
 
                 if (item.getBlockWidth() > Math.abs(i) && item.getBlockHeight() > Math.abs(j)
                         && predicate.test(item)) {
-                    return item;
+                    return block;
                 }
             }
         }
