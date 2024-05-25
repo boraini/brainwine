@@ -1,8 +1,10 @@
-<h1 align="center">Brainwine</h1>
+<h1 align="center">Brainwine with Extended Features</h1>
 <p align="center">
-  <a href="https://github.com/kuroppoi/brainwine/actions"><img src="https://github.com/kuroppoi/brainwine/actions/workflows/build.yml/badge.svg" alt="build"/></a>
+  <a href="https://github.com/kuroppoi/brainwine/actions"><img src="https://github.com/boraini/brainwine/actions/workflows/build.yml/badge.svg" alt="build"/></a>
   <a href="https://github.com/kuroppoi/brainwine/releases/latest"><img src="https://img.shields.io/github/v/release/kuroppoi/brainwine?labelColor=30373D&label=Release&logoColor=959DA5&logo=github" alt="release"/></a>
 </p>
+
+> NOTE: In the branch [extended-features](https://github.com/boraini/brainwine/tree/extended-features) you can find a version of [Kuroppoi's BrainWine](https://github.com/kuroppoi/brainwine) with features that improve on the playability of the game both feature-wise and by ensuring feature-wise compatibility between the v1, v2 (cocos2D) and v3 (Unity) versions of the Deepworld client. We also keep pushing changes to the original development repository and suggest players to use that if they want a more vanilla Deepworld experience in their self-hosted server.
 
 Brainwine is a Deepworld private server written in Java, designed to be portable and easy to use.\
 It's still a work in progress, so keep in mind that it's not yet feature-complete. (A to-do list can be found [here](https://github.com/kuroppoi/brainwine/projects/1).)\
