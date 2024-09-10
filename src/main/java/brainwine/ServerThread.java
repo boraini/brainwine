@@ -30,7 +30,7 @@ public class ServerThread extends Thread {
             logger.info(SERVER_MARKER, "Starting server ...");
             gameServer = new GameServer();
             api = new Api(new DirectDataFetcher(gameServer.getPlayerManager(), gameServer.getZoneManager()));
-            TickLoop tickLoop = new TickLoop(8, () -> {
+            TickLoop tickLoop = new TickLoop(10, () -> {
                 gameServer.tick();
             });
             

@@ -5,6 +5,7 @@ import static brainwine.shared.LogMarkers.SERVER_MARKER;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.net.URL;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -21,11 +22,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.msgpack.jackson.dataformat.MessagePackFactory;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 
 import brainwine.gameserver.GameServer;
 import brainwine.gameserver.entity.npc.NpcData;
+import brainwine.gameserver.resource.ResourceFinder;
 import brainwine.gameserver.util.ZipUtils;
 import brainwine.gameserver.zone.gen.ZoneGenerator;
 import brainwine.shared.JsonHelper;
@@ -40,7 +43,9 @@ public class ZoneManager {
     private Map<String, Zone> zonesByName = new HashMap<>();
     private long lastZoneGenerationTime = System.currentTimeMillis();
     private boolean generatingZone = false;
-        
+
+    private List<List<List<Character>>> badAppleObject;
+    
     public ZoneManager() {
         logger.info(SERVER_MARKER, "Loading zone data ...");
         dataDir.mkdirs();
@@ -258,5 +263,18 @@ public class ZoneManager {
     
     public Collection<Zone> getZones() {
         return zonesByName.values();
+    }
+
+    public void loadBadAppleObject() {
+        URL url = ResourceFinder.getResourceUrl("badapple.json");
+        try {
+            badAppleObject = JsonHelper.readValue(url, new TypeReference<List<List<List<Character>>>>(){});
+        } catch (IOException e) {
+            logger.info("Bad Apple could not be loaded. /badapple won't do anything.");
+        }
+    }
+
+    public List<List<List<Character>>> getBadAppleObject() {
+        return badAppleObject;
     }
 }

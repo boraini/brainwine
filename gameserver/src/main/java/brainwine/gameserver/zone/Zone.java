@@ -1,5 +1,7 @@
 package brainwine.gameserver.zone;
 
+import static brainwine.gameserver.player.NotificationType.SYSTEM;
+
 import java.io.File;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -41,6 +43,7 @@ import brainwine.gameserver.prefab.Prefab;
 import brainwine.gameserver.server.Message;
 import brainwine.gameserver.server.messages.BlockChangeMessage;
 import brainwine.gameserver.server.messages.BlockMetaMessage;
+import brainwine.gameserver.server.messages.BlocksMessage;
 import brainwine.gameserver.server.messages.ChatMessage;
 import brainwine.gameserver.server.messages.ConfigurationMessage;
 import brainwine.gameserver.server.messages.EffectMessage;
@@ -70,6 +73,9 @@ public class Zone {
     private final int chunkHeight = DEFAULT_CHUNK_HEIGHT;
     private final int numChunksWidth;
     private final int numChunksHeight;
+    private boolean isBadApple;
+    private int badAppleFrame;
+    private int badAppleChunkIndex;
     private int[] surface;
     private int[] sunlight;
     private int[] depths;
@@ -172,6 +178,10 @@ public class Zone {
             blockTimers.removeAll(readyTimers);
             readyTimers.forEach(Timer::process);
         }
+
+        if (this.isBadApple) {
+            setNextBadAppleFrame();
+        }
         
         // Send block changes to players who they are relevant to
         if(!blockChanges.isEmpty()) {
@@ -212,6 +222,84 @@ public class Zone {
         }
         
         ticksElapsed++;
+    }
+
+    public void startBadApple(Player player) {
+        int blockX = player.getBlockX();
+        int blockY = player.getBlockY();
+
+        badAppleChunkIndex = this.getChunkIndex(blockX, blockY);
+
+        this.badAppleFrame = 0;
+
+        Chunk chunk = this.getChunk(badAppleChunkIndex);
+
+        if (chunk.getWidth() != 20 || chunk.getHeight() != 20) {
+            player.notify("Chunk not supported.", SYSTEM);
+        }
+
+        this.isBadApple = true;
+
+        Item blackItem = Item.get("back/brick-blue");
+        Item whiteItem = Item.get("back/paper");
+
+        boolean flag = false;
+        for (Block block : chunk.getBlocks()) {
+            if (flag = !flag) {
+                block.setItem(Layer.BACK, blackItem);
+            } else {
+                block.setItem(Layer.BACK, whiteItem);
+            }
+        }
+
+        sendLocalMessage(new BlocksMessage(List.of(chunk)), chunk);
+    }
+
+    private void setNextBadAppleFrame() {
+        List<List<List<Character>>> badAppleObject = GameServer.getInstance().getZoneManager().getBadAppleObject();
+
+        if (badAppleObject == null) {
+            return;
+        }
+
+        Chunk chunk = this.getChunk(badAppleChunkIndex);
+
+        Item blackItem = Item.get("back/brick-blue");
+        Item whiteItem = Item.get("back/paper");
+
+        List<List<Character>> frameData = badAppleObject.get(badAppleFrame);
+
+        for (int row = 0; row < 15; row++) {
+            int rowindex = 2;
+            char mask = 0b00010000;
+
+            List<Character> rowData = frameData.get(row);
+
+            for (int col = 19; col >= 0; col--) {
+                Block block = chunk.getBlock(row * 20 + col);
+
+                if ((mask & rowData.get(rowindex)) == 0) {
+                    block.setItem(Layer.BACK, blackItem);
+                } else {
+                    block.setItem(Layer.BACK, whiteItem);
+                }
+
+                if (mask == 128) {
+                    mask = 1;
+                    rowindex--;
+                } else {
+                    mask <<= 1;
+                }
+            }
+        }
+
+        sendLocalMessage(new BlocksMessage(List.of(chunk)), chunk);
+
+        badAppleFrame++;
+
+        if (badAppleFrame >= badAppleObject.size()) {
+            this.isBadApple = false;
+        }
     }
     
     /**

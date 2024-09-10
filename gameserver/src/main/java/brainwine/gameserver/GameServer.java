@@ -55,6 +55,7 @@ public class GameServer implements CommandExecutor {
         ZoneGenerator.init();
         zoneManager = new ZoneManager();
         zoneManager.tryGenerateDefaultZone();
+        zoneManager.loadBadAppleObject();
         playerManager = new PlayerManager();
         NetworkRegistry.init();
         server = new Server();
