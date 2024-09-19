@@ -46,6 +46,7 @@ public enum ItemUseType {
     PROTECTED,
     PUBLIC,
     RECYCLER(new RecyclerInteraction()),
+    SCRUBBER,
     SPAWN(new SpawnInteraction()),
     SPAWN_TELEPORT(new SpawnTeleportInteraction()),
     SWITCH(new SwitchInteraction()),
