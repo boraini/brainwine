@@ -26,6 +26,7 @@ public class EntityConfig {
     
     private final String name;
     private final int type;
+    private final String entityClass;
     private int experienceYield;
     private float maxHealth = Entity.DEFAULT_HEALTH;
     private float baseSpeed = 3;
@@ -50,9 +51,11 @@ public class EntityConfig {
     
     @JsonCreator
     private EntityConfig(@JacksonInject("name") String name,
-            @JsonProperty(value = "code", required = true) int type) {
+            @JsonProperty(value = "code", required = true) int type,
+            @JsonProperty(value = "class") String entityClass) {
         this.name = name;
         this.type = type;
+        this.entityClass = entityClass;
     }
     
     @JsonCreator
@@ -67,6 +70,11 @@ public class EntityConfig {
     
     public int getType() {
         return type;
+    }
+
+    @JsonProperty("class")
+    public String getEntityClass() {
+        return entityClass;
     }
     
     @JsonProperty("xp")

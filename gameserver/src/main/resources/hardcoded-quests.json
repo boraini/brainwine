@@ -1,0 +1,7 @@
+{
+    "hardcoded_quests": {
+        "Say Hello": {
+            "quest": "beginner_say_hello"
+        }
+    }
+}

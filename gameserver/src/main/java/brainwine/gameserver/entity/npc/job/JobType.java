@@ -9,7 +9,8 @@ import brainwine.gameserver.player.Player;
 public enum JobType {
     @JsonEnumDefaultValue
     JOKER(new Joker()),
-    CRAFTER(new Crafter());
+    CRAFTER(new Crafter()),
+    QUESTER(new Quester());
 
     private Job job;
 
@@ -24,6 +25,8 @@ public enum JobType {
                 return JOKER;
             case "crafter":
                 return CRAFTER;
+            case "quester":
+                return QUESTER;
             default:
                 return null;
         }

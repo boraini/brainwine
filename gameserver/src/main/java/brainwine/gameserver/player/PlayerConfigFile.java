@@ -14,6 +14,7 @@ import com.fasterxml.jackson.annotation.Nulls;
 
 import brainwine.gameserver.achievement.Achievement;
 import brainwine.gameserver.item.Item;
+import brainwine.gameserver.quest.QuestProgress;
 import brainwine.gameserver.zone.Zone;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -40,6 +41,7 @@ public class PlayerConfigFile {
     private Map<Skill, Integer> skills = new HashMap<>();
     private Map<Item, List<Skill>> bumpedSkills = new HashMap<>();
     private Map<String, Object> appearance = new HashMap<>();
+    private Map<String, QuestProgress> questProgresses = new HashMap<>();
     
     public PlayerConfigFile(Player player) {
         this.name = player.getName();
@@ -163,5 +165,10 @@ public class PlayerConfigFile {
     @JsonSetter(nulls = Nulls.SKIP, contentNulls = Nulls.SKIP)
     public Map<String, Object> getAppearance() {
         return appearance;
+    }
+
+    @JsonSetter(nulls = Nulls.SKIP, contentNulls = Nulls.SKIP)
+    public Map<String, QuestProgress> getQuestProgresses() {
+        return questProgresses;
     }
 }

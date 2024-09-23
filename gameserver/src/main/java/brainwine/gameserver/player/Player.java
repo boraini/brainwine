@@ -38,6 +38,7 @@ import brainwine.gameserver.item.Layer;
 import brainwine.gameserver.item.MiningBonus;
 import brainwine.gameserver.item.consumables.Consumable;
 import brainwine.gameserver.loot.Loot;
+import brainwine.gameserver.quest.QuestProgress;
 import brainwine.gameserver.server.Message;
 import brainwine.gameserver.server.messages.AchievementMessage;
 import brainwine.gameserver.server.messages.AchievementProgressMessage;
@@ -104,11 +105,16 @@ public class Player extends Entity implements CommandExecutor {
     private Map<Skill, Integer> skills;
     private Map<Item, List<Skill>> bumpedSkills;
     private Map<String, Object> appearance;
+    private Map<String, QuestProgress> questProgresses = new HashMap<>();
     private final Map<String, Object> settings = new HashMap<>();
     private final Set<Integer> activeChunks = new HashSet<>();
     private final Map<Integer, Consumer<Object[]>> dialogs = new HashMap<>();
     private final List<Timer<String>> timers = new ArrayList<>();
     private final List<Entity> trackedEntities = new ArrayList<>();
+    public Map<String, QuestProgress> getQuestProgresses() {
+        return questProgresses;
+    }
+
     private String clientVersion;
     private TradeSession tradeSession;
     private Placement lastPlacement;
@@ -148,6 +154,7 @@ public class Player extends Entity implements CommandExecutor {
         this.skills = config.getSkills();
         this.bumpedSkills = config.getBumpedSkills();
         this.appearance = config.getAppearance();
+        this.questProgresses = config.getQuestProgresses();
         health = getMaxHealth();
         inventory.setPlayer(this);
         statistics.setPlayer(this);
