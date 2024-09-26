@@ -65,6 +65,7 @@ public class PlayerConfigFile {
         this.skills = player.getSkills();
         this.bumpedSkills = player.getBumpedSkills();
         this.appearance = player.getAppearance();
+        this.questProgresses = player.getQuestProgresses();
     }
     
     @JsonCreator

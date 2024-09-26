@@ -111,10 +111,6 @@ public class Player extends Entity implements CommandExecutor {
     private final Map<Integer, Consumer<Object[]>> dialogs = new HashMap<>();
     private final List<Timer<String>> timers = new ArrayList<>();
     private final List<Entity> trackedEntities = new ArrayList<>();
-    public Map<String, QuestProgress> getQuestProgresses() {
-        return questProgresses;
-    }
-
     private String clientVersion;
     private TradeSession tradeSession;
     private Placement lastPlacement;
@@ -1131,6 +1127,10 @@ public class Player extends Entity implements CommandExecutor {
     
     public Map<String, Object> getAppearance() {
         return Collections.unmodifiableMap(appearance);
+    }
+
+    public Map<String, QuestProgress> getQuestProgresses() {
+        return questProgresses;
     }
     
     public void setSkillLevel(Skill skill, int level) {
