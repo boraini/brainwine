@@ -91,11 +91,7 @@ public class QuestTask {
         DialogSection result = new DialogSection();
 
         result.setText(getDescription() + (taskProgress >= 0 ? String.format("(Progress: %d/%d)", taskProgress, getQuantity()) : ""));
-
-        if (getAction() != null) {
-            result.addItem(new DialogListItem().setText(String.format("Action: %d", getAction())));
-        }
-
+        
         if (!getQualify().isEmpty()) {
             result.addItem(new DialogListItem().setText("Qualifications:"));
             for (List<Object> qualification : getQualify()) {

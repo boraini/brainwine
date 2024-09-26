@@ -109,7 +109,26 @@ public class Quester extends DialoguerJob {
     }
 
     public boolean dialogueCheckProgress(Npc me, Player player, String questId) {
-        return true;
+        Quest quest = Quests.get(questId);
+
+        if (PlayerQuests.canFinishQuest(player, quest)) {
+            player.showDialog(DialogHelper.messageDialog(quest.getStory().getComplete()));
+
+            PlayerQuests.finishQuest(player, quest);
+
+            return true;
+        } else {
+            String message = String.format(
+                "%s. Cancel the quest \"%s\" using the /quests command if you want to give up on the quest.",
+                quest.getStory().getIncomplete(),
+                quest.getTitle()
+            );
+
+            player.showDialog(DialogHelper.messageDialog("Cannot Finish Quest Yet", message));
+
+            return true;
+        }
+        
     }
 
 }

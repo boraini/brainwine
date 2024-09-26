@@ -62,6 +62,16 @@ public class PlayerQuestDialog {
 
     public static void playerQuestsDialogHandle(Player player, Object[] ans) {
         if (ans.length > 0 && "cancel".equals(ans[0])) return;
+        
+        if (ans.length == 0 || !(ans[0] instanceof String)) return;
+
+        String[] args = ((String) ans[0]).split(".");
+
+        if ("quest".equals(args[0])) {
+            if (args.length >= 3 && "cancel".equals(args[2])) {
+                player.getQuestProgresses().remove(args[1]);
+            }
+        }
     }
 
     public static List<DialogSection> getPlayerQuestsSection(Player player, boolean canFinishQuest) {

@@ -3,6 +3,8 @@ package brainwine.gameserver.quest;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import brainwine.gameserver.dialog.DialogListItem;
 import brainwine.gameserver.dialog.DialogSection;
 import brainwine.gameserver.player.Player;
@@ -17,8 +19,9 @@ public class QuestProgress {
         this.taskProgresses = taskProgresses;
     }
 
+    @JsonIgnore
     public Quest getQuest() {
-        return Quest.get(getQuestId());
+        return Quests.get(getQuestId());
     }
 
     public int getTaskProgress(int index) {
@@ -56,7 +59,7 @@ public class QuestProgress {
 
         mainSection.setTitle(quest.getTitle());
 
-        if (PlayerQuests.canFinishQuest(player, questId)) {
+        if (PlayerQuests.canFinishQuest(player, quest)) {
             mainSection.addItem(new DialogListItem().setImage("shop/premium").setText("All tasks done. Visit a quester android to claim your reward!"));
         }
 

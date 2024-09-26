@@ -37,20 +37,21 @@ public class PlayerQuests {
 
         QuestTask task = quest.getTasks().get(i);
 
-        return task.getQuantity() > progress && !task.getCollectInventory().playerSatisfies(player);
+        boolean satisfiesQuantity = task.getQuantity() <= progress;
+        boolean satisfiesInventory = task.getCollectInventory() == null || task.getCollectInventory().playerSatisfies(player);
+
+        return satisfiesQuantity && satisfiesInventory;
     }
 
-    public static boolean canFinishQuest(Player player, String questId) {
+    public static boolean canFinishQuest(Player player, Quest quest) {
         if (player == null) return false;
-
-        Quest quest = Quest.get(questId);
         
         if (quest == null) {
             player.notify("Quest not found!");
             return false;
         }
 
-        QuestProgress progress = player.getQuestProgresses().get(questId);
+        QuestProgress progress = player.getQuestProgresses().get(quest.getId());
 
         if (progress == null) {
             player.notify("Your quest progress is not found!");
@@ -66,11 +67,11 @@ public class PlayerQuests {
         return true;
     }
 
-    public static void finishQuest(Player player, String questId) {
-        Quest quest = Quest.get(questId);
-
+    public static void finishQuest(Player player, Quest quest) {
         for (QuestTask task : quest.getTasks()) {
-            task.getCollectInventory().removeFromPlayer(player);
+            if (task.getCollectInventory() != null) {
+                task.getCollectInventory().removeFromPlayer(player);
+            }
         }
 
         quest.getReward().reward(player);
@@ -93,7 +94,7 @@ public class PlayerQuests {
         for (Map.Entry<String, QuestProgress> questProgressEntry : player.getQuestProgresses().entrySet()) {
             String questId = questProgressEntry.getKey();
             QuestProgress questProgress = questProgressEntry.getValue();
-            Quest quest = Quest.get(questId);
+            Quest quest = Quests.get(questId);
             int i = 0;
             for (QuestTask task : quest.getTasks()) {
                 if (task.getEvents() == null) continue;
