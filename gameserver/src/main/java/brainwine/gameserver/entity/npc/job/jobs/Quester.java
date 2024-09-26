@@ -5,15 +5,25 @@ import java.util.Map;
 
 import brainwine.gameserver.GameConfiguration;
 import brainwine.gameserver.dialog.DialogHelper;
+import brainwine.gameserver.dialog.DialogSection;
 import brainwine.gameserver.entity.npc.Npc;
-import brainwine.gameserver.entity.npc.job.Job;
+import brainwine.gameserver.entity.npc.job.DialoguerJob;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.quest.*;
 import brainwine.gameserver.util.MapHelper;
 import brainwine.gameserver.util.MathUtils;
 import brainwine.gameserver.util.Pair;
 
-public class Quester extends Job {
+public class Quester extends DialoguerJob {
+    @Override
+    public DialogSection getMainDialogSection(Npc me, Player player) {
+        return new DialogSection().setText(MapHelper.getString(GameConfiguration.getBaseConfig(), "dialogs.android.quest")).setChoice("offers");
+    }
+
+    @Override
+    public boolean handleDialogAnswers(Npc me, Player player, Object[] ans) {
+        return dialogueOfferQuests(me, player);
+    }
 
     private Pair<String, Integer> getQuestCategoryAndLevel(Npc me) {
         if (me.getName() == null) {
@@ -32,8 +42,7 @@ public class Quester extends Job {
 
     }
 
-    @Override
-    public boolean dialogue(Npc me, Player player) {
+    public boolean dialogueOfferQuests(Npc me, Player player) {
         HardcodedQuest hardcodedQuest = Quests.getHardcodedQuests().get(me.getName());
         if (hardcodedQuest != null) {
             return dialogueHardcodedQuest(me, player, hardcodedQuest);
@@ -69,7 +78,7 @@ public class Quester extends Job {
                 if (currentProgress == null) {
                     List<Quest> quests = Quests.getRandomQuestsFromCategory(me, category, 5);
 
-                    PlayerQuestDialog.offerQuests(player, quests, System.out::println);
+                    PlayerQuestDialog.offerQuests(player, quests, quest -> beginQuest(me, player, quest));
                     return true;
                 } else {
                     return dialogueCheckProgress(me, player, currentProgress.getQuestId());
@@ -88,11 +97,15 @@ public class Quester extends Job {
             return true;
         }
 
-        PlayerQuestDialog.offerSingleQuest(player, quest, myQuest -> {
-            PlayerQuests.getInstance().beginQuest(player, myQuest.getId());
-        });
+        PlayerQuestDialog.offerSingleQuest(player, quest, myQuest -> beginQuest(me, player, myQuest));
 
         return true;
+    }
+
+    public void beginQuest(Npc me, Player player, Quest quest) {
+        PlayerQuests.beginQuest(player, quest);
+
+        player.showDialog(PlayerQuestDialog.beginQuestDialogGet(player, quest));
     }
 
     public boolean dialogueCheckProgress(Npc me, Player player, String questId) {

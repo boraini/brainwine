@@ -29,7 +29,7 @@ public class PlayerQuests {
         
         player.getQuestProgresses().put(quest.getId(), new QuestProgress(quest.getId(), progresses));
 
-        player.notify("Quest has started! Use the /quest command to view your progress at any time.");
+        player.notify("Quest has started! Use the /quests command to view your progress at any time.");
     }
 
     public static boolean isTaskComplete(Quest quest, Player player, int i) {

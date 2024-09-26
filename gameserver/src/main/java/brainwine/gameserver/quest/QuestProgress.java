@@ -44,21 +44,21 @@ public class QuestProgress {
     public List<DialogSection> getDialogSection(Player player, boolean canFinishQuest) {
         List<DialogSection> result = new ArrayList<>();
         DialogSection mainSection = new DialogSection();
+        result.add(mainSection);
 
         Quest quest = getQuest();
 
         if (quest == null) {
             mainSection.setTitle("QUEST NOT FOUND");
+            
             return result;
         }
 
         mainSection.setTitle(quest.getTitle());
 
-        if (PlayerQuests.getInstance().canFinishQuest(player, questId)) {
+        if (PlayerQuests.canFinishQuest(player, questId)) {
             mainSection.addItem(new DialogListItem().setImage("shop/premium").setText("All tasks done. Visit a quester android to claim your reward!"));
         }
-
-        result.add(mainSection);
 
         for (int i = 0; i < quest.getTasks().size(); i++) {
             result.add(quest.getTasks().get(i).getDialogSection(getTaskProgress(i)));

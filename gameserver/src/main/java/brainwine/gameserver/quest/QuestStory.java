@@ -2,6 +2,8 @@ package brainwine.gameserver.quest;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import brainwine.gameserver.player.Player;
+
 public class QuestStory {
     private String intro;
     private String accept;
@@ -28,5 +30,17 @@ public class QuestStory {
     }
     public String getComplete() {
         return complete;
+    }
+    public String getBegin(Player player) {
+        // TODO: check mobile device player properly
+        if(getBeginMobile() == null) {
+            return getBegin();
+        }
+        
+        if(player.isV3()) {
+            return getBegin();
+        } else {
+            return getBeginMobile();
+        }
     }
 }

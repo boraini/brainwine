@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import brainwine.gameserver.dialog.Dialog;
+import brainwine.gameserver.dialog.DialogHelper;
 import brainwine.gameserver.dialog.DialogSection;
 import brainwine.gameserver.player.Player;
 
@@ -27,7 +28,8 @@ public class PlayerQuestDialog {
     }
 
     public static Quest questOffersDialogGetSelectedOffer(Object[] ans) {
-        if (ans.length >= 1 && "cancel".equals(ans[0])) return null;
+        if (ans.length == 0) return null;
+        if ("cancel".equals(ans[0])) return null;
 
         else return Quests.get((String) ans[0]);
     }
@@ -42,7 +44,11 @@ public class PlayerQuestDialog {
         return result;
     }
 
-    public static Dialog getPlayerQuestsDialog(Player player) {
+    public static Dialog beginQuestDialogGet(Player player, Quest quest) {
+        return DialogHelper.messageDialog(player.isV3() ? quest.getStory().getBegin() : quest.getStory().getBeginMobile());
+    }
+
+    public static Dialog playerQuestsDialogGet(Player player) {
         Dialog result = new Dialog().setTitle("Your Quests");
 
         List<DialogSection> all = getPlayerQuestsSection(player, false);
@@ -52,6 +58,10 @@ public class PlayerQuestDialog {
         }
 
         return result;
+    }
+
+    public static void playerQuestsDialogHandle(Player player, Object[] ans) {
+        if (ans.length > 0 && "cancel".equals(ans[0])) return;
     }
 
     public static List<DialogSection> getPlayerQuestsSection(Player player, boolean canFinishQuest) {
@@ -81,6 +91,10 @@ public class PlayerQuestDialog {
             System.out.println(ans[0]);
             onSelect.accept(quest);
         });
+    }
+
+    public static void showPlayerQuests(Player player) {
+        player.showDialog(playerQuestsDialogGet(player), ans -> playerQuestsDialogHandle(player, ans));
     }
 
 }
