@@ -5,7 +5,8 @@ import java.util.List;
 public class QuestAction {
     public static enum Type {
         INTERACT,
-        BEGIN;
+        BEGIN,
+        DONE;
     }
 
     public static enum Actor {

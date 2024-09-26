@@ -94,6 +94,10 @@ public class Quests {
 
         Quest quest = targetMap.get(questId);
 
+        if (quest == null) {
+            return null;
+        }
+
         quest.setId(questId);
 
         return quest;

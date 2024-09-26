@@ -1,9 +1,11 @@
 package brainwine.gameserver.quest;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -38,6 +40,12 @@ public class Quest {
     @JsonProperty("tasks")
     private List<QuestTask> tasks;
 
+    @JsonIgnore
+    private Map<String, Object> pcDetails = null;
+    
+    @JsonIgnore
+    private Map<String, Object> mobileDetails = null;
+
     public static Quest get(String questId) {
         Quest quest = MapHelper.get(GameConfiguration.getBaseConfig(), questId, Quest.class);
 
@@ -46,7 +54,45 @@ public class Quest {
         quest.setId(questId);
         return quest;
     }
-        
+
+    private void computeClientDetailsIfAbsent() {
+        if (pcDetails == null || mobileDetails == null) {
+            pcDetails = new HashMap<>();
+            mobileDetails = pcDetails;
+
+            pcDetails.put("group", getGroup());
+            pcDetails.put("title", getTitle());
+            pcDetails.put("xp", getReward().getXp() == null ? 0 : getReward().getXp());
+            pcDetails.put("desc", getDescription());
+
+            List<String> tasks = new ArrayList<>();
+
+            if(getTasks() != null) for(QuestTask task : getTasks()) {
+                tasks.add(task.getDescription());
+            }
+
+            pcDetails.put("tasks", tasks);
+
+            if (getDescriptionMobile() != null) {
+                mobileDetails = new HashMap<>(pcDetails);
+
+                mobileDetails.put("desc", getDescriptionMobile());
+            }
+        }
+    }
+
+    @JsonIgnore
+    public Map<String, Object> getPcDetails() {
+        computeClientDetailsIfAbsent();
+        return pcDetails;
+    }
+
+    @JsonIgnore
+    public Map<String, Object> getMobileDetails() {
+        computeClientDetailsIfAbsent();
+        return mobileDetails;
+    }
+
     public String getId() {
         return id;
     }

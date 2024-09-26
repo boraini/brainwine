@@ -62,10 +62,10 @@ public class PlayerQuestDialog {
 
     public static void playerQuestsDialogHandle(Player player, Object[] ans) {
         if (ans.length > 0 && "cancel".equals(ans[0])) return;
-        
+
         if (ans.length == 0 || !(ans[0] instanceof String)) return;
 
-        String[] args = ((String) ans[0]).split(".");
+        String[] args = ((String) ans[0]).split("\\.");
 
         if ("quest".equals(args[0])) {
             if (args.length >= 3 && "cancel".equals(args[2])) {
@@ -98,7 +98,6 @@ public class PlayerQuestDialog {
     public static void offerSingleQuest(Player player, Quest quest, Consumer<Quest> onSelect) {
         player.showDialog(confirmBeginQuestDialogGet(quest), ans -> {
             if (ans.length < 1 || "cancel".equals(ans[0])) return;
-            System.out.println(ans[0]);
             onSelect.accept(quest);
         });
     }

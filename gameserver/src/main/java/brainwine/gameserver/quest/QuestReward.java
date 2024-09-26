@@ -30,4 +30,16 @@ public class QuestReward {
             }
         }
     }
+
+    public Integer getXp() {
+        return xp;
+    }
+
+    public Integer getCrowns() {
+        return crowns;
+    }
+
+    public List<String> getLootCategories() {
+        return lootCategories;
+    }
 }

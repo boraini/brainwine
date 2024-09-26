@@ -8,6 +8,7 @@ import java.util.Objects;
 import brainwine.gameserver.entity.Entity;
 import brainwine.gameserver.entity.npc.Npc;
 import brainwine.gameserver.player.Player;
+import brainwine.gameserver.server.messages.QuestMessage;
 import brainwine.gameserver.zone.Zone;
 
 public class PlayerQuests {
@@ -77,6 +78,30 @@ public class PlayerQuests {
         quest.getReward().reward(player);
     }
 
+    public static void sendInitialPlayerQuestMessages(Player player) {
+        Map<String, QuestProgress> progresses = player.getQuestProgresses();
+
+        if (progresses == null) return;
+        
+        for (QuestProgress progress : progresses.values()) {
+            sendPlayerQuestMessage(player, progress);
+        }
+    }
+
+    public static void sendPlayerQuestMessage(Player player, QuestProgress progress) {
+        Quest quest = Quests.get(progress.getQuestId());
+
+        if (quest == null) return;
+
+        // TODO: detect mobile player properly
+        if (player.isV3()) {
+            player.sendMessage(new QuestMessage(quest.getPcDetails(), progress.getClientStatus()));
+        } else {
+            player.sendMessage(new QuestMessage(quest.getMobileDetails(), progress.getClientStatus()));
+        }
+        
+    }
+
     public static boolean patternMatch(List<Object> event, Object[] pattern) {
         if (event.size() > pattern.length) return false;
         int iterationCount = Math.min(event.size(), pattern.length);
@@ -88,6 +113,45 @@ public class PlayerQuests {
         }
 
         return true;
+    }
+
+    public static void handleQuestFinalReturn(Player player, Quest quest) {
+        QuestProgress progress = player.getQuestProgresses().get(quest.getId());
+
+        if (progress == null) return;
+
+        int found = -1;
+
+        for (int i = 0; i < quest.getTasks().size(); i++) {
+            QuestTask task = quest.getTasks().get(i);
+
+            if (task.getEvents() != null) {
+                for (List<Object> event : task.getEvents()) {
+                    for (Object o : event) {
+                        if ("return".equals(o)) found = i;
+                        if (found != -1) break;
+                    }
+                    if (found != -1) break;
+                }
+            }
+            if (found != -1) break;
+        }
+
+        if (found == -1) return;
+
+        int initialReturnProgress = progress.getTaskProgress(found);
+        int wantedProgress = quest.getTasks().get(found).getQuantity();
+
+        while (progress.getTaskProgresses().size() < quest.getTasks().size()) {
+            progress.getTaskProgresses().add(0);
+        }
+
+        progress.getTaskProgresses().set(found, wantedProgress);
+
+        // if can't finish even with the return task done, set the return task progress to the previous value
+        if (!canFinishQuest(player, quest)) {
+            progress.getTaskProgresses().set(found, initialReturnProgress);
+        }
     }
 
     public static void handleEvent(Player player, Object... pattern) {
@@ -132,10 +196,6 @@ public class PlayerQuests {
 
     public static void handleChat(Player player) {
         handleEvent(player, "chat");
-    }
-
-    public static void handleReturn(Player player) {
-        handleEvent(player, "return");
     }
 
 }

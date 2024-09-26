@@ -111,6 +111,8 @@ public class Quester extends DialoguerJob {
     public boolean dialogueCheckProgress(Npc me, Player player, String questId) {
         Quest quest = Quests.get(questId);
 
+        PlayerQuests.handleQuestFinalReturn(player, quest);
+
         if (PlayerQuests.canFinishQuest(player, quest)) {
             player.showDialog(DialogHelper.messageDialog(quest.getStory().getComplete()));
 

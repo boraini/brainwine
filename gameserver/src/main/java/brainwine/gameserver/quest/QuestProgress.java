@@ -1,17 +1,24 @@
 package brainwine.gameserver.quest;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import brainwine.gameserver.dialog.DialogListItem;
 import brainwine.gameserver.dialog.DialogSection;
 import brainwine.gameserver.player.Player;
 
 public class QuestProgress {
+    @JsonProperty("quest_id")
     private String questId;
+    @JsonProperty("tasks")
     private List<Integer> taskProgresses;
+    @JsonProperty("completed_at")
+    private Long completedAt = null;
 
     public QuestProgress() {}
     public QuestProgress(String questId, List<Integer> taskProgresses) {
@@ -38,6 +45,10 @@ public class QuestProgress {
 
     public List<Integer> getTaskProgresses() {
         return taskProgresses;
+    }
+
+    public Long getCompletedAt() {
+        return completedAt;
     }
 
     public String getActionChoice(String action) {
@@ -80,6 +91,27 @@ public class QuestProgress {
         }
 
         result.add(cancelSection);
+
+        return result;
+    }
+
+    @JsonIgnore
+    public Map<String, Object> getClientStatus() {
+        Map<String, Object> result = new HashMap<>();
+        Quest quest = Quests.get(getQuestId());
+
+        List<Integer> completedIndices = new ArrayList<>();
+
+        for (int i = 0; i < quest.getTasks().size(); i++) {
+            QuestTask task = quest.getTasks().get(i);
+            if (task.getQuantity() <= getTaskProgress(i)) {
+                completedIndices.add(i);
+            }
+        }
+
+        result.put("progress", completedIndices);
+        result.put("complete", getCompletedAt() != null);
+        result.put("active", true);
 
         return result;
     }
