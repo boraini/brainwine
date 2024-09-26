@@ -11,20 +11,10 @@ import brainwine.gameserver.player.Player;
 import brainwine.gameserver.zone.Zone;
 
 public class PlayerQuests {
-    private static PlayerQuests INSTANCE;
+    private PlayerQuests() {}
 
-    public static PlayerQuests getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new PlayerQuests();
-        }
-
-        return INSTANCE;
-    }
-
-    public void beginQuest(Player player, String questId) {
+    public static void beginQuest(Player player, Quest quest) {
         if (player == null) return;
-
-        Quest quest = Quest.get(questId);
         
         if (quest == null) {
             player.notify("Quest not found!");
@@ -36,13 +26,13 @@ public class PlayerQuests {
         for(int i = 0; i < quest.getTasks().size(); i++) {
             progresses.add(0);
         }
-
-        player.getQuestProgresses().put(questId, new QuestProgress(questId, progresses));
+        
+        player.getQuestProgresses().put(quest.getId(), new QuestProgress(quest.getId(), progresses));
 
         player.notify("Quest has started! Use the /quest command to view your progress at any time.");
     }
 
-    public boolean isTaskComplete(Quest quest, Player player, int i) {
+    public static boolean isTaskComplete(Quest quest, Player player, int i) {
         int progress = player.getQuestProgresses().get(quest.getId()).getTaskProgress(i);
 
         QuestTask task = quest.getTasks().get(i);
@@ -50,7 +40,7 @@ public class PlayerQuests {
         return task.getQuantity() > progress && !task.getCollectInventory().playerSatisfies(player);
     }
 
-    public boolean canFinishQuest(Player player, String questId) {
+    public static boolean canFinishQuest(Player player, String questId) {
         if (player == null) return false;
 
         Quest quest = Quest.get(questId);
@@ -76,7 +66,7 @@ public class PlayerQuests {
         return true;
     }
 
-    public void finishQuest(Player player, String questId) {
+    public static void finishQuest(Player player, String questId) {
         Quest quest = Quest.get(questId);
 
         for (QuestTask task : quest.getTasks()) {
@@ -86,7 +76,7 @@ public class PlayerQuests {
         quest.getReward().reward(player);
     }
 
-    public boolean patternMatch(List<Object> event, Object[] pattern) {
+    public static boolean patternMatch(List<Object> event, Object[] pattern) {
         if (event.size() > pattern.length) return false;
         int iterationCount = Math.min(event.size(), pattern.length);
         for (int i = 0; i < iterationCount; i++) {
@@ -99,7 +89,7 @@ public class PlayerQuests {
         return true;
     }
 
-    public void handleEvent(Player player, Object... pattern) {
+    public static void handleEvent(Player player, Object... pattern) {
         for (Map.Entry<String, QuestProgress> questProgressEntry : player.getQuestProgresses().entrySet()) {
             String questId = questProgressEntry.getKey();
             QuestProgress questProgress = questProgressEntry.getValue();
@@ -123,11 +113,11 @@ public class PlayerQuests {
         }
     }
 
-    public void handleEnterZone(Player player, Zone zone) {
+    public static void handleEnterZone(Player player, Zone zone) {
         handleEvent(player, "entered", "zone_name", zone.getName());
     }
 
-    public void handleKill(Player player, Entity other) {
+    public static void handleKill(Player player, Entity other) {
         handleEvent(player, "kill", "code", other.getType());
 
         if(other.isPlayer()) {
@@ -139,11 +129,12 @@ public class PlayerQuests {
         
     }
 
-    public void handleChat(Player player) {
+    public static void handleChat(Player player) {
         handleEvent(player, "chat");
     }
 
-    public void handleReturn(Player player) {
+    public static void handleReturn(Player player) {
         handleEvent(player, "return");
     }
+
 }

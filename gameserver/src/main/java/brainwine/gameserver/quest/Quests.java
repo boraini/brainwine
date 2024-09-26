@@ -21,8 +21,6 @@ import brainwine.gameserver.util.PickRandom;
 import brainwine.shared.JsonHelper;
 
 public class Quests {
-    public static Quests INSTANCE;
-
     public static Map<String, Map<String, Quest>> questMaps = new HashMap<>();
     public static Map<String, List<Quest>> questLists = new HashMap<>();
     public static Map<String, String> titleToPrefix = new HashMap<>();
@@ -31,14 +29,6 @@ public class Quests {
     private static final Logger logger = LogManager.getLogger();
 
     private Quests() {}
-
-    public Quests getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new Quests();
-        }
-
-        return INSTANCE;
-    }
 
     private static void loadHardcodedQuests() {
         try {
@@ -83,10 +73,10 @@ public class Quests {
 
         int counter = 0;
 
-        counter += loadQuestsForCategory("collector", "Arts and Crafts");
+        counter += loadQuestsForCategory("collect", "Arts and Crafts");
         counter += loadQuestsForCategory("combat", "The Art of War");
         counter += loadQuestsForCategory("cooking", "Let Them Eat Cake");
-        counter += loadQuestsForCategory("beginner", "Survive and Thrive");
+        counter += loadQuestsForCategory("survival", "Survive and Thrive");
 
         logger.info("Successfully loaded {} quests", counter);
     }
@@ -145,32 +135,5 @@ public class Quests {
     public static Map<String, HardcodedQuest> getHardcodedQuests() {
         return hardcodedQuests;
     }
-
-    // public static List<Quest> getRandomNInCategory(Entity me, String categoryTitle, int count) {
-    //     List<Quest> targetList = questLists.get(categoryTitle);
-
-    //     if (targetList == null) {
-    //         return null;
-    //     }
-
-    //     if (count > targetList.size()) {
-    //         count = targetList.size();
-    //     }
-
-    //     Set<Integer> pickedIndices = new HashSet<>(count);
-
-    //     Random generator = new Random(me.getId());
-
-    //     for (int i = 0; i < 2 * count; i++) {
-    //         pickedIndices.add(generator.nextInt(targetList.size()));
-    //         if (pickedIndices.size() >= count) break;
-    //     }
-
-    //     for (int i = 0; pickedIndices.size() < count; i++) {
-    //         pickedIndices.add(i);
-    //     }
-        
-    //     return pickedIndices.stream().map(targetList::get).collect(Collectors.toList());
-    // }
 
 }
