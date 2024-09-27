@@ -60,6 +60,7 @@ public class Quest {
             pcDetails = new HashMap<>();
             mobileDetails = pcDetails;
 
+            pcDetails.put("id", getId());
             pcDetails.put("group", getGroup());
             pcDetails.put("title", getTitle());
             pcDetails.put("xp", getReward().getXp() == null ? 0 : getReward().getXp());
