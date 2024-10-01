@@ -27,10 +27,13 @@ public class PlayerQuests {
         for(int i = 0; i < quest.getTasks().size(); i++) {
             progresses.add(0);
         }
+
+        QuestProgress progress = new QuestProgress(quest.getId(), progresses);
         
-        player.getQuestProgresses().put(quest.getId(), new QuestProgress(quest.getId(), progresses));
+        player.getQuestProgresses().put(quest.getId(), progress);
 
         player.notify("Quest has started! Use the /quests command to view your progress at any time.");
+        sendPlayerQuestMessage(player, progress);
     }
 
     public static boolean isTaskComplete(Quest quest, Player player, int i) {
@@ -68,14 +71,35 @@ public class PlayerQuests {
         return true;
     }
 
+    public static void cancelQuest(Player player, String questId) {
+        QuestProgress progress = player.getQuestProgresses().get(questId);
+
+        if (progress == null || progress.isComplete()) return;
+
+        player.getQuestProgresses().remove(questId);
+        sendPlayerQuestMessage(player, new QuestProgress(questId, null));
+    }
+
     public static void finishQuest(Player player, Quest quest) {
+        QuestProgress progress = player.getQuestProgresses().get(quest.getId());
+
+        if (progress.isComplete()) return;
+
         for (QuestTask task : quest.getTasks()) {
             if (task.getCollectInventory() != null) {
                 task.getCollectInventory().removeFromPlayer(player);
             }
         }
 
+        for (int i = 0; i < quest.getTasks().size(); i++) {
+            progress.getTaskProgresses().set(i, quest.getTasks().get(i).getQuantity());
+        }
+
         quest.getReward().reward(player);
+
+        progress.markAsComplete();
+
+        sendPlayerQuestMessage(player, progress);
     }
 
     public static void sendInitialPlayerQuestMessages(Player player) {

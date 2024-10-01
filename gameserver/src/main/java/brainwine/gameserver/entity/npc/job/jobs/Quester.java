@@ -73,10 +73,10 @@ public class Quester extends DialoguerJob {
             int level = categoryAndLevel.getLast();
 
             if (category != null) {
-                QuestProgress currentProgress = Quests.getQuestProgressInCategory(player, category);
+                QuestProgress currentProgress = Quests.getIncompleteQuestProgressInCategory(player, category);
 
                 if (currentProgress == null) {
-                    List<Quest> quests = Quests.getRandomQuestsFromCategory(me, category, 5);
+                    List<Quest> quests = Quests.getRandomQuestsFromCategory(me, category, player.getQuestProgresses().keySet(), 5);
 
                     PlayerQuestDialog.offerQuests(player, quests, quest -> beginQuest(me, player, quest));
                     return true;

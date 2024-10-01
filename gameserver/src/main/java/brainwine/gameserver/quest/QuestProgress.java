@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import brainwine.gameserver.dialog.DialogListItem;
 import brainwine.gameserver.dialog.DialogSection;
@@ -16,8 +18,10 @@ public class QuestProgress {
     @JsonProperty("quest_id")
     private String questId;
     @JsonProperty("tasks")
+    @JsonInclude(Include.NON_NULL)
     private List<Integer> taskProgresses;
     @JsonProperty("completed_at")
+    @JsonInclude(Include.NON_NULL)
     private Long completedAt = null;
 
     public QuestProgress() {}
@@ -53,6 +57,15 @@ public class QuestProgress {
 
     public String getActionChoice(String action) {
         return String.format("quest.%s.%s", questId, action);
+    }
+
+    @JsonIgnore
+    public boolean isComplete() {
+        return completedAt != null;
+    }
+
+    public void markAsComplete() {
+        completedAt = System.currentTimeMillis();
     }
 
     public List<DialogSection> getDialogSection(Player player, boolean canFinishQuest) {

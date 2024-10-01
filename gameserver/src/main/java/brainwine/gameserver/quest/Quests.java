@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -103,9 +105,9 @@ public class Quests {
         return quest;
     }
 
-    public static List<Quest> getRandomQuestsFromCategory(Entity me, String categoryTitle, int count) {
-        logger.info(categoryTitle);
+    public static List<Quest> getRandomQuestsFromCategory(Entity me, String categoryTitle, Set<String> excludeQuestIds, int count) {
         List<Quest> targetList = questLists.get(categoryTitle);
+        targetList = targetList.stream().filter(q -> !excludeQuestIds.contains(q.getId())).collect(Collectors.toList());
 
         if (targetList == null) {
             return null;
@@ -116,7 +118,7 @@ public class Quests {
         return PickRandom.sampleWithoutReplacement(random, targetList, count);
     }
 
-    public static QuestProgress getQuestProgressInCategory(Player player, String categoryTitle) {
+    public static QuestProgress getIncompleteQuestProgressInCategory(Player player, String categoryTitle) {
         String prefix = titleToPrefix.get(categoryTitle);
 
         if (prefix == null) {
@@ -127,7 +129,9 @@ public class Quests {
             return null;
         }
 
-        String id = player.getQuestProgresses().keySet().stream().filter(p -> p.startsWith(prefix)).findFirst().orElse(null);
+        String id = player.getQuestProgresses().keySet().stream()
+            .filter(p -> !player.getQuestProgresses().get(p).isComplete() && p.startsWith(prefix))
+            .findFirst().orElse(null);
 
         return player.getQuestProgresses().get(id);
     }

@@ -69,7 +69,7 @@ public class PlayerQuestDialog {
 
         if ("quest".equals(args[0])) {
             if (args.length >= 3 && "cancel".equals(args[2])) {
-                player.getQuestProgresses().remove(args[1]);
+                PlayerQuests.cancelQuest(player, args[1]);
             }
         }
     }
@@ -77,7 +77,9 @@ public class PlayerQuestDialog {
     public static List<DialogSection> getPlayerQuestsSection(Player player, boolean canFinishQuest) {
         List<DialogSection> result = new ArrayList<>();
         for (QuestProgress questProgress : player.getQuestProgresses().values()) {
-            result.addAll(questProgress.getDialogSection(player, canFinishQuest));
+            if (!questProgress.isComplete()) {
+                result.addAll(questProgress.getDialogSection(player, canFinishQuest));
+            }
         }
 
         return result;
