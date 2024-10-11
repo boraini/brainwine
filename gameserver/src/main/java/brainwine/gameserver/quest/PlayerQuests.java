@@ -5,10 +5,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import brainwine.gameserver.dialog.DialogHelper;
 import brainwine.gameserver.entity.Entity;
 import brainwine.gameserver.entity.npc.Npc;
+import brainwine.gameserver.item.DamageType;
+import brainwine.gameserver.item.Item;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.server.messages.QuestMessage;
+import brainwine.gameserver.util.MapHelper;
 import brainwine.gameserver.zone.Zone;
 
 public class PlayerQuests {
@@ -34,6 +38,7 @@ public class PlayerQuests {
 
         player.notify("Quest has started! Use the /quests command to view your progress at any time.");
         sendPlayerQuestMessage(player, progress);
+        performAction(player, quest, QuestAction.Type.BEGIN);
     }
 
     public static boolean isTaskComplete(Quest quest, Player player, int i) {
@@ -76,8 +81,14 @@ public class PlayerQuests {
 
         if (progress == null || progress.isComplete()) return;
 
+        String reason = progress.tryCancelOtherwiseReason(player);
+        if(reason != null) {
+            player.showDialog(DialogHelper.messageDialog("Cannot Cancel Quest", reason));
+            return;
+        }
+
         player.getQuestProgresses().remove(questId);
-        sendPlayerQuestMessage(player, new QuestProgress(questId, null));
+        sendPlayerCancelQuestMessage(player, questId);
     }
 
     public static void finishQuest(Player player, Quest quest) {
@@ -100,6 +111,8 @@ public class PlayerQuests {
         progress.markAsComplete();
 
         sendPlayerQuestMessage(player, progress);
+        // TODO: this should normally happen without the player having to return to the android
+        performAction(player, quest, QuestAction.Type.DONE);
     }
 
     public static void sendInitialPlayerQuestMessages(Player player) {
@@ -126,17 +139,8 @@ public class PlayerQuests {
         
     }
 
-    public static boolean patternMatch(List<Object> event, Object[] pattern) {
-        if (event.size() > pattern.length) return false;
-        int iterationCount = Math.min(event.size(), pattern.length);
-        for (int i = 0; i < iterationCount; i++) {
-            if (pattern[i] == null) continue;
-            if (event.get(i) == null) continue;
-
-            if (!Objects.equals(pattern[i], event.get(i))) return false;
-        }
-
-        return true;
+    public static void sendPlayerCancelQuestMessage(Player player, String questId) {
+        player.sendMessage(new QuestMessage(MapHelper.map("id", questId), null));
     }
 
     public static void handleQuestFinalReturn(Player player, Quest quest) {
@@ -178,12 +182,39 @@ public class PlayerQuests {
         }
     }
 
+    public static void performAction(Player player, Quest quest, QuestAction.Type actionType) {
+        if(quest.getActions() == null) return;
+
+        List<QuestAction> actions = quest.getActions().get(actionType);
+
+        if(actions == null) return;
+
+        for(QuestAction action : actions) {
+            action.performAction(player);
+        }
+    }
+
+    private static boolean patternMatch(List<Object> event, Object[] pattern) {
+        if (event.size() != pattern.length) return false;
+        int iterationCount = Math.min(event.size(), pattern.length);
+        for (int i = 0; i < iterationCount; i++) {
+            if (pattern[i] == null) continue;
+            if (event.get(i) == null) continue;
+
+            if (!Objects.equals(pattern[i], event.get(i))) return false;
+        }
+
+        return true;
+    }
+
     public static void handleEvent(Player player, Object... pattern) {
         for (Map.Entry<String, QuestProgress> questProgressEntry : player.getQuestProgresses().entrySet()) {
             String questId = questProgressEntry.getKey();
             QuestProgress questProgress = questProgressEntry.getValue();
             Quest quest = Quests.get(questId);
             int i = 0;
+
+            boolean anyProgress = false;
             for (QuestTask task : quest.getTasks()) {
                 if (task.getEvents() == null) continue;
 
@@ -194,10 +225,19 @@ public class PlayerQuests {
                 for (List<Object> event : task.getEvents()) {
                     if (patternMatch(event, pattern)) {
                         questProgress.getTaskProgresses().set(i, questProgress.getTaskProgress(i) + 1);
+
+                        if(event.size() >= 3 && "interact".equals(event.get(0)) && "name".equals(event.get(1))) {
+                            performAction(player, quest, QuestAction.Type.INTERACT);
+                        }
+                        anyProgress = true;
                         break;
                     }
                 }
                 i++;
+            }
+
+            if(anyProgress) {
+                sendPlayerQuestMessage(player, questProgress);
             }
         }
     }
@@ -207,19 +247,42 @@ public class PlayerQuests {
     }
 
     public static void handleKill(Player player, Entity other) {
+        handleEvent(player, "kill");
         handleEvent(player, "kill", "code", other.getType());
 
         if(other.isPlayer()) {
             // don't reward players for killing each other
         } else {
             Npc npc = (Npc) other;
-            handleEvent(player, "kill", "category", npc.getConfig().getEntityClass());
+            handleEvent(player, "kill", "category", npc.getConfig().getCategory());
         }
         
     }
 
+    public static void handleExplode(Player player, Entity other) {
+        handleEvent(player, "explode");
+        handleEvent(player, "explode", "code", other.getType());
+
+        if(other.isPlayer()) {
+            // don't reward players for killing each other
+        } else {
+            Npc npc = (Npc) other;
+            handleEvent(player, "explode", "category", npc.getConfig().getCategory());
+        }
+    }
+
     public static void handleChat(Player player) {
         handleEvent(player, "chat");
+    }
+
+    public static void handleInteract(Player player, Npc npc) {
+        handleEvent(player, "interact", "name", npc.getName());
+    }
+
+    public static void handleAppearance(Player player, Map<String, Object> appearance) {
+        for(Object code : appearance.values()) {
+            handleEvent(player, "appearance", "code", code);
+        }
     }
 
 }

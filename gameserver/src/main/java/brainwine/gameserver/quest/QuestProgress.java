@@ -129,4 +129,36 @@ public class QuestProgress {
         return result;
     }
 
+    /**Revert all the progress, or return a string reason if this will fail.
+     * 
+     * @param player player to cancel the quest for
+     * @return null if the cancellation succeeded, or a string if there is a problem
+     */
+    public String tryCancelOtherwiseReason(Player player) {
+        if(player.isGodMode()) return null;
+        
+        Quest quest = getQuest();
+        if(quest == null) return null;
+
+        String reason = null;
+        int count = 0;
+        for(QuestAction.Type action : new QuestAction.Type[] { QuestAction.Type.BEGIN, QuestAction.Type.INTERACT }) {
+            if(quest.getActions().containsKey(action)) {
+                if(reason == null) {
+                    reason = action.toString();
+                } else {
+                    reason += ", " + action.toString();
+                }
+            }
+
+            count++;
+        }
+
+        if(reason == null) {
+            return null;
+        } else {
+            return "Cannot cancel because the quest has the " + reason + (count == 1 ? " action." : " actions.");
+        }
+    }
+
 }

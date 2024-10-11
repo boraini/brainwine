@@ -46,7 +46,11 @@ public class QuestTask {
             return qualification.length >= 2 && Objects.equals(qualification[1], player.getZone().getBiome().getId());
         }
 
-        return false;
+        if (Objects.equals("current_item_group?", qualification[0])) {
+            return qualification.length >= 2 && Objects.equals(qualification[1], player.getHeldItem().getId());
+        }
+
+        return true;
     }
 
     public boolean doesQualify(Player player) {

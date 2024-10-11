@@ -38,6 +38,7 @@ import brainwine.gameserver.item.Layer;
 import brainwine.gameserver.item.MiningBonus;
 import brainwine.gameserver.item.consumables.Consumable;
 import brainwine.gameserver.loot.Loot;
+import brainwine.gameserver.quest.PlayerQuests;
 import brainwine.gameserver.quest.QuestProgress;
 import brainwine.gameserver.server.Message;
 import brainwine.gameserver.server.messages.AchievementMessage;
@@ -475,6 +476,7 @@ public class Player extends Entity implements CommandExecutor {
         customSpawn = x != -1 && y != -1;
         sendMessage(new EventMessage("playerWillChangeZone", null));
         kick("Teleporting...", true);
+        PlayerQuests.handleEnterZone(this, zone);
     }
     
     public void showDialog(Dialog dialog) {
@@ -1123,6 +1125,7 @@ public class Player extends Entity implements CommandExecutor {
     public void updateAppearance(Map<String, Object> appearance) {
         this.appearance.putAll(appearance);
         zone.sendMessage(new EntityChangeMessage(id, appearance));
+        PlayerQuests.handleAppearance(this, appearance);
     }
     
     public Map<String, Object> getAppearance() {

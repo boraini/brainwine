@@ -127,7 +127,7 @@ public class DialoguerBehavior extends Behavior {
 
                             // set entity parameters
                             entity.setName(entityName);
-                            entity.setJob(JobType.JOKER);
+                            entity.setJob(JobType.QUESTER);
 
                             // notify the player
                             player.notify(String.format("Android has been reconfigured as %s!", entity.getName()));
