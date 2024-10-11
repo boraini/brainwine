@@ -38,6 +38,8 @@ import brainwine.gameserver.player.ChatType;
 import brainwine.gameserver.player.NotificationType;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.prefab.Prefab;
+import brainwine.gameserver.quest.PlayerQuests;
+import brainwine.gameserver.quest.QuestProgress;
 import brainwine.gameserver.server.Message;
 import brainwine.gameserver.server.messages.BlockChangeMessage;
 import brainwine.gameserver.server.messages.BlockMetaMessage;
@@ -275,6 +277,7 @@ public class Zone {
      */
     public void sendChatMessage(Player sender, String text, ChatType type) {
         sendMessage(new ChatMessage(sender.getId(), text, type));
+        PlayerQuests.handleChat(sender);
         GameServer.getInstance().notify(String.format("%s: %s", sender.getName(), text), NotificationType.CHAT);
     }
     
@@ -487,6 +490,10 @@ public class Zone {
                 double distance = MathUtils.distance(x, y, entity.getX(), entity.getY());
                 float damage = (float)(baseDamage - distance);
                 entity.attack(cause, item, damage, damageType);
+                
+                if(entity.isDead() && cause.isPlayer()) {
+                    PlayerQuests.handleExplode((Player) cause, entity);
+                }
             }
         }
     }
