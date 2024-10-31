@@ -1,5 +1,6 @@
 package brainwine.gameserver.server.requests;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -11,6 +12,7 @@ import brainwine.gameserver.player.Skill;
 import brainwine.gameserver.server.OptionalField;
 import brainwine.gameserver.server.PlayerRequest;
 import brainwine.gameserver.server.RequestInfo;
+import brainwine.gameserver.server.messages.InventoryMessage;
 import brainwine.gameserver.util.MathUtils;
 import brainwine.gameserver.util.Pair;
 import brainwine.gameserver.zone.MetaBlock;
@@ -92,13 +94,21 @@ public class CraftRequest extends PlayerRequest {
                 }
             }
         }
-        
+
+        HashMap<String, Object> changes = new HashMap<>();
         for(CraftingRequirement ingredient : ingredients) {
-            inventory.removeItem(ingredient.getItem(), ingredient.getQuantity() * quantity, true);
+            inventory.removeItem(ingredient.getItem(), ingredient.getQuantity() * quantity);
+            changes.putAll(inventory.getClientConfig(ingredient.getItem()));
         }
         
         int totalQuantity = item.getCraftingQuantity() * quantity;
-        inventory.addItem(item, totalQuantity, true);
+        inventory.addItem(item, totalQuantity);
+        changes.putAll(inventory.getClientConfig(item));
+
+        if(!changes.isEmpty()) {
+            player.sendMessage(new InventoryMessage(changes));
+        }
+
         player.getStatistics().trackItemCrafted(item, totalQuantity);
     }
 }
