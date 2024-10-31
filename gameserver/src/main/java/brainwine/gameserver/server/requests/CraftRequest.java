@@ -94,11 +94,11 @@ public class CraftRequest extends PlayerRequest {
         }
         
         for(CraftingRequirement ingredient : ingredients) {
-            inventory.removeItem(ingredient.getItem(), ingredient.getQuantity() * quantity);
+            inventory.removeItem(ingredient.getItem(), ingredient.getQuantity() * quantity, true);
         }
         
         int totalQuantity = item.getCraftingQuantity() * quantity;
-        inventory.addItem(item, totalQuantity);
+        inventory.addItem(item, totalQuantity, true);
         player.getStatistics().trackItemCrafted(item, totalQuantity);
     }
 }
