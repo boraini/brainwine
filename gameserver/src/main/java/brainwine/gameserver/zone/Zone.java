@@ -694,13 +694,16 @@ public class Zone {
     }
     
     public void placePrefab(Prefab prefab, int x, int y, Random random, long seed) {
+        placePrefab(prefab, x, y, random, prefab.isMirrorable() && random.nextBoolean(), seed);
+    }
+    
+    public void placePrefab(Prefab prefab, int x, int y, Random random, boolean mirrored, long seed) {
         int width = prefab.getWidth();
         int height = prefab.getHeight();
         Block[] blocks = prefab.getBlocks();
         int guardBlocks = 0;
         String dungeonId = prefab.isDungeon() ? UUID.randomUUID().toString() : null;
         boolean decay = prefab.hasDecay();
-        boolean mirrored = prefab.isMirrorable() && random.nextBoolean();
         Map<Item, Item> replacedItems = new HashMap<>();
         
         // Replacements
@@ -720,7 +723,7 @@ public class Zone {
                 }
             }
         });
-        
+
         for(int i = 0; i < width; i++) {
             for(int j = 0; j < height; j++) {
                 // Skip ruined bits
@@ -768,7 +771,7 @@ public class Zone {
                     }
                     
                     // Try to place rubble
-                    if(decay && frontItem.isWhole() && !isBlockOccupied(x + i, y + j - 1, Layer.FRONT) && random.nextDouble() <= 0.2) {
+                    if(decay && frontItem.isWhole() && !isBlockOccupied(x + i, y + j - 1, Layer.FRONT) && !prefab.occupies(i, j - 1, mirrored) && random.nextDouble() <= 0.2) {
                         RubbleType[] types = RubbleType.values();
                         RubbleType type = types[random.nextInt(types.length)];
                         String[] itemIds = type.getItemIds();
@@ -777,7 +780,7 @@ public class Zone {
                     }
                     
                     int offset = mirrored ? -(frontItem.getBlockWidth() - 1) : 0;
-                    
+
                     // Clear the block it would normally occupy
                     if(offset != 0) {
                         updateBlock(x + i, y + j, Layer.FRONT, 0);

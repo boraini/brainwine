@@ -1,14 +1,20 @@
 package brainwine.gameserver.prefab;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import brainwine.gameserver.item.ItemUseType;
+import brainwine.gameserver.util.Pair;
+import brainwine.gameserver.util.Vector2i;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 import brainwine.gameserver.GameServer;
 import brainwine.gameserver.item.Item;
 import brainwine.gameserver.util.WeightedMap;
 import brainwine.gameserver.zone.Block;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class Prefab {
     
@@ -24,6 +30,8 @@ public class Prefab {
     private Map<Item, WeightedMap<Item>> replacements = new HashMap<>();
     private Map<Item, CorrespondingReplacement> correspondingReplacements = new HashMap<>();
     private Map<Integer, Map<String, Object>> metadata = new HashMap<>();
+    @JsonIgnore
+    private List<Pair<Vector2i, Vector2i>> occupiedAreas = null;
     
     protected Prefab(String name, PrefabConfigFile config, PrefabBlocksFile blockData) {
         this(name, blockData.getWidth(), blockData.getHeight(), blockData.getBlocks(), config.getMetadata());
@@ -47,6 +55,41 @@ public class Prefab {
     @JsonCreator
     private static Prefab fromName(String name) {
         return GameServer.getInstance().getPrefabManager().getPrefab(name);
+    }
+
+    public List<Pair<Vector2i, Vector2i>> getOccupiedAreas() {
+        if(occupiedAreas == null) {
+            occupiedAreas = new ArrayList<>();
+
+            if(blocks != null) for(int i = 0; i < blocks.length; i++) {
+                Item frontItem = blocks[i].getFrontItem();
+                if(frontItem != null && frontItem.hasUse(ItemUseType.TELEPORT)) {
+                    int x = i % getWidth();
+                    int y = i / getWidth();
+                    occupiedAreas.add(new Pair<>(
+                            new Vector2i(x, y),
+                            new Vector2i(x + frontItem.getBlockWidth(), y + frontItem.getBlockHeight())
+                    ));
+                }
+            }
+        }
+
+        return occupiedAreas;
+    }
+
+    public boolean occupies(int x, int y, boolean mirrored) {
+        if(x < 0 || x >= getWidth() || y < 0 || y >= getHeight()) return false;
+
+        int mirroredX = mirrored ? getWidth() - x - 1 : x;
+
+        for(Pair<Vector2i, Vector2i> area : getOccupiedAreas()) {
+            if(mirroredX >= area.getFirst().getX() && y >= area.getFirst().getY()
+                    && mirroredX < area.getLast().getX() && y < area.getLast().getY()) {
+                return true;
+            }
+        }
+
+        return false;
     }
     
     public String getName() {
