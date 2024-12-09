@@ -63,7 +63,7 @@ public class Prefab {
 
             if(blocks != null) for(int i = 0; i < blocks.length; i++) {
                 Item frontItem = blocks[i].getFrontItem();
-                if(frontItem != null && frontItem.hasUse(ItemUseType.TELEPORT)) {
+                if(frontItem != null && frontItem.getId() != null && frontItem.getId().contains("mechanical") && frontItem.getId().contains("teleporter")) {
                     int x = i % getWidth();
                     int y = i / getWidth();
                     occupiedAreas.add(new Pair<>(
