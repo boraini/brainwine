@@ -156,7 +156,10 @@ public class GameConfiguration {
                 case "front":
                 case "liquid":
                     config.put("layer", category);
-                    break;
+                    break; 
+		case "shields":
+                case "accessories":
+                    break; 
                 default: // Big brain or big stupid?
                     config.put("layer", "front");
                     break;
