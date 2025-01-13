@@ -1,7 +1,7 @@
 {
   "terrain_type": "ocean",
-  "min_amplitude": 100,
-  "max_amplitude": 100,
+  "min_amplitude": 15,
+  "max_amplitude": 45,
   "surface_region_size": 50,
   "dungeon_region": [80, 64],
   "dungeon_chance": 0.25,
@@ -299,6 +299,33 @@
             "rubble/gravestone": 8,
             "rubble/skeleton": 1
           }
+        }
+      ]
+    }
+  },
+  "underwater_region_types": {
+    "forest": {
+      "frequency": 8,
+      "decorators": [
+        {
+          "type": "tree",
+          "tree_spawn_chance": 0.2
+        }
+      ]
+    },
+    "shrubbery": {
+      "frequency": 5,
+      "decorators": [
+        {
+          "type": "item",
+          "item_spawn_chance": 0.2,
+          "items": [
+            "vegetation/shrub-dead"
+          ]
+        },
+        {
+          "type": "tree",
+          "tree_spawn_chance": 0.05
         }
       ]
     }

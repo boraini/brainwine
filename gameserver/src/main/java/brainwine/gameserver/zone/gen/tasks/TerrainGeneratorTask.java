@@ -20,6 +20,7 @@ public class TerrainGeneratorTask implements GeneratorTask {
     private final LayerSeparator layerSeparator;
     private final int surfaceRegionSize;
     private final WeightedMap<SurfaceRegionType> surfaceRegionTypes;
+    private final WeightedMap<SurfaceRegionType> underwaterRegionTypes;
     
     public TerrainGeneratorTask(GeneratorConfig config) {
         type = config.getTerrainType();
@@ -28,6 +29,7 @@ public class TerrainGeneratorTask implements GeneratorTask {
         layerSeparator = config.getLayerSeparator();
         surfaceRegionSize = config.getSurfaceRegionSize();
         surfaceRegionTypes = config.getSurfaceRegionTypes();
+        underwaterRegionTypes = config.getUnderwaterRegionTypes();
     }
     
     @Override
@@ -49,30 +51,86 @@ public class TerrainGeneratorTask implements GeneratorTask {
             for(int x = 0; x < width; x++) {
                 ctx.setSurface(x, 0);
             }
-        } else {
+        } else if(type == TerrainType.OCEAN) {
             double amplitude = ctx.nextDouble() * (maxAmplitude - minAmplitude) + minAmplitude;
             int oceanY = OceanGeneratorTask.getOceanY(ctx);
             for(int x = 0; x < width; x++) {
                 double surfaceNoise = SimplexNoise.noise2(ctx.getSeed(), x / 256.0, 0, 7);
-                double erosionFactor = amplitude;
-                double islandBias = 0.0;
 
-                if(type == TerrainType.OCEAN) {
-                    double islandBiasRaw = 2.0 * SimplexNoise.noise2(ctx.getSeed(), x / 256.0, 0, 2) - 1.0;
-                    double islandBiasGained = Math.signum(islandBiasRaw) * Math.pow(Math.abs(islandBiasRaw), 0.6);
-                    islandBias = -surfaceLevel * (0.5 + 0.25 * islandBiasGained);
-                    erosionFactor = (oceanY < islandBias + surfaceLevel) ? 2.0 : amplitude;
-                    if(Math.abs(erosionFactor - amplitude) < 0.5) System.out.println("are the same");
-                }
+                double islandBiasRaw = 2.0 * SimplexNoise.noise2(ctx.getSeed(), x / 256.0, 0, 2) - 1.0;
+                double islandBiasGained = Math.signum(islandBiasRaw) * Math.pow(Math.abs(islandBiasRaw), 0.6);
+                double islandBias = -surfaceLevel * (0.5 + 0.25 * islandBiasGained);
+
+                double erosionFactor = (oceanY < islandBias + surfaceLevel) ? 2.0 : amplitude;
 
                 int surface = Math.max(0, (int)(surfaceLevel + islandBias + erosionFactor * surfaceNoise));
 
                 ctx.setSurface(x, surface);
-                
+
                 if(surface > lowestSurfaceLevel) {
                     lowestSurfaceLevel = surface;
                 }
-                
+            }
+
+            // Init surface regions
+            if(!surfaceRegionTypes.isEmpty() && !underwaterRegionTypes.isEmpty()) {
+                int regionStart = 0;
+                boolean isUnderwater = ctx.getSurface(0) >= oceanY;
+                for(int x = 0; x < width; x++) {
+                    int surface = ctx.getSurface(x);
+                    // Transitioning to land
+                    if(isUnderwater && surface < oceanY) {
+                        isUnderwater = false;
+
+                        if(x - regionStart < 4) {
+                            regionStart = x;
+                            continue;
+                        }
+
+                        ctx.addSurfaceRegion(new SurfaceRegion(underwaterRegionTypes.next(ctx.getRandom()), regionStart, x));
+                    }
+
+                    // Transitioning to underwater
+                    if(!isUnderwater && surface >= oceanY) {
+                        isUnderwater = true;
+
+                        if(x - regionStart < 4) {
+                            regionStart = x;
+                            continue;
+                        }
+
+                        ctx.addSurfaceRegion(new SurfaceRegion(surfaceRegionTypes.next(ctx.getRandom()), regionStart, x));
+                    }
+
+                    // Region is getting too large
+                    if(x - regionStart >= surfaceRegionSize) {
+                        ctx.addSurfaceRegion(new SurfaceRegion(
+                                (isUnderwater ? underwaterRegionTypes : surfaceRegionTypes).next(ctx.getRandom()),
+                                regionStart,
+                                x
+                        ));
+                    }
+                }
+
+                if(ctx.getWidth() - regionStart > 4) {
+                    ctx.addSurfaceRegion(new SurfaceRegion(
+                            (isUnderwater ? underwaterRegionTypes : surfaceRegionTypes).next(ctx.getRandom()),
+                            regionStart,
+                            ctx.getWidth()
+                    ));
+                }
+            }
+        } else {
+            double amplitude = ctx.nextDouble() * (maxAmplitude - minAmplitude) + minAmplitude;
+
+            for(int x = 0; x < width; x++) {
+                int surface = (int)(SimplexNoise.noise2(ctx.getSeed(), x / 256.0, 0, 7) * amplitude) + surfaceLevel;
+                ctx.setSurface(x, surface);
+
+                if(surface > lowestSurfaceLevel) {
+                    lowestSurfaceLevel = surface;
+                }
+
                 // Init surface regions
                 if(!surfaceRegionTypes.isEmpty() && x % surfaceRegionSize == 0) {
                     int regionEnd = Math.min(width, x + surfaceRegionSize);

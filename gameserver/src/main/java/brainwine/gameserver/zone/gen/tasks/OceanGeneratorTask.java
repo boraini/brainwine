@@ -59,6 +59,6 @@ public class OceanGeneratorTask implements GeneratorTask {
     }
 
     public static int getOceanY(GeneratorContext ctx) {
-        return (int)(0.35 * ctx.getHeight());
+        return (int)(0.4 * ctx.getHeight());
     }
 }
