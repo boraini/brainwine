@@ -81,25 +81,21 @@ public class TerrainGeneratorTask implements GeneratorTask {
                     // Transitioning to land
                     if(isUnderwater && surface < oceanY) {
                         isUnderwater = false;
+                        regionStart = x;
 
-                        if(x - regionStart < 4) {
-                            regionStart = x;
-                            continue;
+                        if(x - regionStart >= 4) {
+                            ctx.addSurfaceRegion(new SurfaceRegion(underwaterRegionTypes.next(ctx.getRandom()), regionStart, x));
                         }
-
-                        ctx.addSurfaceRegion(new SurfaceRegion(underwaterRegionTypes.next(ctx.getRandom()), regionStart, x));
                     }
 
                     // Transitioning to underwater
                     if(!isUnderwater && surface >= oceanY) {
                         isUnderwater = true;
+                        regionStart = x;
 
-                        if(x - regionStart < 4) {
-                            regionStart = x;
-                            continue;
+                        if(x - regionStart >= 4) {
+                            ctx.addSurfaceRegion(new SurfaceRegion(surfaceRegionTypes.next(ctx.getRandom()), regionStart, x));
                         }
-
-                        ctx.addSurfaceRegion(new SurfaceRegion(surfaceRegionTypes.next(ctx.getRandom()), regionStart, x));
                     }
 
                     // Region is getting too large
@@ -109,6 +105,8 @@ public class TerrainGeneratorTask implements GeneratorTask {
                                 regionStart,
                                 x
                         ));
+
+                        regionStart = x;
                     }
                 }
 

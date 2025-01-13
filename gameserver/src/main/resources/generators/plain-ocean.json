@@ -312,8 +312,8 @@
           "rock_materials": [
             {
               "frequency": 5,
-              "back": "back/earth",
-              "front": "ground/earth"
+              "back": "back/limestone",
+              "front": "ground/limestone"
             }
           ],
           "anemones": {

@@ -13,13 +13,17 @@ import java.util.List;
 
 public class ReefSurfaceDecorator extends SurfaceDecorator {
     @JsonProperty
-    private int stride = 15;
+    private int stride = 10;
     @JsonProperty("min_blobs")
     private int minBlobs = 5;
     @JsonProperty("max_blobs")
     private int maxBlobs = 10;
+    @JsonProperty("blob_min_radius")
+    private double blobMinRadius = 1.0;
+    @JsonProperty("blob_max_radius")
+    private double blobMaxRadius = 3.0;
     @JsonProperty("blob_spacing")
-    private double blobSpacing = 1.5;
+    private double blobSpacing = 2.0;
     @JsonProperty("anemone_frequency")
     private double anemoneFrequency = 0.6;
     @JsonProperty("rock_materials")
@@ -38,29 +42,28 @@ public class ReefSurfaceDecorator extends SurfaceDecorator {
         if(region.getEnd() - region.getStart() < stride) return;
         if(rockMaterials.isEmpty()) return;
 
-        int currentX = region.getStart() + stride * minBlobs;
+        int currentX = (int)Math.floor(region.getStart() + MathUtils.lerp(blobSpacing * maxBlobs, stride, ctx.nextDouble()));
 
         while(currentX < region.getEnd() - minBlobs) {
             int numBlobs = minBlobs + ctx.nextInt(maxBlobs - minBlobs);
 
             double reefStart = currentX;
-            double reefEnd = currentX + blobSpacing * numBlobs;
+            double reefEnd = currentX + MathUtils.lerp(blobSpacing * maxBlobs, stride, ctx.nextDouble());
 
-            currentX = (int)Math.ceil(reefEnd) + minBlobs + ctx.nextInt(maxBlobs - minBlobs);
+            currentX = (int)(Math.ceil(reefEnd + blobSpacing * (minBlobs + ctx.nextInt(maxBlobs - minBlobs))));
 
             double[] blobX = new double[numBlobs];
             double[] blobY = new double[numBlobs];
             double[] blobRadiusInner = new double[numBlobs];
             double[] blobRadiusOuter = new double[numBlobs];
 
-            int blockIndex = MathUtils.clamp((int)Math.round(currentX), region.getStart(), region.getEnd() - 1);
-            int bottom = ctx.getSurface(blockIndex);
-            int top = ctx.getSurface(blockIndex);
+            int bottom = ctx.getSurface(currentX);
+            int top = ctx.getSurface(currentX);
             // Generate some blobs.
             for(int i = 0; i < numBlobs; i++) {
-                blockIndex = MathUtils.clamp((int)Math.round(currentX + blobSpacing * i), region.getStart(), region.getEnd() - 1);
-                blobX[i] = MathUtils.lerp((double)i / numBlobs, reefStart, reefEnd) + (2.0 * ctx.nextDouble() - 1.0);
-                blobRadiusInner[i] = ctx.nextDouble();
+                blobX[i] = MathUtils.lerp(reefStart, reefEnd, (double)i / numBlobs) + (2.0 * ctx.nextDouble() - 1.0);
+                int blockIndex = MathUtils.clamp((int)Math.round(blobX[i]), region.getStart(), region.getEnd() - 1);
+                blobRadiusInner[i] = MathUtils.lerp(blobMinRadius, blobMaxRadius, ctx.nextDouble());
                 blobRadiusOuter[i] = 1.4 * blobRadiusInner[i];
                 blobY[i] = ctx.getSurface(blockIndex) - 0.7 * blobRadiusOuter[i] + 0.5 * (2.0 * ctx.nextDouble() - 1.0);
 
@@ -100,8 +103,8 @@ public class ReefSurfaceDecorator extends SurfaceDecorator {
             }
 
             // Place anemone.
-            for(int x = left; x <= right; x++) {
-                if(backHeight[x - left] > frontHeight[x - left] && ctx.nextDouble() < anemoneFrequency) {
+            if(!anemones.isEmpty()) for(int x = left; x <= right; x++) {
+                if(backHeight[x - left] < frontHeight[x - left] && ctx.nextDouble() < anemoneFrequency) {
                     Item anemone = ItemRegistry.getItem(anemones.next(ctx.getRandom()));
                     ctx.updateBlock(x, backHeight[x - left] - 1, anemone.getLayer(), anemone);
                 }

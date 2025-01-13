@@ -24,7 +24,6 @@ public class OceanGeneratorTask implements GeneratorTask {
 
         // Add sediment to flat regions.
         final int oceanY = getOceanY(ctx);
-        System.out.println("ocean y: " + oceanY);
         final int sedimentDepth = 3;
         final int sedimentCut = 5;
         int lastY = -1000;
