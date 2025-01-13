@@ -17,6 +17,7 @@ import brainwine.gameserver.zone.gen.caves.CaveType;
 import brainwine.gameserver.zone.gen.models.Deposit;
 import brainwine.gameserver.zone.gen.models.LayerSeparator;
 import brainwine.gameserver.zone.gen.models.OreDeposit;
+import brainwine.gameserver.zone.gen.models.SedimentType;
 import brainwine.gameserver.zone.gen.models.SpecialStructure;
 import brainwine.gameserver.zone.gen.models.StoneType;
 import brainwine.gameserver.zone.gen.models.TerrainType;
@@ -36,6 +37,7 @@ public class GeneratorConfig {
     private double backgroundDrawingChance = 0.001;
     private LayerSeparator layerSeparator;
     private WeightedMap<StoneType> stoneTypes = new WeightedMap<>();
+    private WeightedMap<SedimentType> sedimentTypes = new WeightedMap<>();
     private WeightedMap<Prefab> spawnBuildings = new WeightedMap<>();
     private WeightedMap<Prefab> dungeons = new WeightedMap<>();
     private SpecialStructure[] specialStructures = {};
@@ -95,6 +97,11 @@ public class GeneratorConfig {
     @JsonSetter(value = "stone_types", nulls = Nulls.SKIP)
     public WeightedMap<StoneType> getStoneTypes() {
         return stoneTypes;
+    }
+
+    @JsonSetter(value = "sediment_types", nulls = Nulls.SKIP)
+    public WeightedMap<SedimentType> getSedimentTypes() {
+        return sedimentTypes;
     }
     
     @JsonSetter(value = "spawn_buildings", nulls = Nulls.SKIP)

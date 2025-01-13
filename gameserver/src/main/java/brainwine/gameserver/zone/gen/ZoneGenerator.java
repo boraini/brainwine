@@ -8,6 +8,7 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import brainwine.gameserver.zone.gen.tasks.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -19,11 +20,6 @@ import brainwine.gameserver.resource.ResourceFinder;
 import brainwine.gameserver.zone.Biome;
 import brainwine.gameserver.zone.Zone;
 import brainwine.gameserver.zone.gen.models.TerrainType;
-import brainwine.gameserver.zone.gen.tasks.CaveGeneratorTask;
-import brainwine.gameserver.zone.gen.tasks.DecorGeneratorTask;
-import brainwine.gameserver.zone.gen.tasks.GeneratorTask;
-import brainwine.gameserver.zone.gen.tasks.StructureGeneratorTask;
-import brainwine.gameserver.zone.gen.tasks.TerrainGeneratorTask;
 import brainwine.shared.JsonHelper;
 
 public class ZoneGenerator {
@@ -34,6 +30,7 @@ public class ZoneGenerator {
     private static AsyncZoneGenerator asyncGenerator;
     private final GeneratorConfig config;
     private final GeneratorTask terrainGenerator;
+    private final GeneratorTask oceanGenerator;
     private final GeneratorTask caveGenerator;
     private final GeneratorTask decorGenerator;
     private final GeneratorTask structureGenerator;
@@ -45,6 +42,7 @@ public class ZoneGenerator {
     public ZoneGenerator(GeneratorConfig config) {
         this.config = config;
         terrainGenerator = new TerrainGeneratorTask(config);
+        oceanGenerator = new OceanGeneratorTask(config);
         caveGenerator = new CaveGeneratorTask(config);
         decorGenerator = new DecorGeneratorTask(config);
         structureGenerator = new StructureGeneratorTask(config);
@@ -140,6 +138,7 @@ public class ZoneGenerator {
         Zone zone = new Zone(id, name, biome, width, height);
         GeneratorContext ctx = new GeneratorContext(zone, seed);
         terrainGenerator.generate(ctx);
+        oceanGenerator.generate(ctx);
         caveGenerator.generate(ctx);
         decorGenerator.generate(ctx);
         structureGenerator.generate(ctx);

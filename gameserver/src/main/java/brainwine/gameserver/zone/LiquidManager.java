@@ -34,6 +34,7 @@ public class LiquidManager {
     
     private int updateLiquids() {
         // Sort in reverse order so that lower liquid blocks are updated first
+        liquidIndices.clear();
         List<Integer> liquidIndicesToUpdate = new ArrayList<>(liquidIndices);
         Collections.sort(liquidIndicesToUpdate, Collections.reverseOrder());
         liquidIndices.clear();
