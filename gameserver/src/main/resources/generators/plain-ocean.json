@@ -304,28 +304,28 @@
     }
   },
   "underwater_region_types": {
-    "forest": {
-      "frequency": 8,
-      "decorators": [
-        {
-          "type": "tree",
-          "tree_spawn_chance": 0.2
-        }
-      ]
-    },
-    "shrubbery": {
+    "reef": {
       "frequency": 5,
       "decorators": [
         {
-          "type": "item",
-          "item_spawn_chance": 0.2,
-          "items": [
-            "vegetation/shrub-dead"
-          ]
-        },
-        {
-          "type": "tree",
-          "tree_spawn_chance": 0.05
+          "type": "reef",
+          "rock_materials": [
+            {
+              "frequency": 5,
+              "back": "back/earth",
+              "front": "ground/earth"
+            }
+          ],
+          "anemones": {
+            "ground/crystal-blue-1": 5,
+            "ground/crystal-blue-3": 8,
+            "ground/crystal-blue-2": 4,
+            "ground/crystal-blue-4": 12,
+            "ground/crystal-rainbow": 9,
+            "ground/onyx": 8,
+            "ground/crystal-red-1": 2,
+            "ground/crystal-purple-1": 4
+          }
         }
       ]
     }
