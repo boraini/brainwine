@@ -15,6 +15,7 @@ import brainwine.gameserver.zone.gen.GeneratorContext;
     @Type(name = "item", value = ItemSurfaceDecorator.class),
     @Type(name = "tree", value = TreeSurfaceDecorator.class),
     @Type(name = "growth", value = GrowthSurfaceDecorator.class),
+    @Type(name = "reef", value = ReefSurfaceDecorator.class),
     @Type(name = "structure", value = StructureSurfaceDecorator.class),
     @Type(name = "rubble", value = RubbleSurfaceDecorator.class)
 })
