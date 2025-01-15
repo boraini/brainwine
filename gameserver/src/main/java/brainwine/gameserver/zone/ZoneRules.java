@@ -11,6 +11,8 @@ public class ZoneRules extends RuleRecord {
     private int autoCleanDuration = 60000;
     @Rule("do-hostile-entity-spawns")
     private boolean hostileEntitySpawnsEnabled = false;
+    @Rule(value = "ocean", adminOnly=true)
+    private boolean ocean;
     @Rule(value="do-peaceful-entity-spawns", adminOnly=true)
     private boolean peacefulEntitySpawnsEnabled = false;
 
@@ -38,4 +40,6 @@ public class ZoneRules extends RuleRecord {
     public boolean isPeacefulEntitySpawnsEnabled() {
         return peacefulEntitySpawnsEnabled;
     }
+
+    public boolean isOcean() { return ocean; }
 }

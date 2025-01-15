@@ -1953,7 +1953,7 @@ public class Zone {
         Map<String, Object> config = new HashMap<>();
         config.put("id", documentId);
         config.put("name", name);
-        config.put("biome", biome);
+        config.put("biome", biome.getId() + (getRules().isOcean() && (biome == Biome.PLAIN || biome == Biome.ARCTIC) ? "-ocean" : ""));
         config.put("size", new int[]{width, height});
         config.put("chunk_size", new int[]{chunkWidth, chunkHeight});
         config.put("surface", surface);

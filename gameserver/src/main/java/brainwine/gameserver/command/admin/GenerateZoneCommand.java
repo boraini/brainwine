@@ -56,7 +56,7 @@ public class GenerateZoneCommand extends Command {
         }
         
         ZoneGenerator generator = null;
-        
+        boolean ocean = false;
         if(args.length >= 4) {
             String name = args[3];
             generator = ZoneGenerator.getZoneGenerator(name);
@@ -65,6 +65,8 @@ public class GenerateZoneCommand extends Command {
                 executor.notify(String.format("The zone generator '%s' does not exist.", name), SYSTEM);
                 return;
             }
+
+            ocean = name.contains("ocean");
         } else {
             generator = ZoneGenerator.getZoneGenerator(biome);
             
@@ -81,7 +83,8 @@ public class GenerateZoneCommand extends Command {
                 seed = args[4].hashCode();
             }
         }
-        
+
+        final boolean isOcean = ocean;
         generating = true;
         executor.notify("Your zone is being generated. It should be ready soon!", SYSTEM);
         generator.generateZoneAsync(biome, width, height, seed, zone -> {
@@ -89,6 +92,7 @@ public class GenerateZoneCommand extends Command {
                 executor.notify("An unexpected error occured while generating your zone.", SYSTEM);
             } else {
                 GameServer.getInstance().getZoneManager().addZone(zone);
+                if(isOcean) zone.getRules().setRule(executor, "ocean", "true");
                 executor.notify(String.format("Your zone '%s' is ready for exploration!", zone.getName()), SYSTEM);
             }
             

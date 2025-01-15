@@ -27,7 +27,11 @@ public class LiquidManager {
         
         // Check if it's time to update liquids yet
         if(now > lastLiquidUpdate + LIQUID_UPDATE_INTERVAL) {
-            updateLiquids();
+            if(zone != null && zone.getRules().isOcean()) {
+                liquidIndices.clear();
+            } else {
+                updateLiquids();
+            }
             lastLiquidUpdate = now;
         }
     }
@@ -164,6 +168,8 @@ public class LiquidManager {
     }
     
     public void indexLiquidBlock(int index) {
-        liquidIndices.add(index);
+        if(zone == null || !zone.getRules().isOcean()) {
+            liquidIndices.add(index);
+        }
     }
 }
