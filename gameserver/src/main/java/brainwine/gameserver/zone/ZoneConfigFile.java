@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import brainwine.gameserver.minigames.WorldMinigame;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -68,6 +69,9 @@ public class ZoneConfigFile {
     @JsonSetter(nulls = Nulls.SKIP)
     private ZoneRules rules = null;
 
+    @JsonSetter(nulls = Nulls.SKIP)
+    private WorldMinigame minigame = null;
+
     @JsonCreator
     private ZoneConfigFile(@JsonProperty(value = "name", required = true) String name,
             @JsonProperty(value = "width", required = true) int width,
@@ -94,10 +98,15 @@ public class ZoneConfigFile {
         this.actionHistory = zone.getActionHistory();
         this.creationDate = zone.getCreationDate();
         this.rules = zone.getRules();
+        this.minigame = zone.getMinigame();
     }
 
     public String getName() {
         return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
     
     public Biome getBiome() {
@@ -163,4 +172,6 @@ public class ZoneConfigFile {
     public ZoneRules getRules() {
         return rules;
     }
+
+    public WorldMinigame getMinigame() { return minigame; }
 }

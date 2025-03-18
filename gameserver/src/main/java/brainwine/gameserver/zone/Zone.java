@@ -20,6 +20,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import brainwine.gameserver.minigames.WorldMinigame;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
@@ -90,6 +91,7 @@ public class Zone {
     private String entryCode;
     private String owner;
     private ZoneRules rules = new ZoneRules();
+    private WorldMinigame minigame = null;
     private final ChunkManager chunkManager;
     private final SteamManager steamManager;
     private final GrowthManager growthManager;
@@ -113,6 +115,7 @@ public class Zone {
     private boolean frozen = false;
     private double xpMultiplier = 1.0;
     private boolean entityShouldDrop = true;
+    private boolean isMinigameInitialized = false;
 
     protected Zone(String documentId, ZoneConfigFile config, ZoneDataFile data) {
         this(documentId, config.getName(), config.getBiome(), config.getWidth(), config.getHeight());
@@ -139,6 +142,7 @@ public class Zone {
         pvp = config.isPvp();
         creationDate = config.getCreationDate();
         setRules(config.getRules());
+        minigame = config.getMinigame();
     }
     
     public Zone(String documentId, String name, Biome biome, int width, int height) {
@@ -267,6 +271,11 @@ public class Zone {
      */
     protected void simulate(float deltaTime) {
         machineManager.updatePurifier(deltaTime);
+        if(minigame != null) {
+            if(!isMinigameInitialized) minigame.initialize(this);
+            minigame.tick(deltaTime);
+            isMinigameInitialized = true;
+        }
     }
     
     /**
@@ -1861,6 +1870,10 @@ public class Zone {
         } else {
             this.rules = rules;
         }
+    }
+
+    public WorldMinigame getMinigame() {
+        return minigame;
     }
 
     protected void setEntryCode(String entryCode) {

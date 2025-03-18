@@ -628,6 +628,7 @@ public class Player extends Entity implements CommandExecutor {
 
         if(zone != null) {
             zone.removeEntity(this);
+            if(zone.getMinigame() != null) zone.getMinigame().leaveZone(this);
         }
         
         // Are we switching zones? Then set the new zone.

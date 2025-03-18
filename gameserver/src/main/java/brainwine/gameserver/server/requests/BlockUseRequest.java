@@ -37,6 +37,8 @@ public class BlockUseRequest extends PlayerRequest {
         if(!player.isGodMode() && !player.inRange(x, y, player.getMiningRange())) {
             return;
         }
+
+
         
         // Transform usage data if necessary
         if(data != null && data.length == 1 && data[0] instanceof Map) {
@@ -47,6 +49,9 @@ public class BlockUseRequest extends PlayerRequest {
         MetaBlock metaBlock = zone.getMetaBlock(x, y);
         Item item = block.getItem(layer);
         int mod = block.getMod(layer);
+
+        // Interact with world minigame
+        if(zone.getMinigame() != null && zone.getMinigame().useBlock(player, x, y, metaBlock)) return;
         
         // Check if block is owned by another player
         if(metaBlock != null && item.hasUse(ItemUseType.PROTECTED)) {

@@ -4,6 +4,7 @@ import static brainwine.gameserver.player.NotificationType.SYSTEM;
 import static brainwine.shared.LogMarkers.SERVER_MARKER;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.time.OffsetDateTime;
@@ -17,7 +18,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -253,6 +256,51 @@ public class ZoneManager {
         }
     }
 
+    public Zone cloneZone(Zone zone) {
+        zone.freeze();
+        String cloneId = generateDocumentId((int) (Integer.MAX_VALUE * Math.random()));
+        File folder = new File(dataDir, zone.getDocumentId());
+        File cloneFolder = new File(dataDir, cloneId);
+        try {
+            if (cloneFolder.exists()) {
+                logger.error("Zone UUID already exists!");
+                zone.thaw();
+                return null;
+            }
+            if (folder.isDirectory()) {
+                cloneFolder.mkdir();
+                for (File file : folder.listFiles()) {
+                    File cloneFile = new File(cloneFolder, file.getName());
+                    FileInputStream fis = new FileInputStream(file);
+                    Files.copy(fis, cloneFile.toPath());
+                    fis.close();
+                }
+                File cloneConfigFile = new File(cloneFolder, "config.json");
+                ZoneConfigFile cloneConfig = JsonHelper.readValue(cloneConfigFile, ZoneConfigFile.class);
+                cloneConfig.setName(cloneConfig.getName() + " Copy");
+                JsonHelper.writeValue(cloneConfigFile, cloneConfig);
+                loadZone(cloneFolder);
+                zone.thaw();
+                return getZone(cloneId);
+            } else {
+                logger.error("Zone to clone with UUID doesn't exist!");
+                zone.thaw();
+                return null;
+            }
+        } catch(IOException e) {
+            logger.error(e);
+            try {
+                if(cloneFolder.exists()) {
+                    Files.delete(cloneFolder.toPath());
+                }
+            } catch(IOException e1) {
+                logger.error("Couldn't delete the clone either. Please check while the server is offline. Broken clone id is {}.", cloneId);
+            }
+            zone.thaw();
+            return null;
+        }
+    }
+
     public void deleteZone(Zone zone) {
         zone.freeze("This zone is being deleted.");
 
@@ -284,7 +332,14 @@ public class ZoneManager {
         zonesByName.put(name.toLowerCase(), zone);
         return true;
     }
-    
+
+    private static String generateDocumentId(int seed) {
+        Random random = new Random();
+        long mostSigBits = (((long)seed) << 32) | (random.nextInt() & 0xFFFFFFFFL);
+        long leastSigBits = random.nextLong();
+        return new UUID(mostSigBits, leastSigBits).toString();
+    }
+
     /**
      * Generates a new entry code for the specified zone and re-indexes it.
      *
