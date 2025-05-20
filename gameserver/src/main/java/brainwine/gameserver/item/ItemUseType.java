@@ -63,6 +63,7 @@ public enum ItemUseType {
     SPAWN(new SpawnInteraction()),
     SPAWN_TELEPORT(new SpawnTeleportInteraction()),
     STEAM_SOURCE,
+    SUPPRESS_BOMB,
     SWITCH(new SwitchInteraction()),
     SWITCHED,
     TARGET_TELEPORT(new TargetTeleportInteraction()),
@@ -89,7 +90,7 @@ public enum ItemUseType {
     
     @JsonCreator
     public static ItemUseType fromId(String id) {
-        String formatted = id.toUpperCase().replace(" ", "_");
+        String formatted = id.toUpperCase().replace(" ", "_").replace("-", "_");
         
         for(ItemUseType value : values()) {
             if(value.toString().equals(formatted)) {

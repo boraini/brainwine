@@ -315,6 +315,20 @@ public class BlockPlaceRequest extends PlayerRequest {
         String type = item.getTimerType();
         int value = item.getTimerValue();
         Runnable task = null;
+
+        // Bomb suppression
+        if(type != null && type.startsWith("bomb")) {
+            for(MetaBlock suppressor : zone.getMetaBlocksWithUse(ItemUseType.SUPPRESS_BOMB)) {
+                if(
+                        // The suppressor is close enough.
+                        MathUtils.distance(suppressor.getX(), suppressor.getY(), x, y) <= suppressor.getItem().getPower()
+                        // The suppressor is powered.
+                        && zone.getBlock(suppressor.getX(), suppressor.getY()).getFrontMod() > 0
+                ) {
+                    return;
+                }
+            }
+        }
         
         switch(type) {
         case "front mod":
