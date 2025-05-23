@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import brainwine.gameserver.command.CommandAccessLevel;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -224,6 +225,12 @@ public class Item {
     
     @JsonProperty("spawn_entity")
     private WeightedMap<String> entitySpawns = new WeightedMap<>();
+
+    @JsonProperty("spawn_entity_quantity")
+    private Pair<Integer, Integer> entitySpawnQuantity = new Pair<Integer, Integer>(1, 1);
+
+    @JsonProperty("spawn_entity_for")
+    private CommandAccessLevel entitySpawnAccessLevel = CommandAccessLevel.EVERYONE;
     
     @JsonCreator
     private Item(@JsonProperty(value = "id", required = true) String id,
@@ -664,5 +671,13 @@ public class Item {
     
     public WeightedMap<String> getEntitySpawns() {
         return entitySpawns;
+    }
+
+    public Pair<Integer, Integer> getEntitySpawnQuantity() {
+        return entitySpawnQuantity;
+    }
+
+    public CommandAccessLevel getEntitySpawnAccessLevel() {
+        return entitySpawnAccessLevel;
     }
 }
