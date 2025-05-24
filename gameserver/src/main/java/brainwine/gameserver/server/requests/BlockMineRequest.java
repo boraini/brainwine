@@ -192,14 +192,24 @@ public class BlockMineRequest extends PlayerRequest {
         }
         
         // Check for entity spawns
-        if(item.hasEntitySpawns() && block.getMod(layer) == 0 && !item.hasTimer() && !item.hasUse(ItemUseType.SPAWN)) {
-            zone.spawnEntity(item.getEntitySpawns().next(), x, y);
+        boolean entitySpawns = item.hasEntitySpawns() && block.getMod(layer) == 0 && !item.hasTimer() && !item.hasUse(ItemUseType.SPAWN);
+        if(entitySpawns && item.getEntitySpawnAccessLevel().isPrivileged(player, block)) {
+            int left = item.getEntitySpawnQuantity().getFirst();
+            int right = item.getEntitySpawnQuantity().getLast() + 1;
+            int quantity = (int)(left + Math.random() * (right - left));
+            for(int i = 0; i < quantity; i++) {
+                zone.spawnEntity(item.getEntitySpawns().next(), x, y);
+            }
         }
         
         // Determine inventory item
         Item inventoryItem;
-        
-        if(item.getMod() == ModType.DECAY && block.getMod(layer) > 0) {
+
+        if(entitySpawns && !item.getEntitySpawnAccessLevel().isPrivileged(player, block)) {
+            inventoryItem = item;
+            // Non-standard behavior
+            player.sendMessage(new InventoryMessage(player.getInventory().getClientConfig(item.getInventoryItem())));
+        } else if(item.getMod() == ModType.DECAY && block.getMod(layer) > 0) {
             inventoryItem = item.getDecayInventoryItem();
         } else if(item.hasModInventoryItem()) {
             inventoryItem = item.getModInventoryItem(block.getMod(layer));

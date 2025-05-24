@@ -527,7 +527,9 @@ public class Zone {
                 updateBlock(x, y, Layer.BACK, 0);
             }
         }
-        
+
+        List<Vector2i> furtherProcessingPositions = new ArrayList<>();
+        List<Item> furtherProcessingItems = new ArrayList<>();
         // Destroy blocks within range if the explosion is destructive
         if(destructive) {
             int rayCount = (int)Math.ceil(radius * 8);
@@ -565,8 +567,9 @@ public class Zone {
                     if(!areCoordinatesInBounds(positionX, positionY)) {
                         break;
                     }
-                    
-                    Item frontItem = getBlock(positionX, positionY).getFrontItem();
+
+                    Block block = getBlock(positionX, positionY);
+                    Item frontItem = block.getFrontItem();
                     double distance = MathUtils.distance(x, y, positionX, positionY);
                     double power = radius - distance;
                     
@@ -604,6 +607,11 @@ public class Zone {
                     }
                     
                     affectedBlocks.add(position);
+                    boolean entitySpawns = frontItem.hasEntitySpawns() && block.getFrontMod() == 0 && !frontItem.hasTimer() && !frontItem.hasUse(ItemUseType.SPAWN);
+                    if(entitySpawns) {
+                        furtherProcessingItems.add(frontItem);
+                        furtherProcessingPositions.add(position);
+                    }
                 }
             }
 
@@ -634,6 +642,20 @@ public class Zone {
 
                 if(entity.isDead() && cause != null && cause.isPlayer()) {
                     QuestEvents.handleExplode((Player) cause, entity);
+                }
+            }
+        }
+
+        for(int i = 0; i < furtherProcessingPositions.size(); i++) {
+            Item frontItem = furtherProcessingItems.get(i);
+            Vector2i position = furtherProcessingPositions.get(i);
+
+            if(frontItem.hasEntitySpawns()) {
+                int left = frontItem.getEntitySpawnQuantity().getFirst();
+                int right = frontItem.getEntitySpawnQuantity().getLast() + 1;
+                int quantity = (int)(left + Math.random() * (right - left));
+                for(int j = 0; j < quantity; j++) {
+                    spawnEntity(frontItem.getEntitySpawns().next(), position.getX(), position.getY());
                 }
             }
         }
