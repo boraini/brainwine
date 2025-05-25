@@ -21,6 +21,8 @@ import java.util.stream.Collectors;
 public abstract class WorldMachineConfiguration {
     @JsonIgnore
     protected Zone zone;
+    @JsonIgnore
+    private long activation = System.currentTimeMillis() + 1000;
     private int machineX;
     private int machineY;
 
@@ -30,6 +32,7 @@ public abstract class WorldMachineConfiguration {
     protected abstract Object getValue(String key);
 
     protected boolean isEnabled(String itemName) {
+        if(activation > System.currentTimeMillis()) return false;
         Block block = zone.getBlock(machineX, machineY);
         if(block == null || !block.getFrontItem().getId().startsWith(itemName)) return false;
         return block.getFrontMod() > 0;

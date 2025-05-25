@@ -126,8 +126,6 @@ public class Zone {
     private boolean frozen = false;
     private double xpMultiplier = 1.0;
     private boolean entityShouldDrop = true;
-    private boolean worldMachinesTicking = false;
-    private long worldMachinesActivation = System.currentTimeMillis() + 1000;
 
     protected Zone(String documentId, ZoneConfigFile config, ZoneDataFile data) {
         this(documentId, config.getName(), config.getBiome(), config.getWidth(), config.getHeight());
@@ -260,13 +258,7 @@ public class Zone {
         }
 
         // Update world machines
-        if(worldMachinesTicking) {
-            holographConfiguration.tick(deltaTime);
-        } else {
-            if(worldMachinesActivation < System.currentTimeMillis()) {
-                worldMachinesTicking = true;
-            }
-        }
+        holographConfiguration.tick(deltaTime);
         
         // Process block timers
         if(!blockTimers.isEmpty()) {
