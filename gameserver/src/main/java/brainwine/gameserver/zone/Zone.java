@@ -1359,6 +1359,15 @@ public class Zone {
         
         return null;
     }
+
+    public Block getBlockSafe(int x, int y) {
+        if(areCoordinatesInBounds(x, y)) {
+            Chunk chunk = getChunk(x, y);
+            return chunk != null ? chunk.getBlock(x, y) : null;
+        }
+
+        return null;
+    }
     
     public void removeMetaBlock(int x, int y) {
         setMetaBlock(x, y, 0);
