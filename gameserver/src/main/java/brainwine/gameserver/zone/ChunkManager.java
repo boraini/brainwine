@@ -199,7 +199,7 @@ public class ChunkManager {
             chunk.setSaveTime(saveTime);
             return chunk;
         } catch(Exception e) {
-            logger.error(SERVER_MARKER, "Could not load chunk {} of zone {}", index, zone.getDocumentId(), e);
+            // logger.error(SERVER_MARKER, "Could not load chunk {} of zone {}", index, zone.getDocumentId(), e);
         }
         
         return null;

@@ -32,7 +32,7 @@ public abstract class WorldMachineConfiguration {
     protected abstract Object getValue(String key);
 
     protected boolean isEnabled(String itemName) {
-        if(activation > System.currentTimeMillis()) return false;
+        if((machineX == 0 && machineY == 0) || activation > System.currentTimeMillis()) return false;
         Block block = zone.getBlockSafe(machineX, machineY);
         if(block == null || !block.getFrontItem().getId().startsWith(itemName)) return false;
         return block.getFrontMod() > 0;
