@@ -13,12 +13,7 @@ public class HuntingAchievement extends Achievement {
     
     @JsonProperty(value = "group", required = true)
     protected EntityGroup group;
-    
-    @JsonCreator
-    public HuntingAchievement(@JacksonInject("title") String title) {
-        super(title);
-    }
-    
+
     @Override
     public int getProgress(Player player) {
         return player.getStatistics().getKills(group);

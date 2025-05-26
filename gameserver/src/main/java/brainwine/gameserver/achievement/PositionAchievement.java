@@ -20,12 +20,7 @@ public class PositionAchievement extends Achievement {
     
     @JsonProperty("right")
     protected int right = -1;
-    
-    @JsonCreator
-    public PositionAchievement(@JacksonInject("title") String title) {
-        super(title);
-    }
-    
+
     @Override
     public boolean isCompleted(Player player) {
         Zone zone = player.getZone();

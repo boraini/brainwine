@@ -18,12 +18,7 @@ public class DiscoveryAchievement extends Achievement {
     
     @JsonProperty("group")
     protected ItemGroup group;
-    
-    @JsonCreator
-    public DiscoveryAchievement(@JacksonInject("title") String title) {
-        super(title);
-    }
-    
+
     @Override
     public int getProgress(Player player) {
         PlayerStatistics statistics = player.getStatistics();

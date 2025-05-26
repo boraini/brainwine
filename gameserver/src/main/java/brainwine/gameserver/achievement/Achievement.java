@@ -1,7 +1,6 @@
 package brainwine.gameserver.achievement;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonCreator.Mode;
+import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -40,8 +39,8 @@ import brainwine.gameserver.util.MathUtils;
 @JsonSerialize(using = AchievementSerializer.class)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class Achievement {
-    
-    protected final String title;
+    @JacksonInject("title")
+    protected String title;
     
     @JsonProperty("xp")
     protected int experience;
@@ -57,12 +56,7 @@ public abstract class Achievement {
     
     @JsonProperty("previous")
     protected LazyAchievementGetter previous;
-    
-    public Achievement(String title) {
-        this.title = title;
-    }
-    
-    @JsonCreator(mode = Mode.DELEGATING)
+
     private static Achievement fromTitle(String title) {
         Achievement achievement = AchievementManager.getAchievement(title);
         
@@ -103,8 +97,7 @@ public abstract class Achievement {
         
         return quantity;
     }
-    
-    @JsonValue
+
     public String getTitle() {
         return title;
     }
@@ -127,5 +120,10 @@ public abstract class Achievement {
     
     public Achievement getPrevious() {
         return hasPrevious() ? previous.get() : null;
+    }
+
+    @JsonValue
+    public String getValue() {
+        return getTitle();
     }
 }

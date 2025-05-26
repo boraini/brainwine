@@ -12,7 +12,9 @@ public enum JobType {
     CRAFTER(new Crafter()),
     QUESTER(new Quester()),
     FAMILY_NAME(new FamilyName()),
-    ANDROID_DIALOG(new AndroidDialog());
+    ANDROID_DIALOG(new AndroidDialog()),
+    CHATGPT(new ChatGPT()),
+    ;
 
     private Job job;
 
@@ -33,6 +35,8 @@ public enum JobType {
                 return FAMILY_NAME;
             case "android_dialog":
                 return ANDROID_DIALOG;
+            case "chatgpt":
+                return CHATGPT;
             default:
                 return null;
         }

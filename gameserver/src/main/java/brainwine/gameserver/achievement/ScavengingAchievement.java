@@ -14,11 +14,6 @@ public class ScavengingAchievement extends Achievement {
     
     @JsonProperty("items")
     protected List<Item> items;
-    
-    @JsonCreator
-    public ScavengingAchievement(@JacksonInject("title") String title) {
-        super(title);
-    }
 
     @Override
     public int getProgress(Player player) {

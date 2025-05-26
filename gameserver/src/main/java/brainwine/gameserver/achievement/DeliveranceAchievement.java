@@ -6,11 +6,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import brainwine.gameserver.player.Player;
 
 public class DeliveranceAchievement extends Achievement {
-    
-    @JsonCreator
-    public DeliveranceAchievement(@JacksonInject("title") String title) {
-        super(title);
-    }
 
     @Override
     public int getProgress(Player player) {

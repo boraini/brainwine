@@ -1,6 +1,7 @@
 package brainwine.gameserver.player;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import brainwine.gameserver.quest.Quest;
 import brainwine.gameserver.util.ValueWithExpiry;
@@ -39,7 +40,7 @@ public class PlayerConfigFile {
     private Set<String> followees = new HashSet<>();
     private Set<String> followers = new HashSet<>();
     private Set<String> lootCodes = new HashSet<>();
-    private Set<Achievement> achievements = new HashSet<>();
+    private Set<String> achievements = new HashSet<>();
     private Map<String, Integer> orders = new HashMap<>();
     private Map<String, Float> ignoredHints = new HashMap<>();
     private Map<Skill, Integer> skills = new HashMap<>();
@@ -72,7 +73,7 @@ public class PlayerConfigFile {
         this.followees = player.getFollowees();
         this.followers = player.getFollowers();
         this.lootCodes = player.getLootCodes();
-        this.achievements = player.getAchievements();
+        this.achievements = player.getAchievements().stream().map(Achievement::getTitle).collect(Collectors.toSet());
         this.orders = player.getOrders();
         this.displayedOrder = player.getDisplayedOrder();
         this.ignoredHints = player.getIgnoredHints();
@@ -189,7 +190,7 @@ public class PlayerConfigFile {
     }
     
     @JsonSetter(nulls = Nulls.SKIP, contentNulls = Nulls.SKIP)
-    public Set<Achievement> getAchievements() {
+    public Set<String> getAchievements() {
         return achievements;
     }
 

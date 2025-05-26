@@ -200,7 +200,7 @@ public class Player extends Entity implements CommandExecutor {
         this.followees = config.getFollowees();
         this.followers = config.getFollowers();
         this.lootCodes = config.getLootCodes();
-        this.achievements = config.getAchievements();
+        this.achievements = config.getAchievements().stream().map(AchievementManager::getAchievement).filter(Objects::nonNull).collect(Collectors.toSet());
         this.orders = config.getOrders();
         this.ignoredHints = config.getIgnoredHints();
         this.skills = config.getSkills();

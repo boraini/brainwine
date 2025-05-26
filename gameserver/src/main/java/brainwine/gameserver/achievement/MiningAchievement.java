@@ -13,12 +13,7 @@ public class MiningAchievement extends Achievement {
     
     @JsonProperty(value = "group", required = true)
     protected ItemGroup group;
-    
-    @JsonCreator
-    public MiningAchievement(@JacksonInject("title") String title) {
-        super(title);
-    }
-    
+
     @Override
     public int getProgress(Player player) {
         return player.getStatistics().getItemsMined().entrySet().stream()

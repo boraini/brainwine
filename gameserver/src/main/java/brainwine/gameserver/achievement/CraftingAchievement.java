@@ -18,11 +18,6 @@ public class CraftingAchievement extends Achievement {
     @JsonProperty("workshopped")
     protected boolean workshopped;
     
-    @JsonCreator
-    public CraftingAchievement(@JacksonInject("title") String title) {
-        super(title);
-    }
-    
     @Override
     public int getProgress(Player player) {
         PlayerStatistics statistics = player.getStatistics();
