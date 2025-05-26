@@ -231,6 +231,9 @@ public class Item {
 
     @JsonProperty("spawn_entity_for")
     private CommandAccessLevel entitySpawnAccessLevel = CommandAccessLevel.EVERYONE;
+
+    @JsonProperty("shillings_price")
+    private int shillingsPrice;
     
     @JsonCreator
     private Item(@JsonProperty(value = "id", required = true) String id,
@@ -679,5 +682,9 @@ public class Item {
 
     public CommandAccessLevel getEntitySpawnAccessLevel() {
         return entitySpawnAccessLevel;
+    }
+
+    public int getShillingsPrice() {
+        return shillingsPrice;
     }
 }

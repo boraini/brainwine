@@ -548,25 +548,30 @@ public class TradeSession {
     /**
      * Helper class for creating trading-related dialogs.
      */
-    private static class Dialogs {
+    public static class Dialogs {
         
         public static final List<String> ITEM_QUANTITY_OPTIONS =
                 Arrays.asList("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "15", "20", "25", "30", "40", "50", "75", "100", "200", "500", "1000", "5000", "25000", "100000");
-        
-        public static Dialog createQuantitySelectorDialog(Player offerer, Player target, Item item) {
+
+        public static DialogSection createQuantitySelector(Player offerer, Item item) {
             // Get quantity options that are available to the player
             List<String> quantityOptions = ITEM_QUANTITY_OPTIONS.stream()
                     .filter(quantity -> offerer.getInventory().hasItem(item, Integer.parseInt(quantity)))
                     .collect(Collectors.toList());
-            
+
+            return new DialogSection()
+                    .setInput(new DialogSelectInput()
+                            .setOptions(quantityOptions)
+                            .setKey("quantity"));
+        }
+
+        public static Dialog createQuantitySelectorDialog(Player offerer, Player target, Item item) {
             return new Dialog()
                 .addSection(new DialogSection()
                     .setTitle(String.format("Trade with %s", target.getName())))
-                .addSection(new DialogSection()
-                    .setText(String.format("Quantity of %s to trade:", item.getTitle()))
-                    .setInput(new DialogSelectInput()
-                        .setOptions(quantityOptions)
-                        .setKey("quantity")));
+                .addSection(createQuantitySelector(offerer, item)
+                        .setText(String.format("Quantity of %s to trade:", item.getTitle()))
+                );
         }
         
         public static Dialog createInitiatorOfferStatusDialog(Player recipient, Map<Item, Integer> offers) {

@@ -39,7 +39,7 @@ public class Crafter extends DialoguerJob {
         return true;
     }
 
-    public boolean craftDialog(Player player, Item item) {
+    public void acceptItem(Player player, Item item) {
         // I can't craft this
         if(item.getCraft() == null || "android".equals(item.getCraft().getCrafter())) {
             player.showDialog(DialogHelper.messageDialog(MapHelper.getString(GameConfiguration.getBaseConfig(), "dialogs.android.cannot_craft")).setType(DialogType.ANDROID));
@@ -48,7 +48,7 @@ public class Crafter extends DialoguerJob {
         // Item is not craftable by an android
         if (item.getCraft() == null) {
             player.showDialog(DialogHelper.messageDialog("Sorry, that item doesn't have any crafting options.").setType(DialogType.ANDROID));
-            return false;
+            return;
         }
 
         Dialog dialog = new Dialog().setType(DialogType.ANDROID);
@@ -68,7 +68,7 @@ public class Crafter extends DialoguerJob {
 
         player.showDialog(dialog, ans -> continueCraftDialog(player, item, ans));
 
-        return true;
+        return;
     }
 
     public void continueCraftDialog(Player player, Item item, Object[] ans) {
