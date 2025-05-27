@@ -11,6 +11,7 @@ import brainwine.gameserver.entity.npc.job.DialoguerJob;
 import brainwine.gameserver.item.Item;
 import brainwine.gameserver.item.ItemRegistry;
 import brainwine.gameserver.player.Player;
+import brainwine.gameserver.player.Skill;
 import brainwine.gameserver.player.TradeSession;
 import brainwine.gameserver.util.MapHelper;
 
@@ -68,7 +69,17 @@ public class Trader extends DialoguerJob {
         String itemTitle = getItemTitle(item);
         String itemTitlePlural = itemTitle + (itemTitle.toLowerCase().endsWith("s") ? "es" : "s");
         int playerHas = player.getInventory().getQuantity(item);
+        int barterSkill = player.getSkillLevel(Skill.BARTER);
         int price = item.getShillingsPrice();
+
+        if(barterSkill < item.getBarterLevel()) {
+            player.showDialog(DialogHelper
+                    .messageDialog("Low Barter Skill", "Sorry, but I don't trust in the quality of your " + (playerHas == 1 ? itemTitle : itemTitlePlural) + ". Improve on your barter skills and come back.")
+                    .addSection(new DialogSection().setText("You need at least barter level " + item.getBarterLevel() + "."))
+                    .setType(DialogType.ANDROID)
+            );
+            return;
+        }
         String header;
         if(price > 0) {
             header = "I buy " + itemTitlePlural + " for " + price + " shilling" + (price == 1 ? "" : "s") + " each.";

@@ -6,6 +6,7 @@ public enum Skill {
     
     AGILITY,
     AUTOMATA,
+    BARTER,
     BUILDING,
     COMBAT,
     ENGINEERING,
