@@ -57,7 +57,7 @@ public class Trader extends DialoguerJob {
     private int calculatePayback(Map<Item, Integer> offer) {
         int payback = 0;
         for(Map.Entry<Item, Integer> entry : offer.entrySet()) {
-            payback += entry.getValue() * entry.getKey().getShillingsPrice();
+            payback += Math.max(0, entry.getValue() * entry.getKey().getShillingsPrice());
         }
         return payback;
     }
@@ -84,6 +84,8 @@ public class Trader extends DialoguerJob {
         String header;
         if(price > 0) {
             header = "I buy " + itemTitlePlural + " for " + price + " shilling" + (price == 1 ? "" : "s") + " each.";
+        } else if(price < -1) {
+            header = "Sorry, there's nothing I can do with this item right now.";
         } else if(price < 0) {
             header = "Sorry but I don't know enough about this item to make an offer on it.";
         } else {
