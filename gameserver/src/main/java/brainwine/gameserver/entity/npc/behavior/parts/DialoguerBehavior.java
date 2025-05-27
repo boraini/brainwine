@@ -89,7 +89,7 @@ public class DialoguerBehavior extends Behavior {
                             loadMemory(player, item);
                         } else {
                             if(entity.getJob() != null) {
-                                entity.getJob().get().acceptItem(player, item);
+                                entity.getJob().get().acceptItem(entity, player, item);
                             }
                         }
 

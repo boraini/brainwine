@@ -39,7 +39,7 @@ public class Crafter extends DialoguerJob {
         return true;
     }
 
-    public void acceptItem(Player player, Item item) {
+    public void acceptItem(Npc me, Player player, Item item) {
         // I can't craft this
         if(item.getCraft() == null || "android".equals(item.getCraft().getCrafter())) {
             player.showDialog(DialogHelper.messageDialog(MapHelper.getString(GameConfiguration.getBaseConfig(), "dialogs.android.cannot_craft")).setType(DialogType.ANDROID));

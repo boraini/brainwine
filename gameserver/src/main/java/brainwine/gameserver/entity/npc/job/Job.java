@@ -8,5 +8,5 @@ public abstract class Job {
 
     public abstract boolean dialogue(Npc me, Player player);
 
-    public void acceptItem(Player player, Item item) {}
+    public void acceptItem(Npc me, Player player, Item item) {}
 }

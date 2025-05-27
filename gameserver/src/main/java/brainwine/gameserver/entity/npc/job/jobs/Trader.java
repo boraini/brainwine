@@ -63,7 +63,7 @@ public class Trader extends DialoguerJob {
     }
 
     @Override
-    public void acceptItem(Player player, Item item) {
+    public void acceptItem(Npc me, Player player, Item item) {
         final Dialog dialog = new Dialog().setType(DialogType.ANDROID);
 
         String itemTitle = getItemTitle(item);
@@ -80,14 +80,24 @@ public class Trader extends DialoguerJob {
             );
             return;
         }
+
         String header;
         if(price > 0) {
             header = "I buy " + itemTitlePlural + " for " + price + " shilling" + (price == 1 ? "" : "s") + " each.";
+        } else if(price < 0) {
+            header = "Sorry but I don't know enough about this item to make an offer on it.";
         } else {
             header = "I'm not interested in your " + (playerHas == 1 ? itemTitle : itemTitlePlural) + " right now, but I can take them so you free up some space.";
         }
 
         dialog.addSection(new DialogSection().setText(header));
+
+        // For -2 and lower it doesn't allow trading at all.
+        if(price < -1) {
+            player.showDialog(dialog);
+            return;
+        }
+
         dialog.addSection(TradeSession.Dialogs.createQuantitySelector(player, item).setText(price > 0 ? "How many are you selling?" : "How many are you giving?"));
 
         player.showDialog(dialog, ans -> {
@@ -105,12 +115,12 @@ public class Trader extends DialoguerJob {
                 Map<Item, Integer> offer = offers.computeIfAbsent(player, p -> new HashMap<>());
                 offer.put(item, quantity);
                 // I tried to make implementing multi item trading easier later on.
-                completeOrder(player);
+                completeOrder(me, player);
             }
         });
     }
 
-    public void completeOrder(Player player) {
+    public void completeOrder(Npc me, Player player) {
         Map<Item, Integer> offer = offers.computeIfAbsent(player, p -> new HashMap<>());
         validateOffer(player, offer);
         Item shillings = ItemRegistry.getItem("accessories/shillings");
@@ -143,6 +153,7 @@ public class Trader extends DialoguerJob {
                         player.getInventory().removeItem(entry.getKey(), entry.getValue(), true);
                     }
                     player.getInventory().addItem(shillings, finalPayback, true);
+                    me.emote("Good trade.");
                 }
             });
         }

@@ -233,7 +233,7 @@ public class Item {
     private CommandAccessLevel entitySpawnAccessLevel = CommandAccessLevel.EVERYONE;
 
     @JsonProperty("shillings_price")
-    private int shillingsPrice;
+    private int shillingsPrice = -1;
 
     @JsonProperty("barter_level")
     private int barterLevel = 1;
