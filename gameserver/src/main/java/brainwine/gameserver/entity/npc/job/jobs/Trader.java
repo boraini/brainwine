@@ -64,8 +64,6 @@ public class Trader extends DialoguerJob {
 
     @Override
     public void acceptItem(Npc me, Player player, Item item) {
-        final Dialog dialog = new Dialog().setType(DialogType.ANDROID);
-
         String itemTitle = getItemTitle(item);
         String itemTitlePlural = itemTitle + (itemTitle.toLowerCase().endsWith("s") ? "es" : "s");
         int playerHas = player.getInventory().getQuantity(item);
@@ -79,6 +77,11 @@ public class Trader extends DialoguerJob {
                     .setType(DialogType.ANDROID)
             );
             return;
+        }
+
+        final Dialog dialog = new Dialog().setType(DialogType.ANDROID);
+        if(item.getBarterMessage() != null) {
+            dialog.addSection(new DialogSection().setText(item.getBarterMessage()));
         }
 
         String header;
@@ -138,7 +141,7 @@ public class Trader extends DialoguerJob {
                 itemsSection.addItem(new DialogListItem().setItem(item.getCode()).setText(getItemTitle(item) + " x " + quantity));
             }
 
-            Dialog dialog = new Dialog().setType(DialogType.ANDROID).setTitle("Your Offer").setActions("yesno");
+            Dialog dialog = new Dialog().setType(DialogType.ANDROID).setTitle("My Offer").setActions("yesno");
             if(payback > 0) {
                 dialog.addSection(itemsSection.setTitle("For your"));
                 dialog.addSection(new DialogSection().setTitle("I pay").addItem(new DialogListItem().setItem(shillings.getCode()).setText(payback + (payback == 1 ? " Shilling" : " Shillings"))));

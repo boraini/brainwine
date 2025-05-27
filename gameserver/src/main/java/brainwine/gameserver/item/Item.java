@@ -237,6 +237,9 @@ public class Item {
 
     @JsonProperty("barter_level")
     private int barterLevel = 1;
+
+    @JsonProperty("barter_message")
+    private String barterMessage = null;
     
     @JsonCreator
     private Item(@JsonProperty(value = "id", required = true) String id,
@@ -693,5 +696,9 @@ public class Item {
 
     public int getBarterLevel() {
         return barterLevel;
+    }
+
+    public String getBarterMessage() {
+        return barterMessage;
     }
 }
