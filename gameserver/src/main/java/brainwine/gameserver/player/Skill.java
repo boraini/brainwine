@@ -14,12 +14,11 @@ public enum Skill {
     LUCK,
     MINING,
     PERCEPTION,
-    SCIENCE,
     STAMINA,
     SURVIVAL;
     
     public static Skill[] getAdvancedSkills() {
-        return new Skill[] {AUTOMATA, COMBAT, ENGINEERING, HORTICULTURE, LUCK, SCIENCE, SURVIVAL};
+        return new Skill[] {AUTOMATA, COMBAT, ENGINEERING, HORTICULTURE, LUCK, BARTER, SURVIVAL};
     }
     
     public static Skill fromId(String id) {

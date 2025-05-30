@@ -68,15 +68,6 @@ public class PlayerManager {
         
         try {
             PlayerConfigFile configFile = JsonHelper.readValue(file, PlayerConfigFile.class);
-
-            // TODO: Remove this after migration
-            int scienceSkill = configFile.getSkills().getOrDefault(Skill.SCIENCE, 1);
-            if(scienceSkill != 1) {
-                logger.warn(SERVER_MARKER, "Migrating " + configFile.getName() + "'s science skill as barter skill.");
-                int barterSkill = configFile.getSkills().getOrDefault(Skill.BARTER, 1);
-                configFile.getSkills().put(Skill.BARTER, Math.max(1, barterSkill + scienceSkill - 1));
-                configFile.getSkills().remove(Skill.SCIENCE);
-            }
             Player player = new Player(id, configFile);
             String name = player.getName();
             
