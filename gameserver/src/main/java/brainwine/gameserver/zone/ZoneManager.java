@@ -21,8 +21,10 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import brainwine.gameserver.Fake;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.util.MathUtils;
+import brainwine.gameserver.util.PickRandom;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.msgpack.jackson.dataformat.MessagePackFactory;
@@ -161,6 +163,7 @@ public class ZoneManager {
 
     public boolean shouldTrackExplorationOfZone(Zone zone) {
         return zone != null
+                && !zone.isPrivate()
                 && !zone.isOwned()
                 && zone.getBiome() != Biome.HELL && zone.getBiome() != Biome.DEEP;
     }
@@ -335,8 +338,12 @@ public class ZoneManager {
      * @return A public, non-owned, recently-generated temperate world (with players if possible) or {@code null} if no such world exists.
      */
     public Zone findBeginnerZone() {
+        List<String> unexplored = new ArrayList<>(unexploredZones);
+        if(!unexplored.isEmpty()) {
+            return getZone(Fake.pickFromList(unexplored));
+        }
         return zones.values().stream()
-                .filter(zone -> zone.isPublic() && !zone.isOwned() && zone.isUnexplored() && zone.getBiome() == Biome.PLAIN)
+                .filter(zone -> zone.isPublic() && !zone.isOwned() && zone.isUnexplored() && zone.getBiome() == Biome.PLAIN && zone.getActivity() != ZoneActivity.TUTORIAL)
                 .sorted((a, b) -> b.getCreationDate().compareTo(a.getCreationDate()))
                 .limit(50)
                 .sorted((a, b) -> Integer.compare(b.getPlayerCount(), a.getPlayerCount())) 
