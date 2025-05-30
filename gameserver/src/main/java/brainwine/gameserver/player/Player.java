@@ -174,6 +174,7 @@ public class Player extends Entity implements CommandExecutor {
     private long lastQuestTimeMessageAt;
     private Zone previousZone;
     private Zone nextZone;
+    private boolean inTutorial = false;
     private Connection connection;
 
     protected Player(String documentId, PlayerConfigFile config) {
@@ -571,6 +572,9 @@ public class Player extends Entity implements CommandExecutor {
                 }
             }
         }
+
+        // Update tutorial status
+        setInTutorial(zone.isTutorial());
         
         // And finally, enter the zone!
         if(isV3()) {
@@ -1835,6 +1839,14 @@ public class Player extends Entity implements CommandExecutor {
     
     public List<Entity> getTrackedEntities() {
         return trackedEntities;
+    }
+
+    public boolean isInTutorial() {
+        return inTutorial;
+    }
+
+    public void setInTutorial(boolean inTutorial) {
+        this.inTutorial = inTutorial;
     }
     
     public void setConnection(Connection connection) {
