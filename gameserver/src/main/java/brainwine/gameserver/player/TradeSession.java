@@ -553,16 +553,20 @@ public class TradeSession {
         public static final List<String> ITEM_QUANTITY_OPTIONS =
                 Arrays.asList("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "15", "20", "25", "30", "40", "50", "75", "100", "200", "500", "1000", "5000", "25000", "100000");
 
-        public static DialogSection createQuantitySelector(Player offerer, Item item) {
+        public static DialogSection createQuantitySelector(int maxQuantity) {
             // Get quantity options that are available to the player
             List<String> quantityOptions = ITEM_QUANTITY_OPTIONS.stream()
-                    .filter(quantity -> offerer.getInventory().hasItem(item, Integer.parseInt(quantity)))
+                    .filter(quantity -> Integer.parseInt(quantity) <= maxQuantity)
                     .collect(Collectors.toList());
 
             return new DialogSection()
                     .setInput(new DialogSelectInput()
                             .setOptions(quantityOptions)
                             .setKey("quantity"));
+        }
+
+        public static DialogSection createQuantitySelector(Player offerer, Item item) {
+            return createQuantitySelector(offerer.getInventory().getQuantity(item));
         }
 
         public static Dialog createQuantitySelectorDialog(Player offerer, Player target, Item item) {

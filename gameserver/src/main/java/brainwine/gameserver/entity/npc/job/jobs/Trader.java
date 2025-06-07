@@ -1,6 +1,8 @@
 package brainwine.gameserver.entity.npc.job.jobs;
 
 import brainwine.gameserver.GameConfiguration;
+import brainwine.gameserver.androidshop.AndroidShop;
+import brainwine.gameserver.androidshop.AndroidShopSession;
 import brainwine.gameserver.dialog.Dialog;
 import brainwine.gameserver.dialog.DialogHelper;
 import brainwine.gameserver.dialog.DialogListItem;
@@ -15,27 +17,38 @@ import brainwine.gameserver.player.Skill;
 import brainwine.gameserver.player.TradeSession;
 import brainwine.gameserver.util.MapHelper;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Trader extends DialoguerJob {
     Map<Player, Map<Item, Integer>> offers = new HashMap<>();
     @Override
-    public DialogSection getMainDialogSection(Npc me, Player player) {
-        return new DialogSection()
-                .setText(MapHelper.getString(GameConfiguration.getBaseConfig(), "dialogs.android.trade"))
-                .setChoice("trade");
+    public List<DialogSection> getMainDialogSection(Npc me, Player player) {
+        return Arrays.asList(
+                new DialogSection()
+                    .setText(MapHelper.getString(GameConfiguration.getBaseConfig(), "dialogs.android.buy"))
+                    .setChoice("buy"),
+                new DialogSection()
+                    .setText(MapHelper.getString(GameConfiguration.getBaseConfig(), "dialogs.android.sell"))
+                    .setChoice("sell")
+        );
     }
 
     @Override
     public boolean handleDialogAnswers(Npc me, Player player, Object[] ans) {
-        if (ans.length >= 1 && "trade".equals(ans[0])) {
+        if (ans.length >= 1 && "sell".equals(ans[0])) {
             player.showDialog(
                     DialogHelper.messageDialog(
                             me.getName(),
-                            MapHelper.getString(GameConfiguration.getBaseConfig(), "dialogs.android.trade_response")
+                            MapHelper.getString(GameConfiguration.getBaseConfig(), "dialogs.android.sell_response")
                     ).setType(DialogType.ANDROID)
             );
+        }
+
+        if (ans.length >= 1 && "buy".equals(ans[0])) {
+            new AndroidShopSession(AndroidShop.getInstance(), me, player).showNextDialog();
         }
 
         return true;

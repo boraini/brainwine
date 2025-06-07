@@ -1,6 +1,7 @@
 package brainwine.gameserver.entity.npc.job.jobs;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import brainwine.gameserver.GameConfiguration;
@@ -19,10 +20,10 @@ import brainwine.gameserver.util.MapHelper;
 public class Crafter extends DialoguerJob {
 
     @Override
-    public DialogSection getMainDialogSection(Npc me, Player player) {
-        return new DialogSection()
+    public List<DialogSection> getMainDialogSection(Npc me, Player player) {
+        return Arrays.asList(new DialogSection()
             .setText(MapHelper.getString(GameConfiguration.getBaseConfig(), "dialogs.android.craft"))
-            .setChoice("craft");
+            .setChoice("craft"));
     }
 
     @Override
