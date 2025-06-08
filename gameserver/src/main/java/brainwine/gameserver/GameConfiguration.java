@@ -69,9 +69,30 @@ public class GameConfiguration {
                     merge(config, update);
                 }
             });
+
+            if(VersionUtils.isGreaterOrEqualTo(version, "3.0.0")) {
+                processV3Config(config);
+            }
             
             versionedConfigs.put(version, config);
         });
+    }
+
+    private static void processV3Config(Map<String, Object> clientConfig) {
+        // Set item title colors
+        if(clientConfig.get("items") instanceof Map) {
+            Map<String, Object> itemConfigs = (Map<String, Object>) clientConfig.get("items");
+            for(Object val : itemConfigs.values()) {
+                if(val instanceof Map) {
+                    Map<String, Object> config = (Map<String, Object>)val;
+                    Object titleColor = config.getOrDefault("title color", config.get("title_color"));
+                    Object title = config.get("title");
+                    if(title instanceof String && titleColor instanceof String) {
+                        config.put("title", String.format("<color=%s>%s</color>", titleColor, title));
+                    }
+                }
+            }
+        }
     }
     
     private static void configure() {
