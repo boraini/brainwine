@@ -25,6 +25,13 @@ public class ItemProduct extends Product {
         super(name, cost);
         this.items = items;
     }
+
+    public ItemProduct(String name, String description, ProductImage image, int cost, Map<Item, Integer> items) {
+        super(name, cost);
+        this.description = description;
+        this.image = image;
+        this.items = items;
+    }
     
     @Override
     public void purchase(Player player) {

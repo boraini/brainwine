@@ -1,17 +1,22 @@
 package brainwine.gameserver.androidshop;
 
-import brainwine.gameserver.GameConfiguration;
+import brainwine.gameserver.item.Item;
+import brainwine.gameserver.item.ItemRegistry;
 import brainwine.gameserver.resource.ResourceFinder;
+import brainwine.gameserver.shop.ItemProduct;
 import brainwine.gameserver.shop.Product;
+import brainwine.gameserver.shop.ProductImage;
 import brainwine.gameserver.shop.ShopSection;
+import brainwine.gameserver.util.MapHelper;
 import brainwine.shared.JsonHelper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.net.URL;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static brainwine.shared.LogMarkers.SERVER_MARKER;
@@ -28,16 +33,41 @@ public class AndroidShop {
         sections.clear();
         products.clear();
 
-        // Clear out default shop config
-        Map<String, Object> gameConfig = GameConfiguration.getBaseConfig();
-
         try {
             URL url = ResourceFinder.getResourceUrl("android-shop.json");
-            Map<String, Object> data = JsonHelper.readValue(url, new TypeReference<Map<String, Object>>(){});
-            sections.putAll(JsonHelper.readValue(data.getOrDefault("sections", Collections.emptyMap()), new TypeReference<LinkedHashMap<String, ShopSection>>(){}));
-            products.putAll(JsonHelper.readValue(data.getOrDefault("products", Collections.emptyMap()), new TypeReference<LinkedHashMap<String, Product>>(){}));
+            Map<String, Map<String, Map<String, Object>>> data = JsonHelper.readValue(url, new TypeReference<Map<String, Map<String, Map<String, Object>>>>(){});
+            Map<String, Map<String, Object>> sectionData = data.get("sections");
+            for(String sectionId : sectionData.keySet()) {
+                String name = (String)sectionData.get(sectionId).get("name");
+                String icon = (String)sectionData.get(sectionId).get("icon");
+                Map<String, Integer> items = MapHelper.getMap(sectionData.get(sectionId), "items");
+                List<String> productKeys = new ArrayList<>(items.keySet());
+
+                for(String productId : items.keySet()) {
+                    Item item = ItemRegistry.getItem(productId);
+                    if(item.isAir()) {
+                        productKeys.remove(productId);
+                        continue;
+                    }
+
+                    Product product = new ItemProduct(
+                            item.getTitle(),
+                            item.getDescription(),
+                            new ProductImage("inventory/" + productId),
+                            items.get(productId),
+                            MapHelper.map(ItemRegistry.getItem(productId), 1)
+                    );
+
+                    products.put(productId, product);
+                }
+
+                if(!productKeys.isEmpty()) {
+                    ShopSection section = new ShopSection(name, icon, productKeys.toArray(new String[0]));
+                    sections.put(sectionId, section);
+                }
+            }
         } catch(Exception e) {
-            logger.error(SERVER_MARKER, "Could not load shop data", e);
+            logger.error(SERVER_MARKER, "Could not load android shop data", e);
             return;
         }
 

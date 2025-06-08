@@ -36,6 +36,9 @@ public class Item {
     
     @JsonProperty("title")
     private String title;
+
+    @JsonProperty("hintt")
+    private String description = "Little is known about this item...";
     
     @JsonProperty("rotation")
     private String rotation;
@@ -306,6 +309,10 @@ public class Item {
     
     public String getTitle() {
         return title;
+    }
+
+    public String getDescription() {
+        return description;
     }
     
     public boolean isMirrorable() {
