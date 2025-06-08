@@ -15,6 +15,7 @@ import brainwine.gameserver.shop.ShopSection;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -122,20 +123,22 @@ public class AndroidShopSession {
         });
     }
 
-    public DialogSection getProductSection(Product product) {
-        DialogSection itemDescriptionSection = new DialogSection().setTitle(product.getName());
-
+    public DialogSection getProductSection1(Product product) {
         Item item = Item.AIR;
         if(product.getImage().getBaseSprite().startsWith("inventory/")) {
-            DialogListItem listItem = new DialogListItem();
             String itemId = product.getImage().getBaseSprite().substring("inventory/".length());
             item = ItemRegistry.getItem(itemId);
         }
 
-        itemDescriptionSection.setTitle(product.getName());
-        itemDescriptionSection.addItem(new DialogListItem().setItem(item.getCode()).setText(product.getDescription()));
+        // This is eyeballed
+        int spaces = (int)Math.max(0.0f, 1.5f * (18 - product.getName().length()));
+        String padding = String.join("", Collections.nCopies(spaces, " "));
+        return new DialogSection()
+            .addItem(new DialogListItem().setItem(item.getCode()).setText(padding + product.getName()));
+    }
 
-        return itemDescriptionSection;
+    public DialogSection getProductSection2(Product product) {
+        return new DialogSection().setText(product.getDescription());
     }
 
     public void showSectionDialog() {
@@ -150,7 +153,8 @@ public class AndroidShopSession {
             // Do not show items if the player is not worth them anyway.
             if(!canBuy.showInShop) continue;
 
-            dialog.addSection(getProductSection(product));
+            dialog.addSection(getProductSection1(product));
+            dialog.addSection(getProductSection2(product));
 
             DialogSection buySection = new DialogSection()
                     .setChoice(productId);
@@ -198,10 +202,11 @@ public class AndroidShopSession {
 
     public void showQuantityDialog() {
         Product product = shop.getProducts().get(currentProduct.get());
-        Dialog dialog = new Dialog().setType(DialogType.ANDROID).setTitle("Buying " + product.getName());
-
         CanBuy canBuy = canBuy(product);
-        dialog.addSection(getProductSection(product));
+
+        Dialog dialog = new Dialog().setType(DialogType.ANDROID).setTitle("Buying " + product.getName());
+        dialog.addSection(getProductSection1(product));
+        dialog.addSection(getProductSection2(product));
 
         if(canBuy != CanBuy.TOO_HIGH_PRICE) {
             DialogSection buySection = new DialogSection();
