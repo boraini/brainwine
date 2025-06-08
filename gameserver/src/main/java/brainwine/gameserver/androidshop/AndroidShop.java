@@ -25,6 +25,7 @@ public class AndroidShop {
     private static final Logger logger = LogManager.getLogger();
     private final Map<String, ShopSection> sections = new LinkedHashMap<>();
     private final Map<String, Product> products = new LinkedHashMap<>();
+    private AndroidShopAdjustments adjustments = new AndroidShopAdjustments();
 
     private static AndroidShop instance;
 
@@ -35,8 +36,8 @@ public class AndroidShop {
 
         try {
             URL url = ResourceFinder.getResourceUrl("android-shop.json");
-            Map<String, Map<String, Map<String, Object>>> data = JsonHelper.readValue(url, new TypeReference<Map<String, Map<String, Map<String, Object>>>>(){});
-            Map<String, Map<String, Object>> sectionData = data.get("sections");
+            Map<String, Object> data = JsonHelper.readValue(url, new TypeReference<Map<String, Object>>() {});
+            Map<String, Map<String, Object>> sectionData = (Map<String, Map<String, Object>>)data.get("sections");
             for(String sectionId : sectionData.keySet()) {
                 String name = (String)sectionData.get(sectionId).get("name");
                 String icon = (String)sectionData.get(sectionId).get("icon");
@@ -52,7 +53,7 @@ public class AndroidShop {
 
                     Product product = new ItemProduct(
                             item.getTitle(),
-                            item.getDescription(),
+                            item.getHint(),
                             new ProductImage("inventory/" + productId),
                             items.get(productId),
                             MapHelper.map(ItemRegistry.getItem(productId), 1)
@@ -66,6 +67,8 @@ public class AndroidShop {
                     sections.put(sectionId, section);
                 }
             }
+
+            adjustments = JsonHelper.readValue(url, AndroidShopAdjustments.class);
         } catch(Exception e) {
             logger.error(SERVER_MARKER, "Could not load android shop data", e);
             return;
@@ -80,6 +83,10 @@ public class AndroidShop {
 
     public Map<String, Product> getProducts() {
         return products;
+    }
+
+    public AndroidShopAdjustments getAdjustments() {
+        return adjustments;
     }
 
     public static AndroidShop getInstance() {

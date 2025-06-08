@@ -80,8 +80,17 @@ public class Trader extends DialoguerJob {
         String itemTitle = getItemTitle(item);
         String itemTitlePlural = itemTitle + (itemTitle.toLowerCase().endsWith("s") ? "es" : "s");
         int playerHas = player.getInventory().getQuantity(item);
-        int barterSkill = player.getSkillLevel(Skill.BARTER);
+        int barterSkill = player.getTotalSkillLevel(Skill.BARTER);
         int price = item.getShillingsPrice();
+        int maxPrice = AndroidShop.getInstance().getAdjustments().getMaxPrice(player);
+
+        if(price > maxPrice) {
+            player.showDialog(DialogHelper
+                    .messageDialog("Low Barter Skill", "Sorry, I don't think we can make a deal on this item right now. Work on your negotiating skills and come back later.")
+                    .setType(DialogType.ANDROID)
+            );
+            return;
+        }
 
         if(barterSkill < item.getBarterLevel()) {
             player.showDialog(DialogHelper

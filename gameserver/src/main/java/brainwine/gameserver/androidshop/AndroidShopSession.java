@@ -10,7 +10,6 @@ import brainwine.gameserver.item.Item;
 import brainwine.gameserver.item.ItemRegistry;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.player.TradeSession;
-import brainwine.gameserver.shop.ItemProduct;
 import brainwine.gameserver.shop.Product;
 import brainwine.gameserver.shop.ShopSection;
 import org.apache.logging.log4j.LogManager;
@@ -43,6 +42,41 @@ public class AndroidShopSession {
         this.onOutcome = onOutcome;
     }
 
+    private enum CanBuy {
+        OK(true, "", "How many are you buying?"),
+        TOO_HIGH_PRICE(false, "This item is too expensive for you.", "Sorry, but I believe that this item is too expensive for you. I won't even tell you the price."),
+        NOT_ENOUGH_SHILLINGS(true, "", "Sorry, you don't have enough shillings to buy any of this item."),
+        ;
+
+        CanBuy(boolean showInShop, String buttonMessage, String dialogMessage) {
+            this.showInShop = showInShop;
+            this.buttonMessage = buttonMessage;
+            this.dialogMessage = dialogMessage;
+        }
+
+        public final boolean showInShop;
+        public final String buttonMessage;
+        public final String dialogMessage;
+    }
+
+    private CanBuy canBuy(Product product) {
+        int maxPrice = shop.getAdjustments().getMaxPrice(player);
+        int adjustedPrice = getAdjustedPrice(product);
+        int account = player.getInventory().getQuantity(ItemRegistry.getItem("accessories/shillings"));
+
+        if(adjustedPrice > maxPrice) {
+            return CanBuy.TOO_HIGH_PRICE;
+        } else if(adjustedPrice > account) {
+            return CanBuy.NOT_ENOUGH_SHILLINGS;
+        } else {
+            return CanBuy.OK;
+        }
+    }
+
+    private int getAdjustedPrice(Product product) {
+        return shop.getAdjustments().getAdjustedSellPrice(player, product.getCost());
+    }
+
     public void showNextDialog() {
         if(!player.isOnline() || me != null && (player.getZone() != me.getZone())) {
             end(false);
@@ -56,8 +90,7 @@ public class AndroidShopSession {
             else showConfirmationDialog();
         } catch(Exception e) {
             player.notify("A problem occurred during your trade session.");
-            e.printStackTrace();
-            // logger.error(e);
+            logger.error("A problem occurred during an android trade session.", e);
         }
     }
 
@@ -93,7 +126,7 @@ public class AndroidShopSession {
         DialogSection itemDescriptionSection = new DialogSection().setTitle(product.getName());
 
         Item item = Item.AIR;
-        if (product.getImage().getBaseSprite().startsWith("inventory/")) {
+        if(product.getImage().getBaseSprite().startsWith("inventory/")) {
             DialogListItem listItem = new DialogListItem();
             String itemId = product.getImage().getBaseSprite().substring("inventory/".length());
             item = ItemRegistry.getItem(itemId);
@@ -112,24 +145,32 @@ public class AndroidShopSession {
 
         for(String productId : shopSection.getProducts()) {
             Product product = shop.getProducts().get(productId);
-            if(product == null) continue;
-            if(product instanceof ItemProduct) {
-                boolean canBuy = player.getInventory().getQuantity(ItemRegistry.getItem("accessories/shillings")) >= product.getCost();
-                dialog.addSection(getProductSection(product));
+            CanBuy canBuy = canBuy(product);
 
-                DialogSection buySection = new DialogSection()
-                        .setChoice(productId)
-                        .setText(String.format(
-                                player.isV3() && !canBuy ? "<color=#ff8844>Buy %s | %d shilling%s each</color>" : "Buy %s | %d shilling%s each",
-                                product.getName(),
-                                product.getCost(),
-                                product.getCost() == 1 ? "" : "s"
-                        ));
+            // Do not show items if the player is not worth them anyway.
+            if(!canBuy.showInShop) continue;
 
-                if(!canBuy && !player.isV3()) buySection.setTextColor("ff8844");
+            dialog.addSection(getProductSection(product));
 
-                dialog.addSection(buySection);
+            DialogSection buySection = new DialogSection()
+                    .setChoice(productId);
+
+            boolean buttonReddened = canBuy != CanBuy.OK;
+            String buttonMessage = canBuy == CanBuy.TOO_HIGH_PRICE
+                    ? canBuy.buttonMessage
+                    : String.format("Buy %s | %d shilling%s each", product.getName(), product.getCost(), product.getCost() == 1 ? "" : "s");
+
+            if(buttonReddened) {
+                if(player.isV3()) {
+                    buySection.setText("<color=#ff8844>" + buttonMessage + "</color>");
+                } else {
+                    buySection.setText(buttonMessage).setTextColor("ff8844");
+                }
+            } else {
+                buySection.setText(buttonMessage);
             }
+
+            dialog.addSection(buySection);
         }
 
         dialog.setActions("Back");
@@ -159,24 +200,39 @@ public class AndroidShopSession {
         Product product = shop.getProducts().get(currentProduct.get());
         Dialog dialog = new Dialog().setType(DialogType.ANDROID).setTitle("Buying " + product.getName());
 
-        int canBuy = player.getInventory().getQuantity(ItemRegistry.getItem("accessories/shillings")) / product.getCost();
+        CanBuy canBuy = canBuy(product);
         dialog.addSection(getProductSection(product));
 
-        DialogSection buySection = new DialogSection().setText(String.format(
-                player.isV3() && (canBuy <= 0) ? "<color=#ff8844>%d shilling%s each</color>" : "%d shilling%s each",
-                product.getCost(),
-                product.getCost() == 1 ? "" : "s"
-        ));
-        if((canBuy <= 0) && !player.isV3()) buySection.setTextColor("ff8844");
+        if(canBuy != CanBuy.TOO_HIGH_PRICE) {
+            DialogSection buySection = new DialogSection();
 
-        if(canBuy <= 0) {
-            dialog.addSection(new DialogSection().setText("Sorry, you don't have enough shillings to buy any of this item."));
+            boolean buttonReddened = canBuy != CanBuy.OK;
+            String buttonMessage = String.format("Buy %s | %d shilling%s each", product.getName(), product.getCost(), product.getCost() == 1 ? "" : "s");
+
+            if(buttonReddened) {
+                if(player.isV3()) {
+                    buySection.setText("<color=#ff8844>" + buttonMessage + "</color>");
+                } else {
+                    buySection.setText(buttonMessage).setTextColor("ff8844");
+                }
+            } else {
+                buySection.setText(buttonMessage);
+            }
+        }
+
+        if(canBuy == CanBuy.OK) {
+            int maxQuantity = player.getInventory().getQuantity(ItemRegistry.getItem("accessories/shillings")) / getAdjustedPrice(product);
+            dialog.addSection(TradeSession.Dialogs.createQuantitySelector(maxQuantity).setTitle("How many are you buying?"));
         } else {
-            dialog.addSection(TradeSession.Dialogs.createQuantitySelector(canBuy).setTitle("How many are you buying?"));
+            dialog.addSection(new DialogSection().setText(canBuy.dialogMessage));
         }
 
         player.showDialog(dialog, ans -> {
-            if(ans.length == 0 || "cancel".equals(ans[0])) {
+            if(ans.length == 0) {
+                return;
+            }
+
+            if("cancel".equals(ans[0])) {
                 currentProduct = Optional.empty();
                 showNextDialog();
                 return;
@@ -198,14 +254,16 @@ public class AndroidShopSession {
             return;
         }
 
+        CanBuy canBuy = canBuy(product);
+
         Item shillings = ItemRegistry.getItem("accessories/shillings");
-        if(player.getInventory().hasItem(shillings, product.getCost())) {
-            player.getInventory().removeItem(shillings, product.getCost());
+        if(canBuy == CanBuy.OK) {
+            player.getInventory().removeItem(shillings, getAdjustedPrice(product));
             product.purchase(player);
             if(me != null) me.emote("Good trade!");
             end(true);
         } else {
-            player.showDialog(DialogHelper.messageDialog("You don't have enough shillings for this many " + product.getName() + "!").setType(DialogType.ANDROID));
+            player.showDialog(DialogHelper.messageDialog(canBuy.dialogMessage).setType(DialogType.ANDROID));
             end(false);
         }
     }

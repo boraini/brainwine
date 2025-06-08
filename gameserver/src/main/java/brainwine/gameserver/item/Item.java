@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import brainwine.gameserver.command.CommandAccessLevel;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -37,8 +38,9 @@ public class Item {
     @JsonProperty("title")
     private String title;
 
-    @JsonProperty("hintt")
-    private String description = "Little is known about this item...";
+    @JsonProperty("hint")
+    @JsonAlias("hintt")
+    private String hint = "Little is known about this item...";
     
     @JsonProperty("rotation")
     private String rotation;
@@ -311,8 +313,8 @@ public class Item {
         return title;
     }
 
-    public String getDescription() {
-        return description;
+    public String getHint() {
+        return hint;
     }
     
     public boolean isMirrorable() {
