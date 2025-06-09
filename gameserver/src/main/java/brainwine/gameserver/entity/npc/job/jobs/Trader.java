@@ -108,15 +108,15 @@ public class Trader extends DialoguerJob {
         }
 
         String header;
-        if(item.getShillingsPrice() > 0) {
+        if(item.getShillingsPrice() <= -2) {
+            header = "Sorry, there's nothing I can do with this item right now.";
+        } else if(item.getShillingsPrice() == -1) {
+            header = "Sorry but I don't know enough about this item to make an offer on it. I can take them from you to free up some space if you'd like.";
+        } else if(item.getShillingsPrice() == 0) {
+            header = "I'm not interested in your " + (playerHas == 1 ? itemTitle : itemTitlePlural) + " right now, but I can take them so you free up some space.";
+        } else {
             int price = AndroidShop.getInstance().getAdjustments().getAdjustedBuyPrice(player, item.getShillingsPrice());
             header = "I buy " + itemTitlePlural + " for " + price + " shilling" + (price == 1 ? "" : "s") + " each.";
-        } else if(item.getShillingsPrice() < -1) {
-            header = "Sorry, there's nothing I can do with this item right now.";
-        } else if(item.getShillingsPrice() < 0) {
-            header = "Sorry but I don't know enough about this item to make an offer on it.";
-        } else {
-            header = "I'm not interested in your " + (playerHas == 1 ? itemTitle : itemTitlePlural) + " right now, but I can take them so you free up some space.";
         }
 
         dialog.addSection(new DialogSection().setText(header));
