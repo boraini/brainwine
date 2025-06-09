@@ -83,10 +83,9 @@ public class Trader extends DialoguerJob {
         String itemTitlePlural = itemTitle + (itemTitle.toLowerCase().endsWith("s") ? "es" : "s");
         int playerHas = player.getInventory().getQuantity(item);
         int barterSkill = player.getTotalSkillLevel(Skill.BARTER);
-        int price = AndroidShop.getInstance().getAdjustments().getAdjustedBuyPrice(player, item.getShillingsPrice());
         int maxPrice = AndroidShop.getInstance().getAdjustments().getMaxPrice(player);
 
-        if(price > maxPrice) {
+        if(item.getShillingsPrice() > maxPrice) {
             player.showDialog(DialogHelper
                     .messageDialog("Low Barter Skill", "Sorry, I don't think we can make a deal on this item right now. Work on your negotiating skills and come back later.")
                     .setType(DialogType.ANDROID)
@@ -109,11 +108,12 @@ public class Trader extends DialoguerJob {
         }
 
         String header;
-        if(price > 0) {
+        if(item.getShillingsPrice() > 0) {
+            int price = AndroidShop.getInstance().getAdjustments().getAdjustedBuyPrice(player, item.getShillingsPrice());
             header = "I buy " + itemTitlePlural + " for " + price + " shilling" + (price == 1 ? "" : "s") + " each.";
-        } else if(price < -1) {
+        } else if(item.getShillingsPrice() < -1) {
             header = "Sorry, there's nothing I can do with this item right now.";
-        } else if(price < 0) {
+        } else if(item.getShillingsPrice() < 0) {
             header = "Sorry but I don't know enough about this item to make an offer on it.";
         } else {
             header = "I'm not interested in your " + (playerHas == 1 ? itemTitle : itemTitlePlural) + " right now, but I can take them so you free up some space.";
@@ -122,12 +122,12 @@ public class Trader extends DialoguerJob {
         dialog.addSection(new DialogSection().setText(header));
 
         // For -2 and lower it doesn't allow trading at all.
-        if(price < -1) {
+        if(item.getShillingsPrice() < -1) {
             player.showDialog(dialog);
             return;
         }
 
-        dialog.addSection(TradeSession.Dialogs.createQuantitySelector(player, item).setText(price > 0 ? "How many are you selling?" : "How many are you giving?"));
+        dialog.addSection(TradeSession.Dialogs.createQuantitySelector(player, item).setText(item.getShillingsPrice() > 0 ? "How many are you selling?" : "How many are you giving?"));
 
         player.showDialog(dialog, ans -> {
             if(ans.length == 0) return;
