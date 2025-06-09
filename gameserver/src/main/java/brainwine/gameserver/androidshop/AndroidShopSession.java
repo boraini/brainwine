@@ -149,6 +149,7 @@ public class AndroidShopSession {
         for(String productId : shopSection.getProducts()) {
             Product product = shop.getProducts().get(productId);
             CanBuy canBuy = canBuy(product);
+            int adjustedCost = getAdjustedPrice(product);
 
             // Do not show items if the player is not worth them anyway.
             if(!canBuy.showInShop) continue;
@@ -162,7 +163,7 @@ public class AndroidShopSession {
             boolean buttonReddened = canBuy != CanBuy.OK;
             String buttonMessage = canBuy == CanBuy.TOO_HIGH_PRICE
                     ? canBuy.buttonMessage
-                    : String.format("Buy %s | %d shilling%s each", product.getName(), product.getCost(), product.getCost() == 1 ? "" : "s");
+                    : String.format("Buy %s | %d shilling%s each", product.getName(), adjustedCost, adjustedCost == 1 ? "" : "s");
 
             if(buttonReddened) {
                 if(player.isV3()) {
@@ -203,6 +204,7 @@ public class AndroidShopSession {
     public void showQuantityDialog() {
         Product product = shop.getProducts().get(currentProduct.get());
         CanBuy canBuy = canBuy(product);
+        int adjustedCost = getAdjustedPrice(product);
 
         Dialog dialog = new Dialog().setType(DialogType.ANDROID).setTitle("Buying " + product.getName());
         dialog.addSection(getProductSection1(product));
@@ -212,7 +214,7 @@ public class AndroidShopSession {
             DialogSection buySection = new DialogSection();
 
             boolean buttonReddened = canBuy != CanBuy.OK;
-            String buttonMessage = String.format("Buy %s | %d shilling%s each", product.getName(), product.getCost(), product.getCost() == 1 ? "" : "s");
+            String buttonMessage = String.format("I sell these for %d shilling%s each.", adjustedCost, adjustedCost == 1 ? "" : "s");
 
             if(buttonReddened) {
                 if(player.isV3()) {
@@ -223,6 +225,8 @@ public class AndroidShopSession {
             } else {
                 buySection.setText(buttonMessage);
             }
+
+            dialog.addSection(buySection);
         }
 
         if(canBuy == CanBuy.OK) {

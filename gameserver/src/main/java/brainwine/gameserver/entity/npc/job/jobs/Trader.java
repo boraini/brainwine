@@ -67,10 +67,12 @@ public class Trader extends DialoguerJob {
         offer.putAll(result);
     }
 
-    private int calculatePayback(Map<Item, Integer> offer) {
+    private int calculatePayback(Player player, Map<Item, Integer> offer) {
         int payback = 0;
         for(Map.Entry<Item, Integer> entry : offer.entrySet()) {
-            payback += Math.max(0, entry.getValue() * entry.getKey().getShillingsPrice());
+            payback += Math.max(0, entry.getValue() * AndroidShop.getInstance().getAdjustments()
+                    .getAdjustedBuyPrice(player, entry.getKey().getShillingsPrice())
+            );
         }
         return payback;
     }
@@ -81,7 +83,7 @@ public class Trader extends DialoguerJob {
         String itemTitlePlural = itemTitle + (itemTitle.toLowerCase().endsWith("s") ? "es" : "s");
         int playerHas = player.getInventory().getQuantity(item);
         int barterSkill = player.getTotalSkillLevel(Skill.BARTER);
-        int price = item.getShillingsPrice();
+        int price = AndroidShop.getInstance().getAdjustments().getAdjustedBuyPrice(player, item.getShillingsPrice());
         int maxPrice = AndroidShop.getInstance().getAdjustments().getMaxPrice(player);
 
         if(price > maxPrice) {
@@ -155,7 +157,7 @@ public class Trader extends DialoguerJob {
             player.showDialog(DialogHelper.messageDialog("No Offer", "Sorry, you haven't offered any items yet").setType(DialogType.ANDROID));
         } else {
             validateOffer(player, offer);
-            int payback = calculatePayback(offer);
+            int payback = calculatePayback(player, offer);
             DialogSection itemsSection = new DialogSection();
             for(Map.Entry<Item, Integer> entry : offer.entrySet()) {
                 Item item = entry.getKey();
@@ -175,7 +177,7 @@ public class Trader extends DialoguerJob {
             player.showDialog(dialog, ans -> {
                 if(!(ans.length == 0 || "cancel".equals(ans[0]))) {
                     validateOffer(player, offer);
-                    int finalPayback = calculatePayback(offer);
+                    int finalPayback = calculatePayback(player, offer);
                     for(Map.Entry<Item, Integer> entry : offer.entrySet()) {
                         player.getInventory().removeItem(entry.getKey(), entry.getValue(), true);
                     }
