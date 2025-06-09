@@ -257,24 +257,45 @@ public class AndroidShopSession {
     }
 
     public void showConfirmationDialog() {
-        Product product = shop.getProducts().get(currentProduct.get());
+        String productId = currentProduct.get();
+        Product product = shop.getProducts().get(productId);
         if(product == null) {
             end(false);
             return;
         }
 
-        CanBuy canBuy = canBuy(product);
-
         Item shillings = ItemRegistry.getItem("accessories/shillings");
-        if(canBuy == CanBuy.OK) {
-            player.getInventory().removeItem(shillings, getAdjustedPrice(product));
-            product.purchase(player);
-            if(me != null) me.emote("Good trade!");
-            end(true);
-        } else {
-            player.showDialog(DialogHelper.messageDialog(canBuy.dialogMessage).setType(DialogType.ANDROID));
-            end(false);
-        }
+        Item purchasedItem = ItemRegistry.getItem(productId);
+        int quantity = currentQuantity.getAsInt();
+        int totalPrice = quantity * shop.getAdjustments().getAdjustedSellPrice(player, product.getCost());
+
+        Dialog dialog = new Dialog().setType(DialogType.ANDROID).setTitle("Confirming Purchase");
+        dialog.addSection(new DialogSection().setTitle("For your")
+                .addItem(new DialogListItem().setItem(shillings.getCode()).setText(totalPrice + (totalPrice == 1 ? " shilling" : " shillings")))
+        );
+        dialog.addSection(new DialogSection().setTitle("you will get")
+                .addItem(new DialogListItem().setItem(purchasedItem.getCode()).setText(purchasedItem.getTitle() + " x " + quantity))
+        );
+        dialog.addSection(new DialogSection().setText("Do you accept?"));
+
+        player.showDialog(dialog, ans -> {
+            if(ans.length == 0 || !"cancel".equals(ans[0])) {
+                CanBuy canBuy = canBuy(product);
+
+                if(canBuy == CanBuy.OK) {
+                    player.getInventory().removeItem(shillings, getAdjustedPrice(product), true);
+                    product.purchase(player);
+                    if(me != null) me.emote("Good trade!");
+                    end(true);
+                } else {
+                    player.showDialog(DialogHelper.messageDialog(canBuy.dialogMessage).setType(DialogType.ANDROID));
+                    end(false);
+                }
+            } else {
+                currentQuantity = OptionalInt.empty();
+                showNextDialog();
+            }
+        });
     }
 
     public void end(boolean outcome) {
