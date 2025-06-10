@@ -94,13 +94,13 @@ public class IpBans {
     }
 
     public Set<String> unbanAndCheckForCidrBlock(Player player) {
-        return player.isOnline() ? unbanAndCheckForCidrBlock(player, player.getConnection()) : new HashSet<>();
+        return unbanAndCheckForCidrBlock(player, player.getConnection());
     }
 
     public Set<String> unbanAndCheckForCidrBlock(Player player, Connection connection) {
         Set<String> ipBlocks = new HashSet<>();
         List<Item> deletedItems = new ArrayList<>();
-        Cidr playerCurrentIp = connection.getIpAddress();
+        Cidr playerCurrentIp = connection != null ? connection.getIpAddress() : null;
         for(Item item : bannedIps) {
             Cidr firstIp = item.getIpAddress();
             if(item.getIpAddress().equals(playerCurrentIp)
@@ -116,7 +116,7 @@ public class IpBans {
                     bansByIp.remove(playerCurrentIp);
                 }
                 if(item.getIpAddress().equals(firstIp)) {
-                    bansByIp.remove(playerCurrentIp);
+                    bansByIp.remove(firstIp);
                 }
                 deletedItems.add(item);
             } else {
