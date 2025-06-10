@@ -1,5 +1,6 @@
 package brainwine.gameserver.server.requests;
 
+import java.net.SocketAddress;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
@@ -8,11 +9,13 @@ import brainwine.gameserver.player.NotificationType;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.player.PlayerManager;
 import brainwine.gameserver.player.PlayerRestriction;
+import brainwine.gameserver.server.IpBans;
 import brainwine.gameserver.server.OptionalField;
 import brainwine.gameserver.server.Request;
 import brainwine.gameserver.server.RequestInfo;
 import brainwine.gameserver.server.messages.NotificationMessage;
 import brainwine.gameserver.server.pipeline.Connection;
+import brainwine.gameserver.util.Cidr;
 import brainwine.gameserver.util.VersionUtils;
 import brainwine.gameserver.zone.Zone;
 
@@ -51,10 +54,41 @@ public class AuthenticateRequest extends Request {
                 connection.kick("The provided session token is invalid or has expired. Please try relogging.");
                 return;
             }
+
+            Cidr cidr = null;
+            IpBans.Item ipBan = null;
+            try {
+                cidr = connection.getIpAddress();
+                if(cidr != null) ipBan = server.getIpBans().getIpBanItem(cidr);
+            } catch(IllegalArgumentException ignored) {}
+
+            Cidr foundCidr = cidr;
+            IpBans.Item foundIpBan = ipBan;
             
             server.queueSynchronousTask(() -> {
                 Player player = playerManager.getPlayer(name);
+
                 PlayerRestriction ban = player.getCurrentBan();
+                if(ban == null && foundIpBan != null) {
+                    for(String uuid : foundIpBan.getKnownUuids()) {
+                        Player bannedPlayer = playerManager.getPlayerById(uuid);
+                        if(bannedPlayer == null) continue;
+                        PlayerRestriction otherBan = bannedPlayer.getCurrentBan();
+                        if(otherBan != null) {
+                            String newReason = otherBan.getReason() + " (You had been banned due to an IP ban)";
+                            player.ban(newReason, otherBan.getEndDate());
+                            connection.kick(newReason);
+                            return;
+                        }
+                    }
+
+                    // Try to clear the IP ban if no banned player with the ip was found.
+                    if(!server.getIpBans().unbanAndCheckForCidrBlock(player, connection).isEmpty()) {
+                        connection.kick("Your IP was banned for an unknown reason.");
+                        server.notify(String.format("%s tried to join with ip %s which is banned because of the ban on %s.", player.getName(), foundCidr, foundIpBan.getIpAddress()), NotificationType.SYSTEM);
+                        return;
+                    }
+                }
                 Zone zone = player.getZone();
                 
                 if(ban != null) {

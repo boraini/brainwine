@@ -185,7 +185,7 @@ public class PlayerManager {
     
     public void onPlayerConnect(Player player) {
         onlinePlayers.add(player);
-        logger.info(SERVER_MARKER, "{} logged into zone {}", player.getName(), player.getZone().getName());
+        logger.info(SERVER_MARKER, "{} logged into zone {} with IP address {}", player.getName(), player.getZone().getName(), player.getConnection().getIpAddress());
     }
     
     public void onPlayerDisconnect(Player player) {
