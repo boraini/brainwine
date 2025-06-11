@@ -53,11 +53,6 @@ public class IpV4Cidr extends Cidr {
     }
 
     @Override
-    public boolean isSingleIpAddress() {
-        return maskBits == 32;
-    }
-
-    @Override
     public boolean equals(Object other) {
         return other instanceof IpV4Cidr && ((IpV4Cidr) other).ip == ip && ((IpV4Cidr)other).maskBits == maskBits;
     }
