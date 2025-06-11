@@ -1,6 +1,7 @@
 package brainwine.gameserver.entity.npc.job.jobs;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import brainwine.gameserver.GameConfiguration;
@@ -19,10 +20,10 @@ import brainwine.gameserver.util.MapHelper;
 public class Crafter extends DialoguerJob {
 
     @Override
-    public DialogSection getMainDialogSection(Npc me, Player player) {
-        return new DialogSection()
+    public List<DialogSection> getMainDialogSection(Npc me, Player player) {
+        return Arrays.asList(new DialogSection()
             .setText(MapHelper.getString(GameConfiguration.getBaseConfig(), "dialogs.android.craft"))
-            .setChoice("craft");
+            .setChoice("craft"));
     }
 
     @Override
@@ -39,7 +40,7 @@ public class Crafter extends DialoguerJob {
         return true;
     }
 
-    public boolean craftDialog(Player player, Item item) {
+    public void acceptItem(Npc me, Player player, Item item) {
         // I can't craft this
         if(item.getCraft() == null || "android".equals(item.getCraft().getCrafter())) {
             player.showDialog(DialogHelper.messageDialog(MapHelper.getString(GameConfiguration.getBaseConfig(), "dialogs.android.cannot_craft")).setType(DialogType.ANDROID));
@@ -48,7 +49,7 @@ public class Crafter extends DialoguerJob {
         // Item is not craftable by an android
         if (item.getCraft() == null) {
             player.showDialog(DialogHelper.messageDialog("Sorry, that item doesn't have any crafting options.").setType(DialogType.ANDROID));
-            return false;
+            return;
         }
 
         Dialog dialog = new Dialog().setType(DialogType.ANDROID);
@@ -68,7 +69,7 @@ public class Crafter extends DialoguerJob {
 
         player.showDialog(dialog, ans -> continueCraftDialog(player, item, ans));
 
-        return true;
+        return;
     }
 
     public void continueCraftDialog(Player player, Item item, Object[] ans) {

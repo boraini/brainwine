@@ -3,6 +3,7 @@ package brainwine.gameserver.entity.npc.behavior.parts;
 import java.util.List;
 import java.util.Map;
 
+import brainwine.gameserver.dialog.DialogType;
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -75,7 +76,7 @@ public class DialoguerBehavior extends Behavior {
                     entity.emote(response);
                 }
             } else {
-                switch ((String) data[0]) {
+                switch((String) data[0]) {
                     case "item":
                         int itemId = (int) data[1];
                         Item item = Item.get(itemId);
@@ -87,8 +88,8 @@ public class DialoguerBehavior extends Behavior {
                         if (item.hasUse(ItemUseType.MEMORY)) {
                             loadMemory(player, item);
                         } else {
-                            if (JobType.CRAFTER.equals(entity.getJob())) {
-                                ((Crafter) JobType.CRAFTER.get()).craftDialog(player, item);
+                            if(entity.getJob() != null) {
+                                entity.getJob().get().acceptItem(entity, player, item);
                             }
                         }
 
@@ -132,6 +133,8 @@ public class DialoguerBehavior extends Behavior {
                                 entity.setJob(JobType.FAMILY_NAME);
                             } else if(entityName.toLowerCase().startsWith("giovanni")) {
                                 entity.setJob(JobType.CRAFTER);
+                            } else if(entityName.toLowerCase().startsWith("bert")) {
+                                entity.setJob(JobType.TRADER);
                             } else {
                                 entity.setJob(JobType.QUESTER);
                             }
@@ -150,7 +153,7 @@ public class DialoguerBehavior extends Behavior {
             }
         } else {
             List<String> options = MapHelper.getList(GameConfiguration.getBaseConfig(), "dialogs.android.cannot_load_memory");
-            player.showDialog(DialogHelper.messageDialog(Fake.pickFromList(options)));
+            player.showDialog(DialogHelper.messageDialog(Fake.pickFromList(options)).setType(DialogType.ANDROID));
         }
     }
 }

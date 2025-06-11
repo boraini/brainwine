@@ -10,12 +10,13 @@ import brainwine.gameserver.quest.QuestAction;
 import brainwine.gameserver.quest.QuestProgress;
 import brainwine.gameserver.quest.QuestTask;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class AndroidDialog extends DialoguerJob {
 
     @Override
-    public DialogSection getMainDialogSection(Npc me, Player player) {
+    public List<DialogSection> getMainDialogSection(Npc me, Player player) {
         for(QuestProgress progress : player.getQuestProgresses().values()) {
             if(progress.isComplete()) continue;
             Quest quest = progress.getQuest(player);
@@ -46,10 +47,10 @@ public class AndroidDialog extends DialoguerJob {
             boolean preventMutations = task.checkComplete(player, progress.getTaskProgress(taskIndex));
 
             // TODO: This is hacked in.
-            return PlayerQuests.performAction(player, quest, QuestAction.Type.INTERACT, preventMutations);
+            return Arrays.asList(PlayerQuests.performAction(player, quest, QuestAction.Type.INTERACT, preventMutations));
         }
 
-        return new DialogSection().setText("I don't know what to say.");
+        return Arrays.asList(new DialogSection().setText("I don't know what to say."));
     }
 
     @Override

@@ -17,12 +17,10 @@ import brainwine.gameserver.util.MapHelper;
 import brainwine.gameserver.util.MathUtils;
 import brainwine.gameserver.util.Pair;
 
-import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
-
 public class Quester extends DialoguerJob {
     @Override
-    public DialogSection getMainDialogSection(Npc me, Player player) {
-        return new DialogSection().setText(MapHelper.getString(GameConfiguration.getBaseConfig(), "dialogs.android.quest")).setChoice("offers");
+    public List<DialogSection> getMainDialogSection(Npc me, Player player) {
+        return Arrays.asList(new DialogSection().setText(MapHelper.getString(GameConfiguration.getBaseConfig(), "dialogs.android.quest")).setChoice("offers"));
     }
 
     @Override

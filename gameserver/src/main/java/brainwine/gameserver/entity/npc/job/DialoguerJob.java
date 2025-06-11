@@ -11,16 +11,19 @@ import brainwine.gameserver.quest.QuestEvents;
 import brainwine.gameserver.server.messages.EntityChangeMessage;
 import brainwine.gameserver.util.MapHelper;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public abstract class DialoguerJob extends Job {
     protected String choice;
 
-    /**Return the DialogSection that contains the content specific to this job. 
+    /**Return a list of DialogSection that contains the content specific to this job. The list may be empty.
      * 
      * @param me the job haver
      * @param player the entity interacting with the job haver
      * @return a dialog section to be added after the greeting
      */
-    public abstract DialogSection getMainDialogSection(Npc me, Player player);
+    public abstract List<DialogSection> getMainDialogSection(Npc me, Player player);
     /**Handle the responses to the initial dialog.
      * 
      * The implementation should first check if ans[0] reflects the choice that relates to the job,
@@ -39,8 +42,8 @@ public abstract class DialoguerJob extends Job {
      */
     public static DialoguerJob CONFIGURATION_ONLY = new DialoguerJob() {
         @Override
-        public DialogSection getMainDialogSection(Npc me, Player player) {
-            return null;
+        public List<DialogSection> getMainDialogSection(Npc me, Player player) {
+            return new ArrayList<>();
         }
 
         @Override
@@ -52,14 +55,16 @@ public abstract class DialoguerJob extends Job {
     public boolean dialogue(Npc me, Player player) {
         DialogSection title = new DialogSection().setTitle(String.format("%s says:", me.getName()));
         DialogSection salutation = new DialogSection().setText(Fake.get(Fake.Type.SALUTATION));
-        DialogSection mainDialog = getMainDialogSection(me, player);
+        List<DialogSection> mainDialog = getMainDialogSection(me, player);
 
         Dialog dialog = new Dialog().setType(DialogType.ANDROID)
             .addSection(title)
             .addSection(salutation);
 
         if (mainDialog != null) {
-            dialog = dialog.addSection(mainDialog);
+            for(DialogSection section : mainDialog) {
+                dialog = dialog.addSection(section);
+            }
         }
         
         if (player.isAdmin()) {

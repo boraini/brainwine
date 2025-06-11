@@ -1,6 +1,7 @@
 package brainwine.gameserver.player;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import brainwine.gameserver.quest.Quest;
 import brainwine.gameserver.util.ValueWithExpiry;
@@ -84,9 +85,48 @@ public class PlayerConfigFile {
         this.androidQuests = player.getAndroidQuests();
         this.familyName = player.getFamilyName();
     }
-    
+
+    private static int transferSkill(Map<String, Integer> skills, String from, String to, int max) {
+        int currentSrc = skills.getOrDefault(from, 1);
+        int points = currentSrc - 1;
+        int currentDest = skills.getOrDefault(to, 1);
+        currentDest += points;
+        int freePoints = 0;
+        if(currentDest > max) {
+            freePoints += currentDest - max;
+            currentDest = max;
+        }
+        skills.remove(from);
+        skills.put(to, currentDest);
+        return freePoints;
+    }
+
+    private static void transferBumpedSkill(Map<Item, Collection<String>> bumpedSkills, String from, String to) {
+        for(Collection<String> set : bumpedSkills.values()) {
+            if (set.contains(from)) {
+                set.remove(from);
+                set.add(to);
+            }
+        }
+    }
+
     @JsonCreator
-    private PlayerConfigFile() {}
+    private PlayerConfigFile(
+            @JsonSetter("skills") Map<String, Integer> skillsMap,
+            @JsonSetter("bumped_skills") Map<Item, Collection<String>> bumpedSkillsMap,
+            @JsonSetter("skill_points") Integer currentSkillPointsObj
+    ) {
+        int currentSkillPoints = currentSkillPointsObj != null ? currentSkillPointsObj : 0;
+        currentSkillPoints += transferSkill(skillsMap, "science", "barter", Player.MAX_NATURAL_SKILL_LEVEL);
+        transferBumpedSkill(bumpedSkillsMap, "science", "barter");
+        this.skillPoints = currentSkillPoints;
+        for(Map.Entry<String, Integer> entry : skillsMap.entrySet()) {
+            this.skills.put(Skill.fromId(entry.getKey()), entry.getValue());
+        }
+        for(Map.Entry<Item, Collection<String>> entry : bumpedSkillsMap.entrySet()) {
+            this.bumpedSkills.put(entry.getKey(), entry.getValue().stream().map(Skill::fromId).collect(Collectors.toList()));
+        }
+    }
     
     @JsonSetter(nulls = Nulls.FAIL)
     public String getName() {

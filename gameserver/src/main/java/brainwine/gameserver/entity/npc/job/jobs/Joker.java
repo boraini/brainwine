@@ -6,11 +6,14 @@ import brainwine.gameserver.entity.npc.Npc;
 import brainwine.gameserver.entity.npc.job.DialoguerJob;
 import brainwine.gameserver.player.Player;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class Joker extends DialoguerJob {
 
     @Override
-    public DialogSection getMainDialogSection(Npc me, Player player) {
-        return new DialogSection().setText(Fake.get(Fake.Type.JOKE));
+    public List<DialogSection> getMainDialogSection(Npc me, Player player) {
+        return Arrays.asList(new DialogSection().setText(Fake.get(Fake.Type.JOKE)));
     }
 
     @Override

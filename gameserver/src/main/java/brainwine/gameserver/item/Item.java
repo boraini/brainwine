@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import brainwine.gameserver.command.CommandAccessLevel;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -36,6 +37,10 @@ public class Item {
     
     @JsonProperty("title")
     private String title;
+
+    @JsonProperty("hint")
+    @JsonAlias("hintt")
+    private String hint = "Little is known about this item...";
     
     @JsonProperty("rotation")
     private String rotation;
@@ -231,6 +236,15 @@ public class Item {
 
     @JsonProperty("spawn_entity_for")
     private CommandAccessLevel entitySpawnAccessLevel = CommandAccessLevel.EVERYONE;
+
+    @JsonProperty("shillings_price")
+    private int shillingsPrice = -1;
+
+    @JsonProperty("barter_level")
+    private int barterLevel = 1;
+
+    @JsonProperty("barter_message")
+    private String barterMessage = null;
     
     @JsonCreator
     private Item(@JsonProperty(value = "id", required = true) String id,
@@ -297,6 +311,10 @@ public class Item {
     
     public String getTitle() {
         return title;
+    }
+
+    public String getHint() {
+        return hint;
     }
     
     public boolean isMirrorable() {
@@ -679,5 +697,17 @@ public class Item {
 
     public CommandAccessLevel getEntitySpawnAccessLevel() {
         return entitySpawnAccessLevel;
+    }
+
+    public int getShillingsPrice() {
+        return shillingsPrice;
+    }
+
+    public int getBarterLevel() {
+        return barterLevel;
+    }
+
+    public String getBarterMessage() {
+        return barterMessage;
     }
 }
