@@ -7,5 +7,6 @@ public enum TerrainType {
     @JsonEnumDefaultValue
     NORMAL,
     FILLED,
+    OCEAN,
     ASTEROIDS;
 }

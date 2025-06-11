@@ -18,6 +18,7 @@ import brainwine.gameserver.zone.gen.caves.CaveType;
 import brainwine.gameserver.zone.gen.models.Deposit;
 import brainwine.gameserver.zone.gen.models.LayerSeparator;
 import brainwine.gameserver.zone.gen.models.OreDeposit;
+import brainwine.gameserver.zone.gen.models.SedimentType;
 import brainwine.gameserver.zone.gen.models.SpecialStructure;
 import brainwine.gameserver.zone.gen.models.StoneType;
 import brainwine.gameserver.zone.gen.models.TerrainType;
@@ -26,7 +27,7 @@ import brainwine.gameserver.zone.gen.surface.SurfaceRegionType;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class GeneratorConfig {
-    
+
     private TerrainType terrainType = TerrainType.NORMAL;
     private double minAmplitude = 15;
     private double maxAmplitude = 45;
@@ -37,6 +38,7 @@ public class GeneratorConfig {
     private double backgroundDrawingChance = 0.001;
     private LayerSeparator layerSeparator;
     private WeightedMap<StoneType> stoneTypes = new WeightedMap<>();
+    private WeightedMap<SedimentType> sedimentTypes = new WeightedMap<>();
     private WeightedMap<Prefab> spawnBuildings = new WeightedMap<>();
     private WeightedMap<Prefab> dungeons = new WeightedMap<>();
     private SpecialStructure[] specialStructures = {};
@@ -48,27 +50,28 @@ public class GeneratorConfig {
     private double skyDecorationDistance = 35.0;
     private int skyChunkWidth = 200;
     private WeightedMap<SurfaceRegionType> surfaceRegionTypes = new WeightedMap<>();
+    private WeightedMap<SurfaceRegionType> underwaterRegionTypes = new WeightedMap<>();
     private List<CaveType> caveTypes = new ArrayList<>();
-    
+
     @JsonCreator
     protected GeneratorConfig() {}
-    
+
     public TerrainType getTerrainType() {
         return terrainType;
     }
-    
+
     public double getMinAmplitude() {
         return minAmplitude;
     }
-    
+
     public double getMaxAmplitude() {
         return maxAmplitude;
     }
-    
+
     public int getSurfaceRegionSize() {
         return surfaceRegionSize;
     }
-    
+
     @JsonSetter(value = "dungeon_region", nulls = Nulls.SKIP)
     private void setDungeonRegion(Vector2i dungeonRegion) {
         if(dungeonRegion.getX() > 0 && dungeonRegion.getY() > 0) {
@@ -79,58 +82,63 @@ public class GeneratorConfig {
     public Vector2i getDungeonRegion() {
         return dungeonRegion;
     }
-    
+
     public double getDungeonChance() {
         return dungeonChance;
     }
-    
+
     public double getBackgroundAccentChance() {
         return backgroundAccentChance;
     }
-    
+
     public double getBackgroundDrawingChance() {
         return backgroundDrawingChance;
     }
-    
+
     public LayerSeparator getLayerSeparator() {
         return layerSeparator;
     }
-    
+
     @JsonSetter(value = "stone_types", nulls = Nulls.SKIP)
     public WeightedMap<StoneType> getStoneTypes() {
         return stoneTypes;
     }
-    
+
+    @JsonSetter(value = "sediment_types", nulls = Nulls.SKIP)
+    public WeightedMap<SedimentType> getSedimentTypes() {
+        return sedimentTypes;
+    }
+
     @JsonSetter(value = "spawn_buildings", nulls = Nulls.SKIP)
     public WeightedMap<Prefab> getSpawnBuildings() {
         return spawnBuildings;
     }
-    
+
     @JsonSetter(value = "dungeons", nulls = Nulls.SKIP)
     public WeightedMap<Prefab> getDungeons() {
         return dungeons;
     }
-    
+
     @JsonSetter(value = "special_structures", nulls = Nulls.SKIP, contentNulls = Nulls.SKIP)
     public SpecialStructure[] getSpecialStructures() {
         return specialStructures;
     }
-    
+
     @JsonSetter(value = "deposits", nulls = Nulls.SKIP, contentNulls = Nulls.SKIP)
     public Deposit[] getDeposits() {
         return deposits;
     }
-    
+
     @JsonSetter(value = "ore_deposits", nulls = Nulls.SKIP, contentNulls = Nulls.SKIP)
     public OreDeposit[] getOreDeposits() {
         return oreDeposits;
     }
-    
+
     @JsonSetter(value = "global_surface_decorators", nulls = Nulls.SKIP, contentNulls = Nulls.SKIP)
     public List<SurfaceDecorator> getGlobalSurfaceDecorators() {
         return globalSurfaceDecorators;
     }
-    
+
     @JsonSetter(value = "global_cave_decorators", nulls = Nulls.SKIP, contentNulls = Nulls.SKIP)
     public List<CaveDecorator> getGlobalCaveDecorators() {
         return globalCaveDecorators;
@@ -155,16 +163,25 @@ public class GeneratorConfig {
     private void setSurfaceRegionTypes(Map<String, SurfaceRegionType> surfaceRegionTypes) {
         this.surfaceRegionTypes = new WeightedMap<>(surfaceRegionTypes.values(), SurfaceRegionType::getFrequency);
     }
-    
+
+    @JsonSetter(value = "underwater_region_types", nulls = Nulls.SKIP, contentNulls = Nulls.SKIP)
+    private void setUnderwaterRegionTypes(Map<String, SurfaceRegionType> surfaceRegionTypes) {
+        this.underwaterRegionTypes = new WeightedMap<>(surfaceRegionTypes.values(), SurfaceRegionType::getFrequency);
+    }
+
     public WeightedMap<SurfaceRegionType> getSurfaceRegionTypes() {
         return surfaceRegionTypes;
     }
-    
+
+    public WeightedMap<SurfaceRegionType> getUnderwaterRegionTypes() {
+        return underwaterRegionTypes;
+    }
+
     @JsonSetter(value = "cave_types", nulls = Nulls.SKIP, contentNulls = Nulls.SKIP)
     private void setCaveTypes(Map<String, CaveType> caveTypes) {
         this.caveTypes = new ArrayList<>(caveTypes.values());
     }
-    
+
     public List<CaveType> getCaveTypes() {
         return caveTypes;
     }
