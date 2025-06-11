@@ -3,9 +3,6 @@ package brainwine.gameserver.androidshop;
 import brainwine.gameserver.item.Item;
 import brainwine.gameserver.item.ItemRegistry;
 import brainwine.gameserver.resource.ResourceFinder;
-import brainwine.gameserver.shop.ItemProduct;
-import brainwine.gameserver.shop.Product;
-import brainwine.gameserver.shop.ProductImage;
 import brainwine.gameserver.shop.ShopSection;
 import brainwine.gameserver.util.MapHelper;
 import brainwine.shared.JsonHelper;
@@ -15,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +22,7 @@ import static brainwine.shared.LogMarkers.SERVER_MARKER;
 public class AndroidShop {
     private static final Logger logger = LogManager.getLogger();
     private final Map<String, ShopSection> sections = new LinkedHashMap<>();
-    private final Map<String, Product> products = new LinkedHashMap<>();
+    private final Map<String, AndroidShopProduct> products = new LinkedHashMap<>();
     private AndroidShopAdjustments adjustments = new AndroidShopAdjustments();
 
     private static AndroidShop instance;
@@ -42,6 +40,7 @@ public class AndroidShop {
                 String name = (String)sectionData.get(sectionId).get("name");
                 String icon = (String)sectionData.get(sectionId).get("icon");
                 Map<String, Integer> items = MapHelper.getMap(sectionData.get(sectionId), "items");
+                Map<String, Integer> maxQuantitiesPerDay = MapHelper.getMap(sectionData.get(sectionId), "quantity_per_day", new HashMap<>());
                 List<String> productKeys = new ArrayList<>(items.keySet());
 
                 for(String productId : items.keySet()) {
@@ -51,12 +50,10 @@ public class AndroidShop {
                         continue;
                     }
 
-                    Product product = new ItemProduct(
-                            item.getTitle(),
-                            item.getHint(),
-                            new ProductImage("inventory/" + productId),
-                            items.get(productId),
-                            MapHelper.map(ItemRegistry.getItem(productId), 1)
+                    AndroidShopProduct product = new AndroidShopProduct(
+                            item,
+                            items.get(item.getId()),
+                            maxQuantitiesPerDay.getOrDefault(item.getId(), Integer.MAX_VALUE)
                     );
 
                     products.put(productId, product);
@@ -81,7 +78,7 @@ public class AndroidShop {
         return sections;
     }
 
-    public Map<String, Product> getProducts() {
+    public Map<String, AndroidShopProduct> getProducts() {
         return products;
     }
 

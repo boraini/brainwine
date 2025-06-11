@@ -10,7 +10,6 @@ import brainwine.gameserver.item.Item;
 import brainwine.gameserver.item.ItemRegistry;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.player.TradeSession;
-import brainwine.gameserver.shop.Product;
 import brainwine.gameserver.shop.ShopSection;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,12 +40,14 @@ public class AndroidShopSession {
         this.me = me;
         this.player = player;
         this.onOutcome = onOutcome;
+        player.getAndroidShopHistory().removeOldPurchases();
     }
 
     private enum CanBuy {
         OK(true, "", "How many are you buying?"),
         TOO_HIGH_PRICE(false, "This item is too expensive for you.", "Sorry, but I believe that this item is too expensive for you. I won't even tell you the price."),
         NOT_ENOUGH_SHILLINGS(true, "", "Sorry, you don't have enough shillings to buy any of this item."),
+        BOUGHT_TOO_FREQUENTLY(true, "", "Sorry, but you have bought too many of this recently. See me later to buy more.")
         ;
 
         CanBuy(boolean showInShop, String buttonMessage, String dialogMessage) {
@@ -60,22 +61,29 @@ public class AndroidShopSession {
         public final String dialogMessage;
     }
 
-    private CanBuy canBuy(Product product) {
+    private CanBuy canBuy(AndroidShopProduct product) {
+        return canBuy(product, 0);
+    }
+
+    private CanBuy canBuy(AndroidShopProduct product, int quantity) {
         int maxPrice = shop.getAdjustments().getMaxPrice(player);
         int adjustedPrice = getAdjustedPrice(product);
         int account = player.getInventory().getQuantity(ItemRegistry.getItem("accessories/shillings"));
+        int purchased = player.getAndroidShopHistory().getPurchases(product.getItem());
 
-        if(adjustedPrice > maxPrice) {
+        if (adjustedPrice > maxPrice) {
             return CanBuy.TOO_HIGH_PRICE;
-        } else if(adjustedPrice > account) {
+        } else if(adjustedPrice > account || adjustedPrice * quantity > account) {
             return CanBuy.NOT_ENOUGH_SHILLINGS;
+        } else if(purchased >= product.getMaxQuantityPerDay() || purchased + quantity > product.getMaxQuantityPerDay()) {
+            return CanBuy.BOUGHT_TOO_FREQUENTLY;
         } else {
             return CanBuy.OK;
         }
     }
 
-    private int getAdjustedPrice(Product product) {
-        return shop.getAdjustments().getAdjustedSellPrice(player, product.getCost());
+    private int getAdjustedPrice(AndroidShopProduct product) {
+        return shop.getAdjustments().getAdjustedSellPrice(player, product.getPrice());
     }
 
     public void showNextDialog() {
@@ -123,22 +131,18 @@ public class AndroidShopSession {
         });
     }
 
-    public DialogSection getProductSection1(Product product) {
-        Item item = Item.AIR;
-        if(product.getImage().getBaseSprite().startsWith("inventory/")) {
-            String itemId = product.getImage().getBaseSprite().substring("inventory/".length());
-            item = ItemRegistry.getItem(itemId);
-        }
+    public DialogSection getProductSection1(AndroidShopProduct product) {
+        Item item = product.getItem();
 
         // This is eyeballed
-        int spaces = (int)Math.max(0.0f, 1.5f * (18 - product.getName().length()));
+        int spaces = (int)Math.max(0.0f, 1.5f * (18 - item.getTitle().length()));
         String padding = String.join("", Collections.nCopies(spaces, " "));
         return new DialogSection()
-            .addItem(new DialogListItem().setItem(item.getCode()).setText(padding + product.getName()));
+            .addItem(new DialogListItem().setItem(item.getCode()).setText(padding + item.getTitle()));
     }
 
-    public DialogSection getProductSection2(Product product) {
-        return new DialogSection().setText(product.getDescription());
+    public DialogSection getProductSection2(AndroidShopProduct product) {
+        return new DialogSection().setText(product.getItem().getHint());
     }
 
     public void showSectionDialog() {
@@ -147,7 +151,7 @@ public class AndroidShopSession {
         Dialog dialog = new Dialog().setType(DialogType.ANDROID).setTitle(shopSection.getName());
 
         for(String productId : shopSection.getProducts()) {
-            Product product = shop.getProducts().get(productId);
+            AndroidShopProduct product = shop.getProducts().get(productId);
             CanBuy canBuy = canBuy(product);
             int adjustedCost = getAdjustedPrice(product);
 
@@ -163,7 +167,7 @@ public class AndroidShopSession {
             boolean buttonReddened = canBuy != CanBuy.OK;
             String buttonMessage = canBuy == CanBuy.TOO_HIGH_PRICE
                     ? canBuy.buttonMessage
-                    : String.format("Buy %s | %d shilling%s each", product.getName(), adjustedCost, adjustedCost == 1 ? "" : "s");
+                    : String.format("Buy %s | %d shilling%s each", product.getItem().getTitle(), adjustedCost, adjustedCost == 1 ? "" : "s");
 
             if(buttonReddened) {
                 if(player.isV3()) {
@@ -202,11 +206,11 @@ public class AndroidShopSession {
     }
 
     public void showQuantityDialog() {
-        Product product = shop.getProducts().get(currentProduct.get());
+        AndroidShopProduct product = shop.getProducts().get(currentProduct.get());
         CanBuy canBuy = canBuy(product);
         int adjustedCost = getAdjustedPrice(product);
 
-        Dialog dialog = new Dialog().setType(DialogType.ANDROID).setTitle("Buying " + product.getName());
+        Dialog dialog = new Dialog().setType(DialogType.ANDROID).setTitle("Buying " + product.getItem().getTitle());
         dialog.addSection(getProductSection1(product));
         dialog.addSection(getProductSection2(product));
 
@@ -230,7 +234,9 @@ public class AndroidShopSession {
         }
 
         if(canBuy == CanBuy.OK) {
-            int maxQuantity = player.getInventory().getQuantity(ItemRegistry.getItem("accessories/shillings")) / getAdjustedPrice(product);
+            int allowedByPrice = player.getInventory().getQuantity(ItemRegistry.getItem("accessories/shillings")) / getAdjustedPrice(product);
+            int purchased = player.getAndroidShopHistory().getPurchases(product.getItem());
+            int maxQuantity = Math.min(allowedByPrice, product.getMaxQuantityPerDay() - purchased);
             dialog.addSection(TradeSession.Dialogs.createQuantitySelector(maxQuantity).setTitle("How many are you buying?"));
         } else {
             dialog.addSection(new DialogSection().setText(canBuy.dialogMessage));
@@ -258,7 +264,7 @@ public class AndroidShopSession {
 
     public void showConfirmationDialog() {
         String productId = currentProduct.get();
-        Product product = shop.getProducts().get(productId);
+        AndroidShopProduct product = shop.getProducts().get(productId);
         if(product == null) {
             end(false);
             return;
@@ -267,7 +273,7 @@ public class AndroidShopSession {
         Item shillings = ItemRegistry.getItem("accessories/shillings");
         Item purchasedItem = ItemRegistry.getItem(productId);
         int quantity = currentQuantity.getAsInt();
-        int totalPrice = quantity * shop.getAdjustments().getAdjustedSellPrice(player, product.getCost());
+        int totalPrice = quantity * shop.getAdjustments().getAdjustedSellPrice(player, product.getPrice());
 
         Dialog dialog = new Dialog().setType(DialogType.ANDROID).setTitle("Confirming Purchase");
         dialog.addSection(new DialogSection().setTitle("For your")
@@ -280,11 +286,11 @@ public class AndroidShopSession {
 
         player.showDialog(dialog, ans -> {
             if(ans.length == 0 || !"cancel".equals(ans[0])) {
-                CanBuy canBuy = canBuy(product);
-
+                CanBuy canBuy = canBuy(product, quantity);
                 if(canBuy == CanBuy.OK) {
                     player.getInventory().removeItem(shillings, getAdjustedPrice(product), true);
-                    product.purchase(player);
+                    product.purchase(player, quantity);
+                    player.getAndroidShopHistory().recordPurchase(product.getItem(), quantity);
                     if(me != null) me.emote("Good trade!");
                     end(true);
                 } else {
