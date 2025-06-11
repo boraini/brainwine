@@ -318,13 +318,15 @@
           ],
           "anemones": {
             "ground/crystal-blue-1": 5,
-            "ground/crystal-blue-3": 8,
-            "ground/crystal-blue-2": 4,
-            "ground/crystal-blue-4": 12,
             "ground/crystal-rainbow": 9,
             "ground/onyx": 8,
             "ground/crystal-red-1": 2,
-            "ground/crystal-purple-1": 4
+            "ground/crystal-purple-1": 4,
+            "ground/geode-green": 10,
+            "ground/geode-orange": 10,
+            "ground/geode-purple": 10,
+            "ground/geode-blue": 10,
+            "ground/geode-white": 10
           }
         }
       ]
