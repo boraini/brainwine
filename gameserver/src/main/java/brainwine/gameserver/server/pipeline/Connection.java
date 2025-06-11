@@ -7,6 +7,7 @@ import java.nio.channels.ClosedChannelException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import brainwine.gameserver.util.Cidr;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -94,6 +95,30 @@ public class Connection extends SimpleChannelInboundHandler<Request> {
         if(isOpen()) {
             disconnectReason = reason;
             sendMessage(new KickMessage(reason, shouldReconnect)).addListener(ChannelFutureListener.CLOSE);
+        }
+    }
+
+    public Cidr getIpAddress() {
+        String whole = channel.remoteAddress().toString();
+        try {
+            int start = 0;
+            int end = whole.length();
+            for(int i = 0; i < whole.length(); i++) {
+                if(whole.charAt(i) == '/') {
+                    start = i + 1;
+                }
+                if(whole.charAt(i) == ':') {
+                    if(i == whole.length() - 1 || whole.charAt(i + 1) != ':') {
+                        end = i;
+                    } else {
+                        i++;
+                    }
+                }
+            }
+            return Cidr.create(whole.substring(start, end));
+        } catch(Exception e) {
+            logger.error("Error while parsing ip address for " + whole + ".", e);
+            return null;
         }
     }
     

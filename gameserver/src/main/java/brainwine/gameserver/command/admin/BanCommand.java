@@ -18,7 +18,7 @@ public class BanCommand extends Command {
 
     @Override
     public void execute(CommandExecutor executor, String[] args) {
-        if(args.length < 2) {
+        if(args.length < 3) {
             executor.notify(String.format("Usage: %s", getUsage(executor)), SYSTEM);
             return;
         }
@@ -47,22 +47,36 @@ public class BanCommand extends Command {
             executor.notify("Time units: y = years, w = weeks, d = days, h = hours, m = minutes", SYSTEM);
             return;
         }
+
+        boolean ipBan;
+        if("true".equalsIgnoreCase(args[2])) {
+            ipBan = true;
+        } else if("false".equalsIgnoreCase(args[2])){
+            ipBan = false;
+        } else {
+            executor.notify("IP ban argument must be true or false.", SYSTEM);
+            return;
+        }
         
         String reason = "The ban hammer has spoken!";
         
-        if(args.length > 2) {
-            reason = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
+        if(args.length > 3) {
+            reason = String.join(" ", Arrays.copyOfRange(args, 3, args.length));
         }
         
         OffsetDateTime endDate = OffsetDateTime.now().plusMinutes(duration);
         target.ban(executor instanceof Player ? (Player)executor : null, reason, endDate);
+        if(ipBan) {
+            GameServer.getInstance().getIpBans().ban(target);
+        }
+
         executor.notify(String.format("Banned %s until %s for '%s'", 
                 target.getName(), endDate.format(DateTimeFormatter.RFC_1123_DATE_TIME), reason), SYSTEM);
     }
     
     @Override
     public String getUsage(CommandExecutor executor) {
-        return "/ban <player> <duration> [reason]";
+        return "/ban <player> <duration> <ban ip> [reason]";
     }
     
     @Override

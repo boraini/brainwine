@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 
 import brainwine.gameserver.order.OrderManager;
 import brainwine.gameserver.server.DefaultPusher;
+import brainwine.gameserver.server.IpBans;
 import brainwine.gameserver.server.Pusher;
 import brainwine.gameserver.zone.ZoneActivityManager;
 import brainwine.gameserver.achievement.AchievementManager;
@@ -43,6 +44,7 @@ public class GameServer implements CommandExecutor {
     private final ZoneManager zoneManager;
     private final ZoneActivityManager zoneActivityManager;
     private final PlayerManager playerManager;
+    private final IpBans ipBans;
     private final Server server;
     private Pusher pusher;
     private long lastTick = System.currentTimeMillis();
@@ -54,6 +56,7 @@ public class GameServer implements CommandExecutor {
         handlerThread = Thread.currentThread();
         long startTime = System.currentTimeMillis();
         logger.info(SERVER_MARKER, "Starting GameServer ...");
+        ipBans = new IpBans();
         CommandManager.init();
         GameConfiguration.init();
         AchievementManager.loadAchievements();
@@ -66,6 +69,7 @@ public class GameServer implements CommandExecutor {
         AndroidShop.getInstance().loadShopData();
         Fake.loadFake();
         AnticheatManager.loadConfig();
+        ipBans.loadIpBans();
         lootManager = new LootManager();
         prefabManager = new PrefabManager();
         ZoneGenerator.init();
@@ -103,6 +107,7 @@ public class GameServer implements CommandExecutor {
         if(lastSave + GLOBAL_SAVE_INTERVAL < System.currentTimeMillis()) {
             zoneManager.saveZones();
             playerManager.savePlayers();
+            ipBans.saveIpBans();
             lastSave = System.currentTimeMillis();
         }
         
@@ -145,6 +150,7 @@ public class GameServer implements CommandExecutor {
         zoneManager.onShutdown();
         logger.info(SERVER_MARKER, "Saving player data ...");
         playerManager.savePlayers();
+        ipBans.saveIpBans();
     }
     
     public void stopGracefully() {
@@ -181,5 +187,9 @@ public class GameServer implements CommandExecutor {
 
     public void setPusher(Pusher pusher) {
         this.pusher = pusher;
+    }
+
+    public IpBans getIpBans() {
+        return ipBans;
     }
 }

@@ -6,7 +6,10 @@ import brainwine.gameserver.GameServer;
 import brainwine.gameserver.command.Command;
 import brainwine.gameserver.command.CommandExecutor;
 import brainwine.gameserver.command.CommandInfo;
+import brainwine.gameserver.player.NotificationType;
 import brainwine.gameserver.player.Player;
+
+import java.util.Set;
 
 @CommandInfo(name = "unban", description = "Unbans a player.", aliases = "pardon")
 public class UnbanCommand extends Command {
@@ -31,6 +34,16 @@ public class UnbanCommand extends Command {
         }
         
         target.unban(executor instanceof Player ? (Player)executor : null);
+
+        Set<String> banBlocks = GameServer.getInstance().getIpBans().unbanAndCheckForCidrBlock(target);
+        if(!banBlocks.isEmpty()) {
+            executor.notify(
+                    "Warning: This user might still be indirectly banned due to a IP address block ban. You can unban the following IP addresses to fix this: "
+                            + String.join(", ", banBlocks),
+                    NotificationType.SYSTEM
+            );
+        }
+
         executor.notify(String.format("Player %s has been unbanned.", target.getName()), SYSTEM);
     }
     
