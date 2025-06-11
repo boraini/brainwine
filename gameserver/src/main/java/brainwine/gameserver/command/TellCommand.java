@@ -12,7 +12,8 @@ import static brainwine.gameserver.player.NotificationType.SYSTEM;
 
 @CommandInfo(name = "tell", description = "Send a private message to a fellow player.", aliases = "t")
 public class TellCommand extends Command {
-    
+    private static final String COLOR = "#8080FF";
+
     @Override
     public void execute(CommandExecutor executor, String[] args) {
         if(args.length == 0) {
@@ -43,7 +44,7 @@ public class TellCommand extends Command {
         int executorId = executorPlayer != null ? executorPlayer.getId() : 0;
 
         if(target.isV3()) {
-            String targetMessage = String.format("<color=#012398>%s: %s</color>", executorName, message);
+            String targetMessage = String.format("<color=%s>%s: %s</color>", COLOR, executorName, message);
             target.sendMessage(new ChatMessage(0, targetMessage, ChatType.PRIVATE));
         } else {
             target.sendMessage(new ChatMessage(executorId, message, ChatType.PRIVATE));
@@ -53,7 +54,7 @@ public class TellCommand extends Command {
             executor.notify(String.format("%s: %s", target.getName(), message), SYSTEM);
         } else if(executorPlayer != target) {
             if (executorPlayer.isV3()) {
-                String executorMessage = String.format("<color=#012398>%s: %s</color>", executorName, message);
+                String executorMessage = String.format("<color=%s>%s: %s</color>", COLOR, executorName, message);
                 executorPlayer.sendMessage(new ChatMessage(0, executorMessage, ChatType.PRIVATE));
             } else {
                 executorPlayer.sendMessage(new ChatMessage(executorId, message, ChatType.PRIVATE));
