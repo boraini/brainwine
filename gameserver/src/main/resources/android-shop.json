@@ -10,6 +10,9 @@
         "mechanical/dish": 2500,
         "mechanical/dish-micro": 1000,
         "mechanical/tesla-coil": 1000
+      },
+      "quantity_per_day": {
+        "mechanical/dish-micro": 1
       }
     }
   },

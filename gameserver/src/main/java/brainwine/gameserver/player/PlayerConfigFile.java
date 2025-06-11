@@ -3,6 +3,7 @@ package brainwine.gameserver.player;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import brainwine.gameserver.androidshop.AndroidShopHistory;
 import brainwine.gameserver.quest.Quest;
 import brainwine.gameserver.util.ValueWithExpiry;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -49,6 +50,7 @@ public class PlayerConfigFile {
     private Map<String, QuestProgress> questProgresses = new HashMap<>();
     private ValueWithExpiry<List<Quest>> dailyQuest = ValueWithExpiry.getExpired();
     private Map<String, Quest> androidQuests = new HashMap<>();
+    private AndroidShopHistory androidShopHistory = new AndroidShopHistory();
     private String familyName = null;
     
     public PlayerConfigFile(Player player) {
@@ -83,6 +85,7 @@ public class PlayerConfigFile {
         this.questProgresses = player.getQuestProgresses();
         this.dailyQuest = player.getDailyQuest();
         this.androidQuests = player.getAndroidQuests();
+        this.androidShopHistory = player.getAndroidShopHistory();
         this.familyName = player.getFamilyName();
     }
 
@@ -269,6 +272,10 @@ public class PlayerConfigFile {
 
     public Map<String, Quest> getAndroidQuests() {
         return androidQuests;
+    }
+
+    public AndroidShopHistory getAndroidShopHistory() {
+        return androidShopHistory;
     }
 
     public String getFamilyName() {

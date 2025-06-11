@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import brainwine.gameserver.androidshop.AndroidShopHistory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -140,6 +141,7 @@ public class Player extends Entity implements CommandExecutor {
     private Map<String, QuestProgress> questProgresses = new HashMap<>();
     private ValueWithExpiry<List<Quest>> dailyQuest = ValueWithExpiry.getExpired();
     private Map<String, Quest> androidQuests = new HashMap<>();
+    private AndroidShopHistory androidShopHistory = new AndroidShopHistory();
     private String familyName = null;
     private final Map<String, Object> settings = new HashMap<>();
     private final Set<Integer> activeChunks = new HashSet<>();
@@ -210,6 +212,7 @@ public class Player extends Entity implements CommandExecutor {
         this.questProgresses = config.getQuestProgresses();
         this.dailyQuest = config.getDailyQuest();
         this.androidQuests = config.getAndroidQuests();
+        this.androidShopHistory = config.getAndroidShopHistory();
         this.familyName = config.getFamilyName();
         health = getMaxHealth();
         inventory.setPlayer(this);
@@ -1622,6 +1625,10 @@ public class Player extends Entity implements CommandExecutor {
 
     public void setDailyQuest(ValueWithExpiry<List<Quest>> dailyQuest) {
         this.dailyQuest = dailyQuest;
+    }
+
+    public AndroidShopHistory getAndroidShopHistory() {
+        return androidShopHistory;
     }
 
     public String getFamilyName() {
