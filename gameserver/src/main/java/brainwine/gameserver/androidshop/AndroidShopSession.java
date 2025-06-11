@@ -47,7 +47,7 @@ public class AndroidShopSession {
         OK(true, "", "How many are you buying?"),
         TOO_HIGH_PRICE(false, "This item is too expensive for you.", "Sorry, but I believe that this item is too expensive for you. I won't even tell you the price."),
         NOT_ENOUGH_SHILLINGS(true, "", "Sorry, you don't have enough shillings to buy any of this item."),
-        BOUGHT_TOO_FREQUENTLY(true, "", "Sorry, but you have bought too many of this recently. See me later to buy more.")
+        BOUGHT_TOO_FREQUENTLY(true, "", "Sorry, I don't have any more of that item at the moment. Come back tomorrow to see if I have more in stock!"),
         ;
 
         CanBuy(boolean showInShop, String buttonMessage, String dialogMessage) {
