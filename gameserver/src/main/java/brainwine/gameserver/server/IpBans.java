@@ -46,7 +46,8 @@ public class IpBans {
         }
     }
 
-    public Item getIpBanItem(Cidr playerIp) {
+    public Item findMatchingIpBan(Cidr playerIp) {
+        if(playerIp == null) return null;
         for(Item bannedItem : bannedIps) {
             if(playerIp.matches(bannedItem.getIpAddress())) {
                 return bannedItem;
@@ -59,12 +60,16 @@ public class IpBans {
         return bansByIp.containsKey(bannedIp);
     }
 
+    private Item addItem(Item item) {
+        bannedIps.add(item);
+        bansByIp.put(item.getIpAddress(), item);
+        return item;
+    }
+
     public void banCidr(Cidr bannedIp, Player scapegoat) {
         Item item = bansByIp.get(bannedIp);
         if(item == null) {
-            item = new Item(bannedIp);
-            bannedIps.add(item);
-            bansByIp.put(bannedIp, item);
+            item = addItem(new Item(bannedIp));
         }
         if(scapegoat != null) {
             item.getKnownUuids().add(scapegoat.getDocumentId());
@@ -84,9 +89,7 @@ public class IpBans {
         Item banByIpAddress = bansByIp.get(playerIp);
 
         if(banByIpAddress == null) {
-            banByIpAddress = new Item(playerIp);
-            bannedIps.add(banByIpAddress);
-            bansByIp.put(playerIp, banByIpAddress);
+            banByIpAddress = addItem(new Item(playerIp));
         }
 
         banByIpAddress.getKnownUuids().add(player.getDocumentId());

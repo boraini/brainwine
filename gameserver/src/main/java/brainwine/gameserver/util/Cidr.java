@@ -24,9 +24,4 @@ public abstract class Cidr {
     public abstract boolean matches(Cidr other);
     public abstract boolean isSingleIpAddress();
 
-    @Override
-    public int hashCode() {
-        return toString().hashCode();
-    }
-
 }

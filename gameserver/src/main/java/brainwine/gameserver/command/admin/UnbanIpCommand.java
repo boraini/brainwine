@@ -4,7 +4,6 @@ import brainwine.gameserver.GameServer;
 import brainwine.gameserver.command.Command;
 import brainwine.gameserver.command.CommandExecutor;
 import brainwine.gameserver.command.CommandInfo;
-import brainwine.gameserver.player.Player;
 import brainwine.gameserver.server.IpBans;
 import brainwine.gameserver.util.Cidr;
 
@@ -29,7 +28,7 @@ public class UnbanIpCommand extends Command {
         }
 
         if(!GameServer.getInstance().getIpBans().isCidrBanned(target)) {
-            IpBans.Item item = GameServer.getInstance().getIpBans().getIpBanItem(target);
+            IpBans.Item item = GameServer.getInstance().getIpBans().findMatchingIpBan(target);
             if(item == null) {
                 executor.notify("This specific CIDR was not banned. No changes have been made.", SYSTEM);
             } else {

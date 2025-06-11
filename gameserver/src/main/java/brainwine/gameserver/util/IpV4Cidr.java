@@ -3,6 +3,8 @@ package brainwine.gameserver.util;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+import java.util.Objects;
+
 public class IpV4Cidr extends Cidr {
     private final int ip;
     private final int maskBits;
@@ -58,6 +60,11 @@ public class IpV4Cidr extends Cidr {
     @Override
     public boolean equals(Object other) {
         return other instanceof IpV4Cidr && ((IpV4Cidr) other).ip == ip && ((IpV4Cidr)other).maskBits == maskBits;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(ip, maskBits);
     }
 
     @Override

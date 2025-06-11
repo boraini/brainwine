@@ -1,6 +1,5 @@
 package brainwine.gameserver.server.requests;
 
-import java.net.SocketAddress;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
@@ -55,15 +54,8 @@ public class AuthenticateRequest extends Request {
                 return;
             }
 
-            Cidr cidr = null;
-            IpBans.Item ipBan = null;
-            try {
-                cidr = connection.getIpAddress();
-                if(cidr != null) ipBan = server.getIpBans().getIpBanItem(cidr);
-            } catch(IllegalArgumentException ignored) {}
-
-            Cidr foundCidr = cidr;
-            IpBans.Item foundIpBan = ipBan;
+            Cidr foundCidr = connection.getIpAddress();
+            IpBans.Item foundIpBan = server.getIpBans().findMatchingIpBan(foundCidr);
             
             server.queueSynchronousTask(() -> {
                 Player player = playerManager.getPlayer(name);

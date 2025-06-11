@@ -100,21 +100,27 @@ public class Connection extends SimpleChannelInboundHandler<Request> {
 
     public Cidr getIpAddress() {
         String whole = channel.remoteAddress().toString();
-        int start = 0;
-        int end = whole.length();
-        for(int i = 0; i < whole.length(); i++) {
-            if(whole.charAt(i) == '/') {
-                start = i + 1;
-            }
-            if(whole.charAt(i) == ':') {
-                if(i == whole.length() - 1 || whole.charAt(i + 1) != ':') {
-                    end = i;
-                } else {
-                    i++;
+        try {
+            System.out.println(whole);
+            int start = 0;
+            int end = whole.length();
+            for(int i = 0; i < whole.length(); i++) {
+                if(whole.charAt(i) == '/') {
+                    start = i + 1;
+                }
+                if(whole.charAt(i) == ':') {
+                    if(i == whole.length() - 1 || whole.charAt(i + 1) != ':') {
+                        end = i;
+                    } else {
+                        i++;
+                    }
                 }
             }
+            return Cidr.create(whole.substring(start, end));
+        } catch(Exception e) {
+            logger.error("Error while parsing ip address for " + whole + ".", e);
+            return null;
         }
-        return Cidr.create(whole.substring(start, end));
     }
     
     public void setPlayer(Player player) {
