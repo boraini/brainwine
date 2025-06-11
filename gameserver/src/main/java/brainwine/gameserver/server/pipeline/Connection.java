@@ -101,7 +101,6 @@ public class Connection extends SimpleChannelInboundHandler<Request> {
     public Cidr getIpAddress() {
         String whole = channel.remoteAddress().toString();
         try {
-            System.out.println(whole);
             int start = 0;
             int end = whole.length();
             for(int i = 0; i < whole.length(); i++) {
