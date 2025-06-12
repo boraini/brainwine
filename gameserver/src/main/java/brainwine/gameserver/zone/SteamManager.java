@@ -36,7 +36,7 @@ public class SteamManager {
     private final Set<Integer> processedIndices = new HashSet<>();
     private final List<Integer> expiredSteamableIndices = new ArrayList<>();
     private final Queue<SteamIteration> processQueue = new ArrayDeque<>();
-    private final Map<Integer, List<Pair<Vector2i, Integer>>> steamSourceOutlets = new HashMap<>();
+    private final Map<Item, List<Pair<Vector2i, Integer>>> steamSourceOutlets = new HashMap<>();
     private final Zone zone;
     private byte[] data;
     private long lastUpdateAt;
@@ -123,7 +123,9 @@ public class SteamManager {
                 continue;
             }
 
-            List<Pair<Vector2i, Integer>> indices = steamSourceOutlets.computeIfAbsent(index, key -> new ArrayList<>(Arrays.asList(new Pair<>(new Vector2i(-1, 0), 3))));
+            Item item = zone.getBlock(x, y).getFrontItem();
+
+            List<Pair<Vector2i, Integer>> indices = steamSourceOutlets.computeIfAbsent(item, key -> new ArrayList<>(Arrays.asList(new Pair<>(new Vector2i(-1, 0), 3))));
 
             for(Pair<Vector2i, Integer> pair : indices) {
                 processQueue.add(new SteamIteration(x + pair.getFirst().getX(), y + pair.getFirst().getY(), pair.getLast(), 0));
@@ -220,14 +222,13 @@ public class SteamManager {
             List<Pair<Vector2i, Integer>> parsed;
             try {
                 parsed = JsonHelper.readValue(item.getUse(ItemUseType.STEAM_SOURCE), new TypeReference<List<Pair<Vector2i, Integer>>>() {});
-                steamSourceOutlets.put(index, parsed);
+                steamSourceOutlets.put(item, parsed);
             } catch(Exception e) {}
             steamSourceIndices.add(index);
             setState(index, STATE_COLLECTOR);
             return;
         } else {
             steamSourceIndices.remove(index);
-            steamSourceOutlets.remove(index);
         }
 
         setState(index, STATE_EMPTY);
