@@ -118,7 +118,15 @@ public class ZoneManager {
         if(timeSinceLastGeneration < requiredInterval) return;
 
         if(shouldGenerateUnexploredZone()) {
-            List<Biome> biomeOptions = Arrays.stream(Biome.values()).collect(Collectors.toList());
+            List<Biome> biomeOptions = Arrays.asList(
+                    Biome.PLAIN,
+                    Biome.ARCTIC,
+                    Biome.HELL,
+                    Biome.DESERT,
+                    Biome.BRAIN,
+                    Biome.DEEP,
+                    Biome.SPACE
+            );
 
             biomeOptions.remove(lastGeneratedBiome);
             if(lastGeneratedBiome == Biome.HELL || lastGeneratedBiome == Biome.DEEP) {

@@ -55,11 +55,11 @@ public class TerrainGeneratorTask implements GeneratorTask {
             double amplitude = ctx.nextDouble() * (maxAmplitude - minAmplitude) + minAmplitude;
             int oceanY = OceanGeneratorTask.getOceanY(ctx);
             for(int x = 0; x < width; x++) {
-                double surfaceNoise = SimplexNoise.noise2(ctx.getSeed(), x / 256.0, 0, 7);
+                double surfaceNoise = SimplexNoise.noise2(ctx.getSeed(), x / 256.0, 0, 7); // 0 to 1
 
-                double islandBiasRaw = 2.0 * SimplexNoise.noise2(ctx.getSeed(), x / 256.0, 0, 2) - 1.0;
-                double islandBiasGained = Math.signum(islandBiasRaw) * Math.pow(Math.abs(islandBiasRaw), 0.6);
-                double islandBias = -surfaceLevel * (0.5 + 0.25 * islandBiasGained);
+                double islandBiasRaw = 2.0 * SimplexNoise.noise2(ctx.getSeed(), x / 256.0, 0, 2) - 1.0; // -1 to 1
+                double islandBiasGained = Math.signum(islandBiasRaw) * Math.pow(Math.abs(islandBiasRaw), 0.6); // -1 to 1
+                double islandBias = -surfaceLevel * (0.35 + 0.25 * islandBiasGained); // about half of the world height
 
                 double erosionFactor = (oceanY < islandBias + surfaceLevel) ? 2.0 : amplitude;
 

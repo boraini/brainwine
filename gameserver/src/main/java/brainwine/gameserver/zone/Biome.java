@@ -13,7 +13,9 @@ public enum Biome {
     DESERT,
     BRAIN,
     DEEP,
-    SPACE;
+    SPACE,
+    OCEAN,
+    ;
     
     @JsonCreator
     public static Biome fromName(String id) {
