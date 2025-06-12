@@ -263,7 +263,7 @@ public class TeleportCommand extends Command {
                                     " wants to teleport you to " +
                                     targetZone.getReadableCoordinates(x, y) +
                                     (distance <= 5.0 ? " (near themselves)" : "") +
-                                    (targetZone == player.getZone()
+                                    (targetZone == subject.getZone()
                                             ? "."
                                             : " in " + targetZone.getName() + ".") +
                                     " Click OK to accept."
