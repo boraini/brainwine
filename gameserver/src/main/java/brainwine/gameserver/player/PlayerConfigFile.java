@@ -1,5 +1,6 @@
 package brainwine.gameserver.player;
 
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -52,6 +53,7 @@ public class PlayerConfigFile {
     private Map<String, Quest> androidQuests = new HashMap<>();
     private AndroidShopHistory androidShopHistory = new AndroidShopHistory();
     private String familyName = null;
+    private Map<String, OffsetDateTime> actionHistory = new HashMap<>();
     
     public PlayerConfigFile(Player player) {
         this.name = player.getName();
@@ -87,6 +89,7 @@ public class PlayerConfigFile {
         this.androidQuests = player.getAndroidQuests();
         this.androidShopHistory = player.getAndroidShopHistory();
         this.familyName = player.getFamilyName();
+        this.actionHistory = player.getActionHistory();
     }
 
     private static int transferSkill(Map<String, Integer> skills, String from, String to, int max) {
@@ -280,5 +283,9 @@ public class PlayerConfigFile {
 
     public String getFamilyName() {
         return familyName;
+    }
+
+    public Map<String, OffsetDateTime> getActionHistory() {
+        return actionHistory;
     }
 }

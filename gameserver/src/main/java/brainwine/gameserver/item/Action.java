@@ -6,12 +6,14 @@ import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
 import brainwine.gameserver.item.consumables.Consumable;
 import brainwine.gameserver.item.consumables.ConvertConsumable;
 import brainwine.gameserver.item.consumables.HealConsumable;
+import brainwine.gameserver.item.consumables.LootConsumable;
 import brainwine.gameserver.item.consumables.NameChangeConsumable;
 import brainwine.gameserver.item.consumables.RefillConsumable;
 import brainwine.gameserver.item.consumables.SkillConsumable;
 import brainwine.gameserver.item.consumables.SkillResetConsumable;
 import brainwine.gameserver.item.consumables.StealthConsumable;
 import brainwine.gameserver.item.consumables.TeleportConsumable;
+import brainwine.gameserver.item.consumables.UnlockWorldConsumable;
 
 /**
  * Action types for items.
@@ -25,6 +27,7 @@ public enum Action {
     DIG,
     SCRUB,
     HEAL(new HealConsumable()),
+    LOOT(new LootConsumable()),
     NAME_CHANGE(new NameChangeConsumable()),
     REFILL(new RefillConsumable()),
     SKILL(new SkillConsumable()),
@@ -32,6 +35,7 @@ public enum Action {
     SMASH,
     STEALTH(new StealthConsumable()),
     TELEPORT(new TeleportConsumable()),
+    UNLOCK_WORLD(new UnlockWorldConsumable()),
     
     @JsonEnumDefaultValue
     NONE;

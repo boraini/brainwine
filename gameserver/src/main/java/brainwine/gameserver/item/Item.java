@@ -113,6 +113,9 @@ public class Item {
     
     @JsonProperty("consumable")
     private boolean consumable;
+
+    @JsonProperty("locked")
+    private boolean locked;
     
     @JsonProperty("placeover")
     private boolean placeover;
@@ -455,6 +458,10 @@ public class Item {
     
     public boolean isConsumable() {
         return consumable;
+    }
+
+    public boolean isLocked() {
+        return locked;
     }
     
     public boolean isBase() {

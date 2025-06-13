@@ -1,0 +1,52 @@
+package brainwine.gameserver.item.consumables;
+
+import brainwine.gameserver.GameServer;
+import brainwine.gameserver.item.Item;
+import brainwine.gameserver.player.Player;
+import brainwine.gameserver.server.messages.InventoryMessage;
+import brainwine.gameserver.zone.Biome;
+import brainwine.gameserver.zone.ZoneRules;
+import brainwine.gameserver.zone.gen.ZoneGenerator;
+
+import java.time.temporal.ChronoUnit;
+
+public class UnlockWorldConsumable implements Consumable {
+    private static final String actionKey = "unlockWorld";
+    @Override
+    public void consume(Item item, Player player, Object details) {
+        if(player.isActionOnCooldown(actionKey, 5L, ChronoUnit.MINUTES)) {
+            fail(player, item, "You can only use an " + item.getTitle() + " every 5 minutes.");
+            return;
+        }
+
+        player.recordActionTime(actionKey);
+
+        Biome biome = Biome.getRandomBiome();
+        int width = biome == Biome.DEEP ? 1200 : 2000;
+        int height = biome == Biome.DEEP ? 1000 : 600;
+        int seed = (int)(Math.random() * Integer.MAX_VALUE);
+
+        ZoneGenerator generator = ZoneGenerator.getZoneGenerator(biome);
+
+        player.getInventory().removeItem(item, true);
+        player.notify("Your zone is being generated. It should be ready soon!");
+        generator.generateZoneAsync(biome, width, height, seed, zone -> {
+            if(zone == null) {
+                player.getInventory().addItem(item);
+                fail(player, item, "An unexpected error occurred while generating your zone. Your " + item.getTitle() + "is returned.");
+            } else {
+                zone.setOwner(player);
+                zone.setPrivate(true);
+                zone.setProtected(true);
+                zone.setRules(ZoneRules.getPrivateDefaults());
+                GameServer.getInstance().getZoneManager().addZone(zone);
+                player.notify(String.format("Your zone '%s' is ready for exploration!", zone.getName()));
+            }
+        });
+    }
+
+    private void fail(Player player, Item item, String message) {
+        player.notify(message);
+        player.sendMessage(new InventoryMessage(player.getInventory().getClientConfig(item)));
+    }
+}

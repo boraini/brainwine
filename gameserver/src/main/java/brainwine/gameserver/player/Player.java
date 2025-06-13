@@ -4,6 +4,7 @@ import static brainwine.shared.LogMarkers.SERVER_MARKER;
 
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -143,6 +144,7 @@ public class Player extends Entity implements CommandExecutor {
     private Map<String, Quest> androidQuests = new HashMap<>();
     private AndroidShopHistory androidShopHistory = new AndroidShopHistory();
     private String familyName = null;
+    private Map<String, OffsetDateTime> actionHistory = new HashMap<>();
     private final Map<String, Object> settings = new HashMap<>();
     private final Set<Integer> activeChunks = new HashSet<>();
     private final Map<Integer, Consumer<Object[]>> dialogs = new HashMap<>();
@@ -214,6 +216,7 @@ public class Player extends Entity implements CommandExecutor {
         this.androidQuests = config.getAndroidQuests();
         this.androidShopHistory = config.getAndroidShopHistory();
         this.familyName = config.getFamilyName();
+        this.actionHistory = config.getActionHistory();
         health = getMaxHealth();
         inventory.setPlayer(this);
         statistics.setPlayer(this);
@@ -1753,6 +1756,18 @@ public class Player extends Entity implements CommandExecutor {
             section.setTitle(title);
             notify(dialog, NotificationType.REWARD);
         }
+    }
+
+    public void recordActionTime(String name) {
+        actionHistory.put(name.toLowerCase(), OffsetDateTime.now());
+    }
+
+    public boolean isActionOnCooldown(String name, long cooldown, TemporalUnit unit) {
+        return actionHistory.containsKey(name.toLowerCase()) && !OffsetDateTime.now().isAfter(actionHistory.get(name.toLowerCase()).plus(cooldown, unit));
+    }
+
+    public Map<String, OffsetDateTime> getActionHistory() {
+        return Collections.unmodifiableMap(actionHistory);
     }
     
     public Inventory getInventory() {
