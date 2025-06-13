@@ -10,8 +10,8 @@ import brainwine.gameserver.server.messages.InventoryMessage;
 public class LootConsumable implements Consumable {
     @Override
     public void consume(Item item, Player player, Object details) {
-        Item keyItem = ItemRegistry.getItem("consumables/world-key");
-        if(item.isLocked() && !player.getInventory().hasItem(keyItem)) {
+        Item keyItem = ItemRegistry.getItem("consumables/lockboxkey");
+        if(item.isLocked() && (keyItem.isAir() || !player.getInventory().hasItem(keyItem))) {
             fail(player, item, "You need a key to unlock this " + item.getTitle() + "!");
             return;
         }
