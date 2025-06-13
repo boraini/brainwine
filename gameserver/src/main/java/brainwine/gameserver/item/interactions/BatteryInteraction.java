@@ -3,7 +3,9 @@ package brainwine.gameserver.item.interactions;
 import brainwine.gameserver.entity.Entity;
 import brainwine.gameserver.item.Item;
 import brainwine.gameserver.item.ItemRegistry;
+import brainwine.gameserver.item.ItemUseType;
 import brainwine.gameserver.item.Layer;
+import brainwine.gameserver.item.usetypeconfig.BatteryConfig;
 import brainwine.gameserver.player.Inventory;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.util.MapHelper;
@@ -33,7 +35,7 @@ public class BatteryInteraction implements ItemInteraction {
         long addition = (long)(1000L * battery.getPower());
         long capacity = 5L * addition;
         if(config instanceof Map) {
-            capacity = (long)(1000L * MapHelper.getFloat((Map<String, Object>)config, "capacity", 5.0f * battery.getPower()));
+            capacity = (long)(1000L * item.<BatteryConfig>getStructuredUse(ItemUseType.BATTERY).getCapacity());
         }
 
         long currentTime = System.currentTimeMillis();

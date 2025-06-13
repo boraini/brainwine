@@ -83,7 +83,7 @@ public class BlockUseRequest extends PlayerRequest {
             ItemInteraction interaction = use.getInteraction();
             
             if(interaction != null) {
-                interaction.interact(zone, player, x, y, layer, item, mod, metaBlock, config, data);
+                interaction.interact(zone, player, x, y, layer, item, mod, metaBlock, config.getConfig(), data);
             }
         });
     }

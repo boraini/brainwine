@@ -2,7 +2,6 @@ package brainwine.gameserver.zone;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -13,11 +12,11 @@ import java.util.Set;
 import brainwine.gameserver.item.Item;
 import brainwine.gameserver.item.ItemUseType;
 import brainwine.gameserver.item.Layer;
+import brainwine.gameserver.item.ModType;
+import brainwine.gameserver.item.usetypeconfig.ExtendedSteamableConfig;
+import brainwine.gameserver.item.usetypeconfig.SteamSourceConfig;
 import brainwine.gameserver.util.MapHelper;
-import brainwine.gameserver.util.Pair;
 import brainwine.gameserver.util.Vector2i;
-import brainwine.shared.JsonHelper;
-import com.fasterxml.jackson.core.type.TypeReference;
 
 /**
  * Distributes steam through collectors to nearby machines via pipes.
@@ -36,7 +35,7 @@ public class SteamManager {
     private final Set<Integer> processedIndices = new HashSet<>();
     private final List<Integer> expiredSteamableIndices = new ArrayList<>();
     private final Queue<SteamIteration> processQueue = new ArrayDeque<>();
-    private final Map<Item, List<Pair<Vector2i, Integer>>> steamSourceOutlets = new HashMap<>();
+    private final Map<Integer, Set<Integer>> extendedSteamableInletIndices = new HashMap<>();
     private final Zone zone;
     private byte[] data;
     private long lastUpdateAt;
@@ -95,6 +94,20 @@ public class SteamManager {
         for(int index : expiredSteamableIndices) {
             steamableIndices.remove(index);
         }
+
+        Set<Integer> expiredIndices = new HashSet<>();
+        for(Set<Integer> index : extendedSteamableInletIndices.values()) {
+            expiredIndices.clear();
+            for(int mainIndex : index) {
+                int x = mainIndex % zone.getWidth();
+                int y = mainIndex / zone.getWidth();
+
+                if(!zone.areCoordinatesInBounds(x, y) || !zone.getBlock(x, y).getFrontItem().hasUse(ItemUseType.EXTENDED_STEAMABLE)) {
+                    expiredIndices.add(mainIndex);
+                }
+            }
+            index.removeAll(expiredIndices);
+        }
         
         // Enqueue blocks at the spouts of all collectors
         for(int index : collectorIndices) {
@@ -123,15 +136,14 @@ public class SteamManager {
                 continue;
             }
 
-            Item item = zone.getBlock(x, y).getFrontItem();
+            SteamSourceConfig steamSource = zone.getBlock(x, y).getFrontItem().getStructuredUse(ItemUseType.STEAM_SOURCE);
 
-            List<Pair<Vector2i, Integer>> indices = steamSourceOutlets.computeIfAbsent(item, key -> new ArrayList<>(Arrays.asList(new Pair<>(new Vector2i(-1, 0), 3))));
-
-            for(Pair<Vector2i, Integer> pair : indices) {
-                processQueue.add(new SteamIteration(x + pair.getFirst().getX(), y + pair.getFirst().getY(), pair.getLast(), 0));
+            for(SteamSourceConfig.Outlet outlet : steamSource.getOutlets()) {
+                processQueue.add(new SteamIteration(x + outlet.getPosition().getX(), y + outlet.getPosition().getY(), outlet.getDirection(), 0));
             }
         }
-        
+
+        Set<Integer> poweredExtendedSteamableInlets = new HashSet<>();
         // Travel down the pipeline and power on any machines that are reached by it
         while(!processQueue.isEmpty()) {
             SteamIteration iteration = processQueue.poll();
@@ -158,6 +170,10 @@ public class SteamManager {
             }
             
             processedIndices.add(index);
+
+            if(extendedSteamableInletIndices.containsKey(index)) {
+                poweredExtendedSteamableInlets.add(index);
+            }
             
             // Skip if block is not a pipe but activate it first if it uses steam
             if(getState(x, y) != STATE_PIPE) {
@@ -176,6 +192,31 @@ public class SteamManager {
             if(direction != 3) processQueue.add(new SteamIteration(x + 1, y, 1, nextDepth)); // Right
             if(direction != 0) processQueue.add(new SteamIteration(x, y + 1, 2, nextDepth)); // Bottom
             if(direction != 1) processQueue.add(new SteamIteration(x - 1, y, 3, nextDepth)); // Left
+        }
+
+        for(int inletIndex : extendedSteamableInletIndices.keySet()) {
+            boolean powered = poweredExtendedSteamableInlets.contains(inletIndex);
+            for(int mainIndex : extendedSteamableInletIndices.get(inletIndex)) {
+                int x = mainIndex % zone.getWidth();
+                int y = mainIndex / zone.getWidth();
+
+                // Items without the extended steam use type had been removed beforehand.
+                Block block = zone.getBlock(x, y);
+                if(block == null) continue;
+                Item item = zone.getBlock(x, y).getFrontItem();
+                boolean serverSide = item.getMod() == ModType.ROTATION;
+                if(serverSide) {
+                    ExtendedSteamableConfig steamable = item.getStructuredUse(ItemUseType.EXTENDED_STEAMABLE);
+                    boolean poweredBeforehand = item.hasId(steamable.getOnVariantId());
+
+                    if(poweredBeforehand != powered) {
+                        String newItemCode = powered ? steamable.getOnVariantId() : steamable.getOffVariantId();
+                        zone.updateBlock(x, y, Layer.FRONT, newItemCode, block.getFrontMod());
+                    }
+                } else {
+                    zone.updateBlockMod(x, y, Layer.FRONT, powered ? 1 : 0);
+                }
+            }
         }
     }
 
@@ -219,16 +260,26 @@ public class SteamManager {
 
         // Is it a steam source
         if(item.hasUse(ItemUseType.STEAM_SOURCE) && zone.getBlock(x, y).getFrontMod() > 0) {
-            List<Pair<Vector2i, Integer>> parsed;
-            try {
-                parsed = JsonHelper.readValue(item.getUse(ItemUseType.STEAM_SOURCE), new TypeReference<List<Pair<Vector2i, Integer>>>() {});
-                steamSourceOutlets.put(item, parsed);
-            } catch(Exception e) {}
             steamSourceIndices.add(index);
             setState(index, STATE_COLLECTOR);
             return;
         } else {
             steamSourceIndices.remove(index);
+        }
+
+        if(item.hasUse(ItemUseType.EXTENDED_STEAMABLE)) {
+            ExtendedSteamableConfig steamable = item.getStructuredUse(ItemUseType.EXTENDED_STEAMABLE);
+
+            Block block = zone.getBlock(x, y);
+            boolean flipped = item.isMirrorable() && block.getFrontMod() == 1;
+            for(Vector2i position : steamable.getInlets()) {
+                int worldX = x + (flipped ? (item.getBlockWidth() - position.getX() - 1) : position.getX());
+                int worldY = y + position.getY();
+
+                int inletIndex = zone.getBlockIndex(worldX, worldY);
+
+                extendedSteamableInletIndices.computeIfAbsent(inletIndex, HashSet::new).add(index);
+            }
         }
 
         setState(index, STATE_EMPTY);
