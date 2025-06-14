@@ -106,6 +106,8 @@ public class DirectDataFetcher implements DataFetcher {
                 zone.getBiome().getId(),
                 zone.getActivity() == null || zone.getActivity() == ZoneActivity.NONE ? null : zone.getActivity().toString().toLowerCase(),
                 zone.isPvp(),
+                zone.isMarket(),
+                zone.isTutorial(),
                 false,
                 zone.isPrivate(),
                 zone.isProtected(),

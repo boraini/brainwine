@@ -16,6 +16,8 @@ public class ZoneInfo {
     private final String biome;
     private final String activity;
     private final boolean pvp;
+    private final boolean market;
+    private final boolean tutorial;
     private final boolean premium;
     private final boolean isPrivate;
     private final boolean isProtected;
@@ -28,12 +30,14 @@ public class ZoneInfo {
     private final String owner;
     private final List<String> members;
 
-    public ZoneInfo(String name, String biome, String activity, boolean pvp, boolean premium, boolean isPrivate, boolean isProtected,
+    public ZoneInfo(String name, String biome, String activity, boolean pvp, boolean market, boolean tutorial, boolean premium, boolean isPrivate, boolean isProtected,
             int playerCount, int width, int height, int[] surface, double explorationProgress, OffsetDateTime creationDate, String owner, List<String> members) {
         this.name = name;
         this.biome = biome;
         this.activity = activity;
         this.pvp = pvp;
+        this.market = market;
+        this.tutorial = tutorial;
         this.premium = premium;
         this.isPrivate = isPrivate;
         this.isProtected = isProtected;
@@ -61,6 +65,14 @@ public class ZoneInfo {
     
     public boolean isPvp() {
         return pvp;
+    }
+
+    public boolean isMarket() {
+        return market;
+    }
+
+    public boolean isTutorial() {
+        return tutorial;
     }
     
     public boolean isPremium() {

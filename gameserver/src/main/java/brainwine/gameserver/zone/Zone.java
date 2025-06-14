@@ -88,10 +88,11 @@ public class Zone {
     private float time = (float)Math.random(); // TODO temporary
     private float temperature;
     private float acidity;
-    private ZoneActivity activity;
     private boolean isPrivate;
     private boolean isProtected;
     private boolean pvp;
+    private boolean market;
+    private boolean tutorial;
     private String entryCode;
     private String owner;
     private MassSpawnerConfiguration massSpawnerConfiguration = new MassSpawnerConfiguration().setZone(this);
@@ -146,10 +147,11 @@ public class Zone {
         members.addAll(config.getMembers());
         actionHistory.putAll(config.getActionHistory());
         acidity = config.getAcidity();
-        activity = config.getActivity();
         isPrivate = config.isPrivate();
         isProtected = config.isProtected();
         pvp = config.isPvp();
+        market = config.isMarket();
+        tutorial = config.isTutorial();
         creationDate = config.getCreationDate();
         massSpawnerConfiguration = config.getMassSpawnerConfiguration().setZone(this);
         massTeleporterConfiguration = config.getMassTeleporterConfiguration().setZone(this);
@@ -1996,20 +1998,8 @@ public class Zone {
         return acidity;
     }
 
-    public void setActivity(ZoneActivity activity) {
-        this.activity = activity;
-    }
-
     public ZoneActivity getActivity() {
-        return activity;
-    }
-
-    public boolean isMarket() {
-        return this.activity == ZoneActivity.MARKET;
-    }
-
-    public boolean isTutorial() {
-        return this.activity == ZoneActivity.TUTORIAL;
+        return tutorial ? ZoneActivity.TUTORIAL : market ? ZoneActivity.MARKET : ZoneActivity.NONE;
     }
 
     public void setPrivate(boolean value) {
@@ -2055,6 +2045,18 @@ public class Zone {
     
     public boolean isPvp() {
         return pvp;
+    }
+
+    public void setMarket(boolean market) {
+        this.market = market;
+    }
+
+    public boolean isMarket() {
+        return market;
+    }
+
+    public boolean isTutorial() {
+        return tutorial;
     }
 
     public MassSpawnerConfiguration getMassSpawnerConfiguration() {

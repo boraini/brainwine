@@ -32,9 +32,6 @@ public class ZoneConfigFile {
     @JsonSetter(nulls = Nulls.SKIP)
     private float acidity = 1.0F;
 
-    @JsonSetter(nulls = Nulls.DEFAULT)
-    private ZoneActivity activity;
-
     @JsonSetter(value = "private")
     private boolean isPrivate;
 
@@ -43,6 +40,12 @@ public class ZoneConfigFile {
 
     @JsonSetter(nulls = Nulls.SKIP)
     private boolean pvp;
+
+    @JsonSetter(nulls = Nulls.SKIP)
+    private boolean market;
+
+    @JsonSetter(nulls = Nulls.SKIP)
+    private boolean tutorial;
     
     @JsonSetter(nulls = Nulls.SKIP)
     private String entryCode;
@@ -82,9 +85,14 @@ public class ZoneConfigFile {
 
     @JsonCreator
     private ZoneConfigFile(@JsonProperty(value = "name", required = true) String name,
+            @JsonProperty("tutorial") boolean tutorial,
+            @JsonProperty("market") boolean market,
+            @JsonProperty("activity") ZoneActivity activity,
             @JsonProperty(value = "width", required = true) int width,
             @JsonProperty(value = "height", required = true) int height) {
         this.name = name;
+        this.tutorial = tutorial || activity == ZoneActivity.TUTORIAL;
+        this.market = market || activity == ZoneActivity.MARKET;
         this.width = width;
         this.height = height;
     }
@@ -95,10 +103,11 @@ public class ZoneConfigFile {
         this.width = zone.getWidth();
         this.height = zone.getHeight();
         this.acidity = zone.getAcidity();
-        this.activity = zone.getActivity();
         this.isPrivate = zone.isPrivate();
         this.isProtected = zone.isProtected();
         this.pvp = zone.isPvp();
+        this.market = zone.isMarket();
+        this.tutorial = zone.isTutorial();
         this.entryCode = zone.getEntryCode();
         this.owner = zone.getOwner();
         this.members = zone.getMembers();
@@ -132,10 +141,6 @@ public class ZoneConfigFile {
         return acidity;
     }
 
-    public ZoneActivity getActivity() {
-        return activity;
-    }
-
     public boolean isPrivate() {
         return isPrivate;
     }
@@ -146,6 +151,14 @@ public class ZoneConfigFile {
     
     public boolean isPvp() {
         return pvp;
+    }
+
+    public boolean isMarket() {
+        return market;
+    }
+
+    public boolean isTutorial() {
+        return tutorial;
     }
     
     public String getEntryCode() {

@@ -52,7 +52,7 @@ public class MarketCommand extends Command {
                     , NotificationType.SYSTEM);
         }
 
-        zone.setActivity(value ? ZoneActivity.MARKET : ZoneActivity.NONE);
+        zone.setMarket(value);
     }
 
     @Override

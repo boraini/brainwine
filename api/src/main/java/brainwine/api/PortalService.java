@@ -138,6 +138,10 @@ public class PortalService {
         handleQueryParam(ctx, "pvp", boolean.class, pvp -> {
             zones.removeIf(zone -> zone.isPvp() != pvp);
         });
+
+        handleQueryParam(ctx, "market", boolean.class, pvp -> {
+            zones.removeIf(zone -> zone.isMarket() != pvp);
+        });
         
         handleQueryParam(ctx, "protected", boolean.class, value -> {
             zones.removeIf(zone -> zone.isProtected() != value);
