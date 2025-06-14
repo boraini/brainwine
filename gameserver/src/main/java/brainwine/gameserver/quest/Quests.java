@@ -128,6 +128,26 @@ public class Quests {
         return quest;
     }
 
+    public static String findQuestIdByTitle(Player player, String title) {
+        if(player != null) {
+            for(String questId : player.getQuestProgresses().keySet()) {
+                if(title.equalsIgnoreCase(get(player, questId).getTitle())) {
+                    return questId;
+                }
+            }
+        }
+
+        for(Map<String, Quest> map : questMaps.values()) {
+            for(String questId : map.keySet()) {
+                if(title.equalsIgnoreCase(map.get(questId).getTitle())) {
+                    return questId;
+                }
+            }
+        }
+
+        return null;
+    }
+
     public static List<Quest> getRandomQuestsFromCategory(Entity me, String categoryTitle, Set<String> excludeQuestIds, int count) {
         List<Quest> targetList = questLists.get(categoryTitle);
 
