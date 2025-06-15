@@ -36,6 +36,7 @@ public class SteamManager {
     private final List<Integer> expiredSteamableIndices = new ArrayList<>();
     private final Queue<SteamIteration> processQueue = new ArrayDeque<>();
     private final Map<Integer, Set<Integer>> extendedSteamableInletIndices = new HashMap<>();
+    private final Map<Integer, List<Integer>> extendedSteamableMainIndices = new HashMap<>();
     private final Zone zone;
     private byte[] data;
     private long lastUpdateAt;
@@ -226,15 +227,25 @@ public class SteamManager {
             if(zone.getBlock(metaBlock.getX(), metaBlock.getY()).getFrontMod() > 0) {
                 long f = MapHelper.getLong(metaBlock.getMetadata(), "f", 0);
                 if(f > 0 && f < currentTime) {
-                    System.out.println("Shutting off machine!");
                     zone.updateBlock(metaBlock.getX(), metaBlock.getY(), Layer.FRONT, metaBlock.getItem(), 0);
                 }
             }
         }
     }
+
+    public void unindexBlock(int x, int y) {
+        int index = zone.getBlockIndex(x, y);
+        List<Integer> inletIndices = extendedSteamableMainIndices.get(index);
+        if(inletIndices != null) for(int inletIndex : inletIndices) {
+            Set<Integer> mainIndices = extendedSteamableInletIndices.get(inletIndex);
+            if(mainIndices != null) inletIndices.forEach(mainIndices::remove);
+        }
+    }
     
     public void indexBlock(int x, int y, Item item) {
         int index = zone.getBlockIndex(x, y);
+
+        unindexBlock(x, y);
 
         // Does it use steam?
         if(item.usesSteam()) {
@@ -272,14 +283,19 @@ public class SteamManager {
 
             Block block = zone.getBlock(x, y);
             boolean flipped = item.isMirrorable() && block.getFrontMod() != 0;
+            List<Integer> inletIndices = new ArrayList<>(steamable.getInlets().size());
             for(Vector2i position : steamable.getInlets()) {
                 int worldX = x + (flipped ? (item.getBlockWidth() - position.getX() - 1) : position.getX());
                 int worldY = y + position.getY();
 
-                int inletIndex = zone.getBlockIndex(worldX, worldY);
+                if(zone.areCoordinatesInBounds(worldX, worldY)) {
+                    int inletIndex = zone.getBlockIndex(worldX, worldY);
 
-                extendedSteamableInletIndices.computeIfAbsent(inletIndex, HashSet::new).add(index);
+                    extendedSteamableInletIndices.computeIfAbsent(inletIndex, HashSet::new).add(index);
+                    inletIndices.add(inletIndex);
+                }
             }
+            extendedSteamableMainIndices.put(index, inletIndices);
         }
 
         setState(index, STATE_EMPTY);
