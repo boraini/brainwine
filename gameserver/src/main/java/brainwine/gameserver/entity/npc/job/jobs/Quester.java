@@ -2,8 +2,10 @@ package brainwine.gameserver.entity.npc.job.jobs;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import brainwine.gameserver.GameConfiguration;
 import brainwine.gameserver.dialog.DialogHelper;
@@ -86,7 +88,14 @@ public class Quester extends DialoguerJob {
                     }
                     // Offer a set of quests that the player hasn't had before
                     final int count = 5;
-                    List<Quest> quests = Quests.getRandomQuestsFromCategory(me, category, player.getQuestProgresses().keySet(), count);
+                    Set<String> excludedQuests = new HashSet<>(player.getQuestProgresses().keySet());
+
+                    // If the quester is Newton and there are other uncompleted beginner quests don't offer the "Fancy Another Quest" quest.
+                    if("Survive and Thrive".equals(category) && excludedQuests.stream().filter(k -> k.startsWith("survival_") && !k.startsWith("survival_random")).count() < Quests.questMaps.get("Survive and Thrive").size() - 1) {
+                        excludedQuests.add("survival_quest");
+                    }
+
+                    List<Quest> quests = Quests.getRandomQuestsFromCategory(me, category, excludedQuests, count);
 
                     if(quests.size() < count) {
                         String categoryPrefix = Quests.titleToPrefix.get(category);
