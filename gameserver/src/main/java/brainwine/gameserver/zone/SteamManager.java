@@ -271,7 +271,7 @@ public class SteamManager {
             ExtendedSteamableConfig steamable = item.getStructuredUse(ItemUseType.EXTENDED_STEAMABLE);
 
             Block block = zone.getBlock(x, y);
-            boolean flipped = item.isMirrorable() && block.getFrontMod() == 1;
+            boolean flipped = item.isMirrorable() && block.getFrontMod() != 0;
             for(Vector2i position : steamable.getInlets()) {
                 int worldX = x + (flipped ? (item.getBlockWidth() - position.getX() - 1) : position.getX());
                 int worldY = y + position.getY();
