@@ -95,20 +95,6 @@ public class SteamManager {
         for(int index : expiredSteamableIndices) {
             steamableIndices.remove(index);
         }
-
-        Set<Integer> expiredIndices = new HashSet<>();
-        for(Set<Integer> index : extendedSteamableInletIndices.values()) {
-            expiredIndices.clear();
-            for(int mainIndex : index) {
-                int x = mainIndex % zone.getWidth();
-                int y = mainIndex / zone.getWidth();
-
-                if(!zone.areCoordinatesInBounds(x, y) || !zone.getBlock(x, y).getFrontItem().hasUse(ItemUseType.EXTENDED_STEAMABLE)) {
-                    expiredIndices.add(mainIndex);
-                }
-            }
-            index.removeAll(expiredIndices);
-        }
         
         // Enqueue blocks at the spouts of all collectors
         for(int index : collectorIndices) {
@@ -171,10 +157,6 @@ public class SteamManager {
             }
             
             processedIndices.add(index);
-
-            if(extendedSteamableInletIndices.containsKey(index)) {
-                poweredExtendedSteamableInlets.add(index);
-            }
             
             // Skip if block is not a pipe but activate it first if it uses steam
             if(getState(x, y) != STATE_PIPE) {
@@ -183,6 +165,11 @@ public class SteamManager {
                 }
                 
                 continue;
+            }
+
+            Set<Integer> mainIndices = extendedSteamableInletIndices.get(index);
+            if(mainIndices != null && !mainIndices.isEmpty()) {
+                poweredExtendedSteamableInlets.add(index);
             }
             
             byte direction = iteration.getDirection();
@@ -235,10 +222,11 @@ public class SteamManager {
 
     public void unindexBlock(int x, int y) {
         int index = zone.getBlockIndex(x, y);
-        List<Integer> inletIndices = extendedSteamableMainIndices.get(index);
-        if(inletIndices != null) for(int inletIndex : inletIndices) {
-            Set<Integer> mainIndices = extendedSteamableInletIndices.get(inletIndex);
-            if(mainIndices != null) inletIndices.forEach(mainIndices::remove);
+
+        List<Integer> inlets = extendedSteamableMainIndices.remove(index);
+        if(inlets != null) for(int inlet : inlets) {
+            Set<Integer> steamableIndices = extendedSteamableInletIndices.get(inlet);
+            if(steamableIndices != null) steamableIndices.remove(index);
         }
     }
     
