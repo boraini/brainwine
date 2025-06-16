@@ -35,7 +35,7 @@ public abstract class WorldMachineConfiguration {
         if((machineX == 0 && machineY == 0) || activation > System.currentTimeMillis()) return false;
         Block block = zone.getBlockSafe(machineX, machineY);
         if(block == null || !block.getFrontItem().getId().startsWith(itemName)) return false;
-        return block.getFrontMod() > 0;
+        return zone.isBlockPowered(machineX, machineY);
     }
 
     protected boolean isEnabled() {
