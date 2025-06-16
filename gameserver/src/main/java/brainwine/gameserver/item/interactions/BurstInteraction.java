@@ -5,10 +5,13 @@ import java.util.Map;
 import brainwine.gameserver.entity.Entity;
 import brainwine.gameserver.item.DamageType;
 import brainwine.gameserver.item.Item;
+import brainwine.gameserver.item.ItemRegistry;
+import brainwine.gameserver.item.ItemUseType;
 import brainwine.gameserver.item.Layer;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.player.Skill;
 import brainwine.gameserver.util.MapHelper;
+import brainwine.gameserver.util.MathUtils;
 import brainwine.gameserver.zone.Block;
 import brainwine.gameserver.zone.MetaBlock;
 import brainwine.gameserver.zone.Zone;
@@ -55,6 +58,25 @@ public class BurstInteraction implements ItemInteraction {
         float range = MapHelper.getFloat(configMap, "range");
         float damage = MapHelper.getFloat(configMap, "damage");
         boolean destructive = MapHelper.getBoolean(configMap, "destructive");
+
+        // Mine suppression
+        if(effect != null && effect.startsWith("bomb")) {
+            for(MetaBlock suppressor : zone.getMetaBlocksWithUse(ItemUseType.SUPPRESS_BOMB)) {
+                if(
+                    // The suppressor is close enough.
+                    MathUtils.distance(suppressor.getX(), suppressor.getY(), x, y) <= suppressor.getItem().getPower()
+                        // The suppressor is powered.
+                        && zone.getBlock(suppressor.getX(), suppressor.getY()).getFrontMod() > 0
+                ) {
+                    Item replacement = ItemRegistry.getItem(item.getId() + "-inert");
+                    if(!replacement.isAir()) {
+                        zone.updateBlock(x, y, layer, replacement);
+                    }
+
+                    return;
+                }
+            }
+        }
         
         // Create explosion and destroy block
         zone.explode(x, y, range, null, destructive, damage, damageType, effect);
