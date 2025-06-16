@@ -325,11 +325,16 @@ public class BlockPlaceRequest extends PlayerRequest {
         if(type != null && type.startsWith("bomb")) {
             for(MetaBlock suppressor : zone.getMetaBlocksWithUse(ItemUseType.SUPPRESS_BOMB)) {
                 if(
-                        // The suppressor is close enough.
-                        MathUtils.distance(suppressor.getX(), suppressor.getY(), x, y) <= suppressor.getItem().getPower()
+                    // The suppressor is close enough.
+                    MathUtils.distance(suppressor.getX(), suppressor.getY(), x, y) <= suppressor.getItem().getPower()
                         // The suppressor is powered.
                         && zone.getBlock(suppressor.getX(), suppressor.getY()).getFrontMod() > 0
                 ) {
+                    Item replacement = ItemRegistry.getItem(item.getId() + "-inert");
+                    if(!replacement.isAir()) {
+                        zone.updateBlock(x, y, layer, replacement);
+                    }
+
                     return;
                 }
             }
