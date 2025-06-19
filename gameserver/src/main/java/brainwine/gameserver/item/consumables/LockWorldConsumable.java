@@ -1,0 +1,72 @@
+package brainwine.gameserver.item.consumables;
+
+import brainwine.gameserver.GameServer;
+import brainwine.gameserver.dialog.Dialog;
+import brainwine.gameserver.dialog.DialogSection;
+import brainwine.gameserver.item.Item;
+import brainwine.gameserver.player.NotificationType;
+import brainwine.gameserver.player.Player;
+import brainwine.gameserver.server.messages.InventoryMessage;
+import brainwine.gameserver.server.messages.NotificationMessage;
+import brainwine.gameserver.zone.Zone;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class LockWorldConsumable implements Consumable {
+    public static final int CROWN_REWARD = 50;
+
+    @Override
+    public void consume(Item item, Player player, Object details) {
+        Zone zone = player.getZone();
+        if(zone == null) return;
+
+        if(!player.isGodMode()) {
+            if(!player.getInventory().hasItem(item)) {
+                fail(player, item, null);
+                return;
+            }
+
+            if(!zone.isOwner(player)) {
+                fail(player, item, "Sorry, you do not own this world.");
+                return;
+            }
+        }
+
+        if(zone.getRules().isDeleted()) {
+            fail(player, item, "This world is already deleted.");
+            return;
+        }
+
+        player.showDialog(new Dialog()
+                        .addSection(new DialogSection().setText("You have chosen to delete this world in exchange of " + CROWN_REWARD + " crowns."))
+                        .addSection(new DialogSection().setText("You will lose access to the world for the foreseeable future. Are you sure you want to continue?")),
+                ans -> {
+                    if(ans.length == 0) confirm(player, item, zone);
+                }
+        );
+    }
+
+    public void fail(Player player, Item item, String message) {
+        if(message != null) player.notify(message);
+        player.sendMessage(new InventoryMessage(player.getInventory().getClientConfig(item)));
+    }
+
+    public void confirm(Player player, Item item, Zone zone) {
+        if(!player.isGodMode()) {
+            player.getInventory().removeItem(item, true);
+            player.addCrowns(CROWN_REWARD);
+        }
+        zone.getRules().setDeleted(true);
+
+        List<String> members = new ArrayList<>(zone.getMembers());
+        for(String memberId : members) {
+            Player member = GameServer.getInstance().getPlayerManager().getPlayerById(memberId);
+            if(member != null) zone.removeMember(member);
+        }
+        zone.setOwner(null);
+
+        zone.setPrivate(true);
+        player.sendDelayedMessage(new NotificationMessage("This world is being deleted. Thank you for helping us free server storage. You are getting " + CROWN_REWARD + "crowns as a reward.", NotificationType.POPUP), 3000);
+    }
+}

@@ -2112,7 +2112,7 @@ public class Zone {
     }
     
     public void setOwner(Player player) {
-        this.owner = player.getDocumentId();
+        this.owner = player != null ? player.getDocumentId() : null;
         
         // Update spawn teleporter ownership
         for(MetaBlock block : getMetaBlocksWithItem("mechanical/zone-teleporter")) {

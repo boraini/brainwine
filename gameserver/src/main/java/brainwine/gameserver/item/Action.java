@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
 import brainwine.gameserver.item.consumables.Consumable;
 import brainwine.gameserver.item.consumables.ConvertConsumable;
 import brainwine.gameserver.item.consumables.HealConsumable;
+import brainwine.gameserver.item.consumables.LockWorldConsumable;
 import brainwine.gameserver.item.consumables.LootConsumable;
 import brainwine.gameserver.item.consumables.NameChangeConsumable;
 import brainwine.gameserver.item.consumables.RefillConsumable;
@@ -27,6 +28,7 @@ public enum Action {
     DIG,
     SCRUB,
     HEAL(new HealConsumable()),
+    LOCK_WORLD(new LockWorldConsumable()),
     LOOT(new LootConsumable()),
     NAME_CHANGE(new NameChangeConsumable()),
     REFILL(new RefillConsumable()),

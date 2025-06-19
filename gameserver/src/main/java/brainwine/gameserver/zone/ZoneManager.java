@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 import brainwine.gameserver.Fake;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.util.MathUtils;
-import brainwine.gameserver.util.PickRandom;
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.msgpack.jackson.dataformat.MessagePackFactory;
@@ -173,6 +173,13 @@ public class ZoneManager {
             saveZone(zone);
             zone.getChunkManager().closeStream();
         }
+
+        logger.info("Deleting any marked zones...");
+        for(Zone zone : zones.values()) {
+            if(zone.getRules().isDeleted()) {
+                deleteZone(zone);
+            }
+        }
     }
     
     private void loadZone(File file) {
@@ -261,11 +268,12 @@ public class ZoneManager {
 
         File folder = new File(dataDir, zone.getDocumentId());
         if(folder.isDirectory()) {
-            folder.delete();
+            try {
+                FileUtils.deleteDirectory(folder);
+            } catch(IOException e) {
+                logger.warn("Failed to delete deleted zone " + zone.getName() + "'s folder.", e);
+            }
         }
-
-        zones.remove(zone.getDocumentId());
-        zonesByName.remove(zone.getName());
     }
     
     /**

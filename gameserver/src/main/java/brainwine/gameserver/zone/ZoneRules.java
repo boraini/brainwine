@@ -13,6 +13,8 @@ public class ZoneRules extends RuleRecord {
     private boolean hostileEntitySpawnsEnabled = false;
     @Rule(value="do-peaceful-entity-spawns", adminOnly=true)
     private boolean peacefulEntitySpawnsEnabled = false;
+    @Rule(value="deleted", adminOnly = true)
+    private boolean deleted = false;
 
     public static ZoneRules getPrivateDefaults() {
         ZoneRules rules = new ZoneRules();
@@ -37,5 +39,13 @@ public class ZoneRules extends RuleRecord {
 
     public boolean isPeacefulEntitySpawnsEnabled() {
         return peacefulEntitySpawnsEnabled;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
     }
 }
