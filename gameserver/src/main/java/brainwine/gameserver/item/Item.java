@@ -697,7 +697,8 @@ public class Item {
     }
     
     public Object getUse(ItemUseType type) {
-        return useConfigs.get(type).getConfig();
+        ItemUseTypeConfig structuredConfig = useConfigs.get(type);
+        return structuredConfig != null ? structuredConfig.getConfig() : null;
     }
     
     public Map<ItemUseType, ItemUseTypeConfig> getUses() {
