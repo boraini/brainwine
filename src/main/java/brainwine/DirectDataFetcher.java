@@ -2,12 +2,15 @@ package brainwine;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 import brainwine.api.DataFetcher;
+import brainwine.api.models.PlayerInfo;
+import brainwine.api.models.PlayerInfoSummary;
 import brainwine.api.models.ZoneInfo;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.player.PlayerManager;
@@ -15,6 +18,9 @@ import brainwine.gameserver.util.MapHelper;
 import brainwine.gameserver.zone.MetaBlock;
 import brainwine.gameserver.zone.Zone;
 import brainwine.gameserver.zone.ZoneManager;
+import brainwine.shared.JsonHelper;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 public class DirectDataFetcher implements DataFetcher {
     
@@ -57,7 +63,66 @@ public class DirectDataFetcher implements DataFetcher {
     public boolean verifyAuthToken(String name, String token) {
         return playerManager.verifyAuthToken(name, token);
     }
-    
+
+    @Override
+    public PlayerInfo getPlayerInfo(String nameOrId) {
+        Player player = playerManager.getPlayer(nameOrId);
+
+        if(player == null) {
+            player = playerManager.getPlayerById(nameOrId);
+        }
+
+        return player == null ? null : createPlayerInfo(player);
+    }
+
+    @Override
+    public Collection<PlayerInfoSummary> fetchPlayerInfo() {
+        return playerManager.getPlayers().stream()
+                .filter(Objects::nonNull)
+                .map(DirectDataFetcher::createPlayerInfoSummary)
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    private static PlayerInfoSummary createPlayerInfoSummary(Player player) {
+        return new PlayerInfoSummary(
+                player.getName(),
+                player.getLevel(),
+                player.getLevelFromExperience(player.getExperience()),
+                player.getStatistics().getDeaths(),
+                player.getStatistics().getTotalItemsMined(),
+                player.getStatistics().getTotalItemsScavenged(),
+                player.getStatistics().getItemsPlaced(),
+                player.getStatistics().getTotalItemsCrafted()
+        );
+    }
+
+    private static PlayerInfo createPlayerInfo(Player player) {
+        Map<String, Object> stats;
+        try {
+            Map<String, Object> all = JsonHelper.readValue(player.getStatistics(), new TypeReference<Map<String, Object>>() {});
+            stats = MapHelper.map(
+                    String.class, Object.class,
+                    "items_mined", all.get("items_mined"),
+                    "items_scavenged", all.get("items_scavenged"),
+                    "items_crafted", all.get("items_crafted")
+            );
+        } catch(JsonProcessingException e) {
+            stats = new HashMap<>();
+        }
+        return new PlayerInfo(
+                player.getName(),
+                player.getLevel(),
+                player.getSkills().values().stream().collect(Collectors.summingInt(x -> (Integer)x - 1)),
+                player.getStatistics().getDeaths(),
+                player.getStatistics().getTotalItemsMined(),
+                player.getStatistics().getTotalItemsScavenged(),
+                player.getStatistics().getItemsPlaced(),
+                player.getStatistics().getTotalItemsCrafted(),
+                player.getApiToken(),
+                stats
+        );
+    }
+
     @Override
     public ZoneInfo getZoneInfo(String nameOrId) {
         Zone zone = zoneManager.getZoneByName(nameOrId);

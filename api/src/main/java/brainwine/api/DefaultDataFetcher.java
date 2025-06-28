@@ -2,6 +2,8 @@ package brainwine.api;
 
 import java.util.Collection;
 
+import brainwine.api.models.PlayerInfo;
+import brainwine.api.models.PlayerInfoSummary;
 import brainwine.api.models.ZoneInfo;
 
 public class DefaultDataFetcher implements DataFetcher {
@@ -37,7 +39,17 @@ public class DefaultDataFetcher implements DataFetcher {
     public boolean verifyAuthToken(String name, String token) {
         throw exception;
     }
-    
+
+    @Override
+    public PlayerInfo getPlayerInfo(String nameOrId) {
+        throw exception;
+    }
+
+    @Override
+    public Collection<PlayerInfoSummary> fetchPlayerInfo() {
+        throw exception;
+    }
+
     @Override
     public ZoneInfo getZoneInfo(String nameOrId) {
         throw exception;

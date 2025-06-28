@@ -2,6 +2,8 @@ package brainwine.api;
 
 import java.util.Collection;
 
+import brainwine.api.models.PlayerInfo;
+import brainwine.api.models.PlayerInfoSummary;
 import brainwine.api.models.ZoneInfo;
 
 public interface DataFetcher {
@@ -12,6 +14,8 @@ public interface DataFetcher {
     public String fetchPlayerName(String name);
     public String fetchPlayerId(String apiToken);
     public boolean verifyAuthToken(String name, String token);
+    public PlayerInfo getPlayerInfo(String nameOrId);
+    public Collection<PlayerInfoSummary> fetchPlayerInfo();
     public ZoneInfo getZoneInfo(String nameOrId);
     public Collection<ZoneInfo> fetchZoneInfo();
     public Collection<ZoneInfo> fetchRecentZoneInfo(String apiToken);
