@@ -3,8 +3,10 @@ package brainwine.api.models;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -27,9 +29,10 @@ public class ZoneInfo {
     private final OffsetDateTime creationDate;
     private final String owner;
     private final List<String> members;
+    private List<Map<String, Object>> metablocks;
     
     public ZoneInfo(String name, String biome, String activity, boolean pvp, boolean premium, boolean isPrivate, boolean isProtected, 
-            int playerCount, int width, int height, int[] surface, double explorationProgress, OffsetDateTime creationDate, String owner, List<String> members) {
+            int playerCount, int width, int height, int[] surface, double explorationProgress, OffsetDateTime creationDate, String owner, List<String> members, List<Map<String, Object>> metablocks) {
         this.name = name;
         this.biome = biome;
         this.activity = activity;
@@ -45,6 +48,7 @@ public class ZoneInfo {
         this.creationDate = creationDate;
         this.owner = owner;
         this.members = members;
+        this.metablocks = metablocks;
     }
     
     public String getName() {
@@ -113,5 +117,14 @@ public class ZoneInfo {
     @JsonIgnore
     public List<String> getMembers() {
         return Collections.unmodifiableList(members);
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public List<Map<String, Object>> getMetablocks() {
+        return metablocks;
+    }
+
+    public void setMetablocks(List<Map<String, Object>> metablocks) {
+        this.metablocks = metablocks;
     }
 }

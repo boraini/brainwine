@@ -3,6 +3,7 @@ package brainwine;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -10,6 +11,8 @@ import brainwine.api.DataFetcher;
 import brainwine.api.models.ZoneInfo;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.player.PlayerManager;
+import brainwine.gameserver.util.MapHelper;
+import brainwine.gameserver.zone.MetaBlock;
 import brainwine.gameserver.zone.Zone;
 import brainwine.gameserver.zone.ZoneManager;
 
@@ -115,6 +118,17 @@ public class DirectDataFetcher implements DataFetcher {
                 zone.getExplorationProgress(),
                 zone.getCreationDate(),
                 zone.getOwner(),
-                zone.getMembers());
+                zone.getMembers(),
+                zone.getGlobalMetaBlocks().stream().map(DirectDataFetcher::createMetaBlockData).collect(Collectors.toList()));
+    }
+
+    private static Map<String, Object> createMetaBlockData(MetaBlock m) {
+        return MapHelper.map(
+                String.class, Object.class,
+                "x", m.getX(),
+                "y", m.getY(),
+                "item", m.getItem().getId(),
+                "metadata", m.getMetadata()
+        );
     }
 }

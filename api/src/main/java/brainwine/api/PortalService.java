@@ -13,6 +13,7 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 
+import io.javalin.core.validation.Validator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -161,6 +162,13 @@ public class PortalService {
                 break;
             }
         });
+
+        // TODO this modifies the objects returned from the direct data fetcher directly
+        Validator<Boolean> param = ctx.queryParamAsClass("metablocks", Boolean.class);
+        Boolean value = param.getOrDefault(null);
+        if(value == null || value.equals(false)) {
+            zones.forEach(z -> z.setMetablocks(null));
+        }
         
         // Page
         int page = ctx.queryParamAsClass("page", Integer.class).getOrDefault(1);
