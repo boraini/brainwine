@@ -123,12 +123,22 @@ public class DirectDataFetcher implements DataFetcher {
     }
 
     private static Map<String, Object> createMetaBlockData(MetaBlock m) {
-        return MapHelper.map(
+        Map<String, Object> data = MapHelper.map(
                 String.class, Object.class,
                 "x", m.getX(),
                 "y", m.getY(),
                 "item", m.getItem().getId(),
                 "metadata", m.getMetadata()
         );
+
+        Player owner = m.getOwner();
+        if(owner != null) {
+            data.put("owner", MapHelper.map(
+                    String.class, Object.class,
+                    "name", owner.getName()
+            ));
+        }
+
+        return data;
     }
 }
