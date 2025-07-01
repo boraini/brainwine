@@ -53,6 +53,38 @@ public class GrowthManager {
             logger.error(SERVER_MARKER, "Could not load growth data", e);
         }
     }
+
+    public boolean fertilize(int x, int y) {
+        if(!zone.areCoordinatesInBounds(x, y ) || !zone.areCoordinatesInBounds(x, y - 1)) return false;
+
+        Item sourceItem = zone.getBlock(x, y).getFrontItem();
+        Block growableBlock = zone.getBlock(x, y - 1);
+        Item growableItem = growableBlock.getFrontItem();
+
+        boolean usedFertilizer = false;
+        // Pick a random growable if no growable was found.
+        if(growableItem.isAir()) {
+            growableItem = sources.get(sourceItem).next();
+            usedFertilizer = true;
+        }
+
+        Growable growable = growables.get(growableItem);
+        int mod = growableBlock.getFrontMod();
+
+        // Try to grow completely if the plant can still grow
+        if(mod < growable.getMaxMod()) {
+            zone.updateBlock(x, y - 1, Layer.FRONT, growableItem, growable.getMaxMod());
+
+            // Replace source block if max mod has been reached
+            if(growable.getReplaceSource() != null && mod >= growable.getMaxMod()) {
+                zone.updateBlock(x, y, Layer.FRONT, growable.getReplaceSource());
+            }
+
+            usedFertilizer = true;
+        }
+
+        return usedFertilizer;
+    }
     
     /**
      * Calls {@link #updateGrowables(int, Collection)} where {@code sourceIndices} is the currently indexed growables.

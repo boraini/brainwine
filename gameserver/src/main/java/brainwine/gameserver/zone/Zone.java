@@ -1586,6 +1586,10 @@ public class Zone {
     public ChunkManager getChunkManager() {
         return chunkManager;
     }
+
+    public GrowthManager getGrowthManager() {
+        return growthManager;
+    }
     
     public WeatherManager getWeatherManager() {
         return weatherManager;
