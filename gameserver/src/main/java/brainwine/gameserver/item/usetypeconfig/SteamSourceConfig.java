@@ -1,14 +1,23 @@
 package brainwine.gameserver.item.usetypeconfig;
 
+import brainwine.gameserver.item.Item;
 import brainwine.gameserver.util.Pair;
 import brainwine.gameserver.util.Vector2i;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Arrays;
 import java.util.List;
 
 @Properties(allowsDefault = false)
 public class SteamSourceConfig extends ItemUseTypeConfig {
+    @JsonProperty("off variant")
+    String offVariantId = Item.AIR.getId();
+
+    @JsonProperty("on variant")
+    String onVariantId = Item.AIR.getId();
+
+    @JsonProperty("outlets")
     List<Outlet> outlets;
 
     public SteamSourceConfig() {
@@ -18,6 +27,14 @@ public class SteamSourceConfig extends ItemUseTypeConfig {
     @JsonCreator
     public SteamSourceConfig(List<Outlet> outlets) {
         this.outlets = outlets;
+    }
+
+    public String getOffVariantId() {
+        return offVariantId;
+    }
+
+    public String getOnVariantId() {
+        return onVariantId;
     }
 
     public List<Outlet> getOutlets() {

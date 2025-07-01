@@ -10,11 +10,13 @@ import java.util.Queue;
 import java.util.Set;
 
 import brainwine.gameserver.item.Item;
+import brainwine.gameserver.item.ItemRegistry;
 import brainwine.gameserver.item.ItemUseType;
 import brainwine.gameserver.item.Layer;
 import brainwine.gameserver.item.ModType;
 import brainwine.gameserver.item.usetypeconfig.ExtendedSteamableConfig;
 import brainwine.gameserver.item.usetypeconfig.SteamSourceConfig;
+import brainwine.gameserver.player.Player;
 import brainwine.gameserver.util.MapHelper;
 import brainwine.gameserver.util.Vector2i;
 
@@ -123,10 +125,15 @@ public class SteamManager {
                 continue;
             }
 
-            SteamSourceConfig steamSource = zone.getBlock(x, y).getFrontItem().getStructuredUse(ItemUseType.STEAM_SOURCE);
+            Block block = zone.getBlock(x, y);
+            Item item = block.getFrontItem();
+            SteamSourceConfig steamSource = item.getStructuredUse(ItemUseType.STEAM_SOURCE);
+            boolean mirrored = item.isMirrorable() && block.getFrontMod() != 0;
 
             for(SteamSourceConfig.Outlet outlet : steamSource.getOutlets()) {
-                processQueue.add(new SteamIteration(x + outlet.getPosition().getX(), y + outlet.getPosition().getY(), outlet.getDirection(), 0));
+                int dx = mirrored ? item.getBlockWidth() - outlet.getPosition().getX() - 1 : outlet.getPosition().getX();
+                int dir = mirrored ? (outlet.getDirection() + 2) % 4 : outlet.getDirection();
+                processQueue.add(new SteamIteration(x + dx, y + outlet.getPosition().getY(), dir, 0));
             }
         }
 
@@ -208,13 +215,37 @@ public class SteamManager {
         }
     }
 
+    public void setSteamSourcePowered(int x, int y, boolean powered, Player owner) {
+        Block block = zone.getBlock(x, y);
+        Item item = block.getFrontItem();
+        SteamSourceConfig steamSource = item.getStructuredUse(ItemUseType.STEAM_SOURCE);
+        if(item.isMirrorable()) {
+            zone.updateBlock(x, y, Layer.FRONT, ItemRegistry.getItem(powered ? steamSource.getOnVariantId() : steamSource.getOffVariantId()), block.getFrontMod(), owner);
+        } else {
+            // Update whole block to force it to be re-indexed.
+            zone.updateBlock(x, y, Layer.FRONT, block.getFrontItem(), powered ? 1 : 0, owner);
+        }
+    }
+
+    public boolean isSteamSourcePowered(int x, int y) {
+        Block block = zone.getBlock(x, y);
+        Item item = block.getFrontItem();
+        if(!item.hasUse(ItemUseType.STEAM_SOURCE)) return false;
+        SteamSourceConfig steamSource = item.getStructuredUse(ItemUseType.STEAM_SOURCE);
+        if(item.isMirrorable()) {
+            return block.getFrontItem().hasId(steamSource.getOnVariantId());
+        } else {
+            return block.getFrontMod() > 0;
+        }
+    }
+
     private void tickSteamSources() {
         long currentTime = System.currentTimeMillis();
         for(MetaBlock metaBlock : zone.getMetaBlocksWithUse(ItemUseType.STEAM_SOURCE)) {
-            if(zone.getBlock(metaBlock.getX(), metaBlock.getY()).getFrontMod() > 0) {
+            if(isSteamSourcePowered(metaBlock.getX(), metaBlock.getY())) {
                 long f = MapHelper.getLong(metaBlock.getMetadata(), "f", 0);
                 if(f > 0 && f < currentTime) {
-                    zone.updateBlock(metaBlock.getX(), metaBlock.getY(), Layer.FRONT, metaBlock.getItem(), 0);
+                    setSteamSourcePowered(metaBlock.getX(), metaBlock.getY(), false, metaBlock.getOwner());
                 }
             }
         }
@@ -257,8 +288,8 @@ public class SteamManager {
             collectorIndices.remove(index);
         }
 
-        // Is it a steam source
-        if(item.hasUse(ItemUseType.STEAM_SOURCE) && zone.getBlock(x, y).getFrontMod() > 0) {
+        // Is it a powered steam source
+        if(isSteamSourcePowered(x, y)) {
             steamSourceIndices.add(index);
             setState(index, STATE_COLLECTOR);
             return;

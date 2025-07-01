@@ -49,7 +49,11 @@ public class BatteryInteraction implements ItemInteraction {
 
         inventory.removeItem(battery, true);
         metaData.put("f",  currentTime + leftover + addition);
-        zone.updateBlock(x, y, layer, item, 1, owner);
+        if(item.hasUse(ItemUseType.STEAM_SOURCE)) {
+            zone.getSteamManager().setSteamSourcePowered(x, y, true, owner);
+        } else {
+            zone.updateBlock(x, y, layer, item, 1, owner);
+        }
         zone.setMetaBlock(x, y, item, owner, metaData);
         zone.spawnEffect(x + 2.0F, y, "area steam", 10);
     }

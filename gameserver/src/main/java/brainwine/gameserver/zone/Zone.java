@@ -1679,6 +1679,10 @@ public class Zone {
         return liquidManager;
     }
 
+    public SteamManager getSteamManager() {
+        return steamManager;
+    }
+
     public DynamicsManager getDynamicsManager() {
         return dynamicsManager;
     }
