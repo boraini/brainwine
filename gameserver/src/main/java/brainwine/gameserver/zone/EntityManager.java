@@ -428,7 +428,7 @@ public class EntityManager {
         List<Player> players = new ArrayList<>(zone.getPlayers());
         boolean inhibited = false;
         for(MetaBlock evoker : zone.getMetaBlocksWithItem("mechanical/spawner-brain")) {
-            if(zone.getBlock(evoker.getX(), evoker.getY()).getFrontMod() != 0) {
+            if(zone.isBlockPowered(evoker.getX(), evoker.getY())) {
                 inhibited = true;
                 zone.spawnEffect(evoker.getX(), evoker.getY(), "bomb-electric", 5);
                 zone.updateBlock(evoker.getX(), evoker.getY(), Layer.FRONT, Item.AIR);

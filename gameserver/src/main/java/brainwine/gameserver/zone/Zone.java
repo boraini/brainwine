@@ -38,6 +38,7 @@ import brainwine.gameserver.item.ItemUseType;
 import brainwine.gameserver.item.Layer;
 import brainwine.gameserver.item.MetaType;
 import brainwine.gameserver.item.ModType;
+import brainwine.gameserver.item.usetypeconfig.ExtendedSteamableConfig;
 import brainwine.gameserver.minigame.Minigame;
 import brainwine.gameserver.player.ChatType;
 import brainwine.gameserver.player.NotificationType;
@@ -825,6 +826,30 @@ public class Zone {
                         return true;
                     }
                 }
+            }
+        }
+
+        return false;
+    }
+
+    public boolean isBlockPowered(int x, int y) {
+        Block block = getBlock(x, y);
+        if(block == null) return false;
+        Item item = block.getFrontItem();
+
+        if(item.usesSteam()) {
+            return block.getFrontMod() != 0;
+        }
+
+        if(item.hasUse(ItemUseType.EXTENDED_STEAMABLE)) {
+            if(item.isMirrorable()) {
+                // Mod is used for something else for items with rotation.
+                // The client needs the correct rotation mod, but it does not need to know about the steam state.
+                // Therefore, we use the block front item to track steam power and the mod for the rotation.
+                ExtendedSteamableConfig steamable = item.getStructuredUse(ItemUseType.EXTENDED_STEAMABLE);
+                return item.hasId(steamable.getOnVariantId());
+            } else {
+                return block.getFrontMod() != 0;
             }
         }
 

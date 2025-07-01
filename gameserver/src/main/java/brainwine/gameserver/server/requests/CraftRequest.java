@@ -5,6 +5,9 @@ import java.util.stream.Collectors;
 
 import brainwine.gameserver.item.CraftingRequirement;
 import brainwine.gameserver.item.Item;
+import brainwine.gameserver.item.ItemRegistry;
+import brainwine.gameserver.item.ItemUseType;
+import brainwine.gameserver.item.usetypeconfig.ExtendedSteamableConfig;
 import brainwine.gameserver.player.Inventory;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.player.Skill;
@@ -66,10 +69,18 @@ public class CraftRequest extends PlayerRequest {
             // Check for each crafting helper if it is present in the workshop and available for use
             for(CraftingRequirement craftingHelper : item.getCraftingHelpers()) {
                 int quantityRequired = craftingHelper.getQuantity();
-                
+
                 // Fetch list of crafting helpers of this type that are present in the workshop
+                Item poweredItem;
+                if(craftingHelper.getItem().hasUse(ItemUseType.EXTENDED_STEAMABLE) && craftingHelper.getItem().isMirrorable()) {
+                    ExtendedSteamableConfig steamable = craftingHelper.getItem().getStructuredUse(ItemUseType.EXTENDED_STEAMABLE);
+                    poweredItem = ItemRegistry.getItem(steamable.getOnVariantId());
+                } else {
+                    poweredItem = craftingHelper.getItem();
+                }
+
                 List<MetaBlock> presentCraftingHelpers = workshop.stream()
-                        .filter(metaBlock -> metaBlock.getItem() == craftingHelper.getItem()).collect(Collectors.toList());
+                        .filter(metaBlock -> metaBlock.getItem() == craftingHelper.getItem() || metaBlock.getItem() == poweredItem).collect(Collectors.toList());
                 int quantityMissing = quantityRequired - presentCraftingHelpers.size();
                 
                 // Check if workshop is still missing crafting helpers of this type and notify the player if this is the case
@@ -80,9 +91,9 @@ public class CraftRequest extends PlayerRequest {
                 }
 
                 // Perform additional checks if the crafting helper requires steam to function
-                if(craftingHelper.getItem().usesSteam()) {
+                if(craftingHelper.getItem().usesSteam() || craftingHelper.getItem().hasUse(ItemUseType.EXTENDED_STEAMABLE)) {
                     quantityMissing = quantityRequired - (int)presentCraftingHelpers.stream()
-                            .filter(metaBlock -> zone.getBlock(metaBlock.getX(), metaBlock.getY()).getFrontMod() == 1).count();
+                            .filter(metaBlock -> zone.isBlockPowered(metaBlock.getX(), metaBlock.getY())).count();
                     
                     // Notify the player if not enough crafting helpers are powered
                     if(quantityMissing > 0) {

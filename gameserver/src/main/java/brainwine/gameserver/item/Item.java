@@ -7,11 +7,15 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import brainwine.gameserver.GameServer;
 import brainwine.gameserver.command.CommandAccessLevel;
+import brainwine.gameserver.item.usetypeconfig.ItemUseTypeConfig;
+import brainwine.gameserver.player.NotificationType;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 import brainwine.gameserver.dialog.DialogType;
@@ -224,9 +228,8 @@ public class Item {
     
     @JsonProperty("crafting_helpers")
     private List<CraftingRequirement> craftingHelpers = new ArrayList<>();
-    
-    @JsonProperty("use")
-    private Map<ItemUseType, Object> useConfigs = new HashMap<>();
+
+    private Map<ItemUseType, ItemUseTypeConfig> useConfigs = new HashMap<>();
     
     @JsonProperty("convert")
     private Map<LazyItemGetter, LazyItemGetter> conversions = new HashMap<>();
@@ -254,6 +257,20 @@ public class Item {
             @JsonProperty(value = "code", required = true) int code) {
         this.id = id;
         this.code = code;
+    }
+
+    @JsonSetter("use")
+    public void setUseConfigs(Map<ItemUseType, Object> uses) {
+        useConfigs = new HashMap<>();
+        for(Map.Entry<ItemUseType, Object> use : uses.entrySet()) {
+            try {
+                useConfigs.put(use.getKey(), use.getKey().parseConfig(use.getValue()));
+            } catch(Exception e) {
+                GameServer.getInstance().notify("Failed to parse " + use.getKey() + " use type for item " + id, NotificationType.SYSTEM);
+                e.printStackTrace();
+                useConfigs.put(use.getKey(), use.getKey().getDefaultConfig());
+            }
+        }
     }
     
     @JsonCreator
@@ -677,12 +694,21 @@ public class Item {
         
         return false;
     }
-    
-    public Object getUse(ItemUseType type) {
-        return useConfigs.get(type);
+
+    public <T extends ItemUseTypeConfig> T getStructuredUse(ItemUseType type) {
+        if(hasUse(type)) {
+            return (T)useConfigs.get(type);
+        } else {
+            return null;
+        }
     }
     
-    public Map<ItemUseType, Object> getUses() {
+    public Object getUse(ItemUseType type) {
+        ItemUseTypeConfig structuredConfig = useConfigs.get(type);
+        return structuredConfig != null ? structuredConfig.getConfig() : null;
+    }
+    
+    public Map<ItemUseType, ItemUseTypeConfig> getUses() {
         return useConfigs;
     }
     
