@@ -132,7 +132,7 @@ public class SteamManager {
 
             for(SteamSourceConfig.Outlet outlet : steamSource.getOutlets()) {
                 int dx = mirrored ? item.getBlockWidth() - outlet.getPosition().getX() - 1 : outlet.getPosition().getX();
-                int dir = mirrored ? (outlet.getDirection() + 2) % 4 : outlet.getDirection();
+                int dir = mirrored ? (outlet.getDirection() == 3 ? 1 : outlet.getDirection() == 1 ? 3 : outlet.getDirection()): outlet.getDirection();
                 processQueue.add(new SteamIteration(x + dx, y + outlet.getPosition().getY(), dir, 0));
             }
         }
