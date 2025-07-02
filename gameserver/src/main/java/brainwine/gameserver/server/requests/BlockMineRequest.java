@@ -2,6 +2,7 @@ package brainwine.gameserver.server.requests;
 
 import java.util.Map;
 
+import brainwine.gameserver.command.CommandAccessLevel;
 import brainwine.gameserver.entity.Entity;
 import brainwine.gameserver.item.Action;
 import brainwine.gameserver.item.Fieldability;
@@ -193,7 +194,8 @@ public class BlockMineRequest extends PlayerRequest {
         
         // Check for entity spawns
         boolean entitySpawns = item.hasEntitySpawns() && block.getMod(layer) == 0 && !item.hasTimer() && !item.hasUse(ItemUseType.SPAWN);
-        if(entitySpawns && item.getEntitySpawnAccessLevel().isPrivileged(player, block)) {
+        if((!block.isNatural() || item.getEntitySpawnAccessLevel() == CommandAccessLevel.EVERYONE)
+                && entitySpawns && item.getEntitySpawnAccessLevel().isPrivileged(player, block)) {
             int left = item.getEntitySpawnQuantity().getFirst();
             int right = item.getEntitySpawnQuantity().getLast() + 1;
             int quantity = (int)(left + Math.random() * (right - left));
@@ -205,7 +207,7 @@ public class BlockMineRequest extends PlayerRequest {
         // Determine inventory item
         Item inventoryItem;
 
-        if(entitySpawns && !item.getEntitySpawnAccessLevel().isPrivileged(player, block)) {
+        if(entitySpawns && (!item.getEntitySpawnAccessLevel().isPrivileged(player, block) || (block.isNatural() && item.getEntitySpawnAccessLevel() != CommandAccessLevel.EVERYONE))) {
             inventoryItem = item;
             // Non-standard behavior
             player.sendMessage(new InventoryMessage(player.getInventory().getClientConfig(item.getInventoryItem())));
