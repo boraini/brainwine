@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import brainwine.gameserver.androidshop.AndroidShop;
 import brainwine.gameserver.anticheat.AnticheatManager;
+import brainwine.gameserver.chat.ProfanityManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -45,6 +46,7 @@ public class GameServer implements CommandExecutor {
     private final ZoneActivityManager zoneActivityManager;
     private final PlayerManager playerManager;
     private final IpBans ipBans;
+    private final ProfanityManager profanityManager;
     private final Server server;
     private Pusher pusher;
     private long lastTick = System.currentTimeMillis();
@@ -57,6 +59,7 @@ public class GameServer implements CommandExecutor {
         long startTime = System.currentTimeMillis();
         logger.info(SERVER_MARKER, "Starting GameServer ...");
         ipBans = new IpBans();
+        profanityManager = new ProfanityManager();
         CommandManager.init();
         GameConfiguration.init();
         AchievementManager.loadAchievements();
@@ -191,5 +194,9 @@ public class GameServer implements CommandExecutor {
 
     public IpBans getIpBans() {
         return ipBans;
+    }
+
+    public ProfanityManager getProfanityManager() {
+        return profanityManager;
     }
 }
