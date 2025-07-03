@@ -29,7 +29,7 @@ public class Corpus {
     }
 
     public int findLongestMatch(String[] words, int i, int currentCount) {
-        while(i < words.length && words[i].isBlank()) {
+        while(i < words.length && words[i].matches("\\s*")) {
             i++;
             currentCount++;
         }

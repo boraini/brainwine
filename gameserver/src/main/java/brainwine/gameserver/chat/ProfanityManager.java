@@ -26,7 +26,7 @@ public class ProfanityManager {
         try(Scanner sc = new Scanner(new FileInputStream(file))) {
             while(sc.hasNextLine()) {
                 String line = sc.nextLine();
-                if(!line.isBlank() && !line.startsWith("##") && !line.startsWith("--")) {
+                if(!line.matches("\\s*") && !line.startsWith("##") && !line.startsWith("--")) {
                     String[] words = line.split(", ?");
                     for(String word : words) {
                         try {
@@ -85,7 +85,7 @@ public class ProfanityManager {
             lastMode = mode;
         }
 
-        if(sb != null && !sb.isEmpty()) {
+        if(sb != null && sb.length() > 0) {
             tokens.add(sb.toString());
         }
 
