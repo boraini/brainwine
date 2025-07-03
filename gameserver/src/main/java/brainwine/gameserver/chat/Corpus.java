@@ -1,6 +1,5 @@
 package brainwine.gameserver.chat;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -8,14 +7,14 @@ import java.util.Scanner;
 public class Corpus {
     Map<String, Corpus> next = new HashMap<>();
 
-    public void addPhrase(String item) throws IOException {
+    public void addPhrase(String item) {
         try(Scanner sc = new Scanner(item)) {
             sc.useDelimiter("\\s+");
             addPhrase(sc);
         }
     }
 
-    public void addPhrase(Scanner sc) throws IOException {
+    public void addPhrase(Scanner sc) {
         if(sc.hasNext()) {
             String word = sc.next();
             Corpus nextCorpus = next.computeIfAbsent(word, s -> new Corpus());
