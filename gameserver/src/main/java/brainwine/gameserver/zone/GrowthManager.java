@@ -3,14 +3,17 @@ package brainwine.gameserver.zone;
 import static brainwine.shared.LogMarkers.SERVER_MARKER;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import brainwine.gameserver.util.MathUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -28,12 +31,16 @@ import brainwine.shared.JsonHelper;
 public class GrowthManager {
     
     public static final int MAX_RAIN_CYCLES = 500; // Maximum number of rain cycles that are permitted in a single growth update
+    private static final String GROW_LAMP = "lighting/grow-lamp-lit";
+    private static final double GROW_LAMP_CENTER_OFFSET = 0.5;
+    private static final double GROW_LAMP_RANGE = 5.0;
     private static final Logger logger = LogManager.getLogger();
     private static final Map<Item, Growable> growables = new HashMap<>();
     private static final Map<Biome, Map<Item, WeightedMap<Item>>> sourcesByBiome = new HashMap<>();
     private final Set<Integer> sourceIndices = new HashSet<>();
     private final Map<Item, WeightedMap<Item>> sources;
     private final Zone zone;
+    private List<MetaBlock> growLamps = new ArrayList<>();
     
     public GrowthManager(Zone zone) {
         this.sources = sourcesByBiome.getOrDefault(zone.getBiome(), Collections.emptyMap());
@@ -54,36 +61,79 @@ public class GrowthManager {
         }
     }
 
+    public boolean isReceivingLight(int x, int y) {
+        if(zone.getSunlight()[x] >= y) {
+            return true;
+        } else {
+            for(MetaBlock growLamp : growLamps) {
+                if(y >= growLamp.getY() && MathUtils.distance(x, y, growLamp.getX() + GROW_LAMP_CENTER_OFFSET, growLamp.getY()) < GROW_LAMP_RANGE) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
     public boolean fertilize(int x, int y) {
+        if(!isReceivingLight(x, y)) return false;
         if(!zone.areCoordinatesInBounds(x, y ) || !zone.areCoordinatesInBounds(x, y - 1)) return false;
 
-        Item sourceItem = zone.getBlock(x, y).getFrontItem();
-        Block growableBlock = zone.getBlock(x, y - 1);
-        Item growableItem = growableBlock.getFrontItem();
+        int replaceY = -1;
+        int plantY = -1;
+        int sourceY = -1;
+        Item replacementItem = Item.AIR;
+        Item plantItem = Item.AIR;
 
-        boolean usedFertilizer = false;
-        // Pick a random growable if no growable was found.
-        if(growableItem.isAir()) {
-            growableItem = sources.get(sourceItem).next();
-            usedFertilizer = true;
-        }
-
-        Growable growable = growables.get(growableItem);
-        int mod = growableBlock.getFrontMod();
-
-        // Try to grow completely if the plant can still grow
-        if(mod < growable.getMaxMod()) {
-            zone.updateBlock(x, y - 1, Layer.FRONT, growableItem, growable.getMaxMod());
-
-            // Replace source block if max mod has been reached
-            if(growable.getReplaceSource() != null && mod >= growable.getMaxMod()) {
-                zone.updateBlock(x, y, Layer.FRONT, growable.getReplaceSource());
+        Item belowItem = zone.getBlock(x, y + 1).getFrontItem();
+        if(belowItem.hasId("ground/earth-compost")) {
+            // Fertilizer placed directly on compost.
+            plantY = y;
+            sourceY = y + 1;
+        } else if(growables.containsKey(belowItem)) {
+            // Fertilizer placed onto plant.
+            if(!zone.areCoordinatesInBounds(x, y + 2)) return false;
+            plantItem = belowItem;
+            plantY = y + 1;
+            replacementItem = growables.containsKey(plantItem) ? growables.get(plantItem).getReplaceSource() : Item.AIR;
+            if(replacementItem != null && !replacementItem.isAir()) replaceY = y + 2;
+        } else {
+            if(belowItem.isAir()) {
+                // Fertilizer placed above compost - same behaviour as immediate placement.
+                sourceY = y + 2;
+                plantY = y + 1;
+            } else {
+                // Fertilizer placed onto bulb.
+                WeightedMap<Item> source = sources.get(belowItem);
+                if(source == null || source.isEmpty()) return false;
+                plantItem = source.next();
+                replacementItem = growables.containsKey(plantItem) ? growables.get(plantItem).getReplaceSource() : Item.AIR;
+                if(replacementItem != null && !replacementItem.isAir()) replaceY = y + 1;
+                plantY = y + 1;
             }
-
-            usedFertilizer = true;
         }
 
-        return usedFertilizer;
+        if(sourceY != -1) {
+            if(!zone.areCoordinatesInBounds(x, sourceY)) return false;
+            WeightedMap<Item> source = sources.get(zone.getBlock(x, sourceY).getFrontItem());
+            if(source == null || source.isEmpty()) return false;
+            plantItem = source.next();
+        }
+
+        zone.updateBlock(x, y, Layer.FRONT, Item.AIR);
+        // stack blocks on top of each other
+        int currentY = y + 2;
+        if(replaceY != -1) {
+            currentY = Math.min(currentY, replaceY);
+            zone.updateBlock(x, currentY, Layer.FRONT, replacementItem);
+            currentY--;
+        }
+        if(plantY != -1) {
+            currentY = Math.min(currentY, plantY);
+            zone.updateBlock(x, currentY, Layer.FRONT, plantItem, growables.containsKey(plantItem) ? growables.get(plantItem).getMaxMod() : 0);
+            currentY--;
+        }
+
+        return true;
     }
     
     /**
@@ -106,6 +156,9 @@ public class GrowthManager {
         if(rainCycles < 1 || sourceIndices.isEmpty()) {
             return;
         }
+
+        growLamps = zone.getMetaBlocksWithItem(GROW_LAMP);
+        System.out.println(growLamps);
         
         // Reduce overhead by reducing the number of iterations in exchange for a growth chance boost
         rainCycles = Math.min(MAX_RAIN_CYCLES, rainCycles);
@@ -128,7 +181,7 @@ public class GrowthManager {
                 }
                 
                 // Skip if sunlight can't reach this source
-                if(zone.getSunlight()[x] < y) {
+                if(!isReceivingLight(x, y)) {
                     continue;
                 }
                 
