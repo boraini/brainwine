@@ -12,6 +12,7 @@ import brainwine.gameserver.item.interactions.ComposterInteraction;
 import brainwine.gameserver.item.interactions.ContainerInteraction;
 import brainwine.gameserver.item.interactions.DialogInteraction;
 import brainwine.gameserver.item.interactions.ExpiatorInteraction;
+import brainwine.gameserver.item.interactions.FertilizerInteraction;
 import brainwine.gameserver.item.interactions.GeckInteraction;
 import brainwine.gameserver.item.interactions.ItemInteraction;
 import brainwine.gameserver.item.interactions.LandmarkInteraction;
@@ -50,6 +51,7 @@ public enum ItemUseType {
     GECK(new GeckInteraction()),
     GUARD,
     CHANGE(new ChangeInteraction()),
+    FERTILIZER(new FertilizerInteraction()),
     FIELDABLE,
     FLY,
     HAZMAT,
