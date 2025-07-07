@@ -75,6 +75,7 @@ public class GrowthManager {
     }
 
     public boolean fertilize(int x, int y) {
+        growLamps = zone.getMetaBlocksWithItem(GROW_LAMP);
         if(!isReceivingLight(x, y)) return false;
         if(!zone.areCoordinatesInBounds(x, y ) || !zone.areCoordinatesInBounds(x, y - 1)) return false;
 
