@@ -77,7 +77,7 @@ public class GrowthManager {
     public boolean fertilize(int x, int y) {
         growLamps = zone.getMetaBlocksWithItem(GROW_LAMP);
         if(!isReceivingLight(x, y)) return false;
-        if(!zone.areCoordinatesInBounds(x, y ) || !zone.areCoordinatesInBounds(x, y - 1)) return false;
+        if(!zone.areCoordinatesInBounds(x, y) || !zone.areCoordinatesInBounds(x, y + 1)) return false;
 
         int replaceY = -1;
         int plantY = -1;
@@ -95,8 +95,8 @@ public class GrowthManager {
             if(!zone.areCoordinatesInBounds(x, y + 2)) return false;
             plantItem = belowItem;
             plantY = y + 1;
-            replacementItem = growables.containsKey(plantItem) ? growables.get(plantItem).getReplaceSource() : Item.AIR;
-            if(replacementItem != null && !replacementItem.isAir()) replaceY = y + 2;
+            replacementItem = growables.containsKey(plantItem) ? growables.get(plantItem).getReplaceSource() : null;
+            replaceY = y + 2;
         } else {
             if(belowItem.isAir()) {
                 // Fertilizer placed above compost - same behaviour as immediate placement.
@@ -107,8 +107,8 @@ public class GrowthManager {
                 WeightedMap<Item> source = sources.get(belowItem);
                 if(source == null || source.isEmpty()) return false;
                 plantItem = source.next();
-                replacementItem = growables.containsKey(plantItem) ? growables.get(plantItem).getReplaceSource() : Item.AIR;
-                if(replacementItem != null && !replacementItem.isAir()) replaceY = y + 1;
+                replacementItem = growables.containsKey(plantItem) ? growables.get(plantItem).getReplaceSource() : null;
+                replaceY = y + 1;
                 plantY = y + 1;
             }
         }
@@ -125,7 +125,7 @@ public class GrowthManager {
         int currentY = y + 2;
         if(replaceY != -1) {
             currentY = Math.min(currentY, replaceY);
-            zone.updateBlock(x, currentY, Layer.FRONT, replacementItem);
+            if(replacementItem != null) zone.updateBlock(x, currentY, Layer.FRONT, replacementItem);
             currentY--;
         }
         if(plantY != -1) {
