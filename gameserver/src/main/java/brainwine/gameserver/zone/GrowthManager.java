@@ -159,25 +159,22 @@ public class GrowthManager {
         }
 
         growLamps = zone.getMetaBlocksWithItem(GROW_LAMP);
-        System.out.println(growLamps);
         
         // Reduce overhead by reducing the number of iterations in exchange for a growth chance boost
         rainCycles = Math.min(MAX_RAIN_CYCLES, rainCycles);
         int growthChanceBoost = Math.min(10, rainCycles);
         rainCycles /= growthChanceBoost;
-        
+
         // Update growth for each rain cycle
+        List<Integer> indices = new ArrayList<>(sourceIndices);
         for(int i = 0; i < rainCycles; i++) {
-            Iterator<Integer> iterator = sourceIndices.iterator();
-            
-            while(iterator.hasNext()) {
-                int index = iterator.next();
+            for(int index : indices) {
                 int x = index % zone.getWidth();
                 int y = index / zone.getWidth();
                 
                 // Unindex if chunk is not loaded
                 if(y == 0 || !zone.isChunkLoaded(x, y)) {
-                    iterator.remove();
+                    sourceIndices.remove(index);
                     continue;
                 }
                 
@@ -191,7 +188,7 @@ public class GrowthManager {
                 
                 // Unindex if block is not a source
                 if(!sources.containsKey(sourceItem)) {
-                    iterator.remove();
+                    sourceIndices.remove(index);
                     continue;
                 }
                 
