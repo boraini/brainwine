@@ -149,7 +149,7 @@ public class GrowthManager {
      */
     public void updateGrowables(int rainCycles, Collection<Integer> sourceIndices) {        
         // Do nothing if zone isn't purified
-        if(!zone.isPurified() && zone.getBiome() != Biome.HELL) {
+        if(!zone.isPurified()) {
             return;
         }
         
