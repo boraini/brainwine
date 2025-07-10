@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import brainwine.gameserver.GameServer;
+import brainwine.gameserver.item.ItemRegistry;
 import brainwine.gameserver.zone.ZoneActivity;
 import com.fasterxml.jackson.annotation.JsonIncludeProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -108,6 +109,12 @@ public class Inventory {
             finalQuantity = Math.max(currentQuantity, Math.min(finalQuantity, allowed));
         }
         setItem(item, finalQuantity, sendMessage);
+
+        if(currentQuantity == 0 && finalQuantity > 0) {
+            if(item.hasId("accessories/makeup")) {
+                player.sendMessage(new WardrobeMessage(getClientWardrobe()));
+            }
+        }
     }
     
     public void removeItem(Item item) {
@@ -198,6 +205,17 @@ public class Inventory {
     
     public Set<Item> getWardrobe() {
         return items.keySet().stream().filter(item -> item.isClothing() && hasItem(item)).collect(Collectors.toCollection(HashSet::new));
+    }
+
+    public Set<Item> getClientWardrobe() {
+        Set<Item> result = getWardrobe();
+
+        if(hasItem(ItemRegistry.getItem("accessories/makeup"))) {
+            ItemRegistry.getItemsByCategory("skincolor").stream().collect(Collectors.toCollection(() -> result));
+            ItemRegistry.getItemsByCategory("haircolor").stream().collect(Collectors.toCollection(() -> result));
+        }
+
+        return result;
     }
     
     @JsonValue
