@@ -2,12 +2,16 @@ package brainwine.gameserver.zone;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import brainwine.gameserver.item.Item;
+import brainwine.gameserver.item.ItemRegistry;
 import brainwine.gameserver.item.Layer;
+import brainwine.gameserver.server.models.BlockChangeData;
 
 public class LiquidManager {
     
@@ -162,6 +166,47 @@ public class LiquidManager {
         }
         
         return updateCount;
+    }
+
+    public void processClientLiquidContinuity(Map<Integer, BlockChangeData> changeDataMap) {
+        Map<Integer, BlockChangeData> newChanges = new HashMap<>();
+        int updateMinIndex = Layer.LIQUID.ordinal() * zone.getWidth() * zone.getHeight();
+        Item lava = ItemRegistry.getItem("liquid/magma");
+        Item acid = ItemRegistry.getItem("liquid/acid");
+        for(BlockChangeData data : changeDataMap.values()) {
+            if(data.getLayer() != Layer.LIQUID) continue;
+            int x = data.getX();
+            int y = data.getY();
+            if(!zone.isChunkLoaded(x, y)) continue;
+
+            Block thisBlock = zone.getBlock(x, y);
+            boolean thisBlockHasLiquid = !thisBlock.getLiquidItem().isAir() && thisBlock.getLiquidMod() > 0;
+
+            int thisIndex = updateMinIndex + zone.getBlockIndex(x, y);
+            int belowChangeIndex = updateMinIndex + zone.getBlockIndex(x, y + 1);
+
+            // Make below block full if there is liquid here.
+            if(zone.isChunkLoaded(x, y + 1)) {
+                Block belowBlock = zone.getBlock(x, y + 1);
+                if(!belowBlock.getLiquidItem().isAir()) {
+                    if(thisBlockHasLiquid) {
+                        newChanges.put(belowChangeIndex, new BlockChangeData(x, y + 1, Layer.LIQUID, 0, acid, 5));
+                    } else if(belowBlock.getLiquidMod() < 5) {
+                        newChanges.put(belowChangeIndex, new BlockChangeData(x, y + 1, Layer.LIQUID, 0, acid, belowBlock.getLiquidMod()));
+                    }
+                }
+            }
+
+            // Sometimes this liquid can flow underneath another.
+            if(thisBlockHasLiquid && zone.isChunkLoaded(x, y - 1)) {
+                Block aboveBlock = zone.getBlock(x, y - 1);
+                if(!aboveBlock.getLiquidItem().isAir() && aboveBlock.getLiquidMod() > 0) {
+                    newChanges.put(thisIndex, new BlockChangeData(x, y, Layer.LIQUID, 0, lava, 5));
+                }
+            }
+        }
+
+        changeDataMap.putAll(newChanges);
     }
     
     public void indexLiquidBlock(int x, int y) {

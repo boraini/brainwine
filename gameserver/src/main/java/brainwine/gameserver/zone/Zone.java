@@ -269,6 +269,8 @@ public class Zone {
             blockTimers.removeAll(readyTimers);
             readyTimers.forEach(Timer::process);
         }
+
+        liquidManager.processClientLiquidContinuity(blockChanges);
         
         // Send block changes to players who they are relevant to
         if(!blockChanges.isEmpty()) {
