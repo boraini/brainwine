@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Set;
 
 import brainwine.gameserver.item.Item;
-import brainwine.gameserver.item.ItemRegistry;
 import brainwine.gameserver.item.Layer;
 import brainwine.gameserver.server.models.BlockChangeData;
 
@@ -171,8 +170,6 @@ public class LiquidManager {
     public void processClientLiquidContinuity(Map<Integer, BlockChangeData> changeDataMap) {
         Map<Integer, BlockChangeData> newChanges = new HashMap<>();
         int updateMinIndex = Layer.LIQUID.ordinal() * zone.getWidth() * zone.getHeight();
-        Item lava = ItemRegistry.getItem("liquid/magma");
-        Item acid = ItemRegistry.getItem("liquid/acid");
         for(BlockChangeData data : changeDataMap.values()) {
             if(data.getLayer() != Layer.LIQUID) continue;
             int x = data.getX();
@@ -190,9 +187,9 @@ public class LiquidManager {
                 Block belowBlock = zone.getBlock(x, y + 1);
                 if(!belowBlock.getLiquidItem().isAir()) {
                     if(thisBlockHasLiquid) {
-                        newChanges.put(belowChangeIndex, new BlockChangeData(x, y + 1, Layer.LIQUID, 0, acid, 5));
+                        newChanges.put(belowChangeIndex, new BlockChangeData(x, y + 1, Layer.LIQUID, 0, belowBlock.getLiquidItem(), 5));
                     } else if(belowBlock.getLiquidMod() < 5) {
-                        newChanges.put(belowChangeIndex, new BlockChangeData(x, y + 1, Layer.LIQUID, 0, acid, belowBlock.getLiquidMod()));
+                        newChanges.put(belowChangeIndex, new BlockChangeData(x, y + 1, Layer.LIQUID, 0, belowBlock.getLiquidItem(), belowBlock.getLiquidMod()));
                     }
                 }
             }
@@ -201,7 +198,7 @@ public class LiquidManager {
             if(thisBlockHasLiquid && zone.isChunkLoaded(x, y - 1)) {
                 Block aboveBlock = zone.getBlock(x, y - 1);
                 if(!aboveBlock.getLiquidItem().isAir() && aboveBlock.getLiquidMod() > 0) {
-                    newChanges.put(thisIndex, new BlockChangeData(x, y, Layer.LIQUID, 0, lava, 5));
+                    newChanges.put(thisIndex, new BlockChangeData(x, y, Layer.LIQUID, 0, thisBlock.getLiquidItem(), 5));
                 }
             }
         }
