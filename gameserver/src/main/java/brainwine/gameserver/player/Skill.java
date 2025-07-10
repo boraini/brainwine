@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum Skill {
     
     AGILITY,
-    AUTOMATA,
     BARTER,
     BUILDING,
     COMBAT,
@@ -18,7 +17,7 @@ public enum Skill {
     SURVIVAL;
     
     public static Skill[] getAdvancedSkills() {
-        return new Skill[] {AUTOMATA, COMBAT, ENGINEERING, HORTICULTURE, LUCK, BARTER, SURVIVAL};
+        return new Skill[] {COMBAT, ENGINEERING, HORTICULTURE, LUCK, BARTER, SURVIVAL};
     }
     
     public static Skill fromId(String id) {

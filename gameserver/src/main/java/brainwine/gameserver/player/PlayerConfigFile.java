@@ -95,7 +95,12 @@ public class PlayerConfigFile {
     private static int transferSkill(Map<String, Integer> skills, String from, String to, int max) {
         int currentSrc = skills.getOrDefault(from, 1);
         int points = currentSrc - 1;
-        int currentDest = skills.getOrDefault(to, 1);
+        int currentDest;
+        if(to != null) {
+            currentDest = skills.getOrDefault(to, 1);
+        } else {
+            currentDest = 0;
+        }
         currentDest += points;
         int freePoints = 0;
         if(currentDest > max) {
@@ -103,7 +108,9 @@ public class PlayerConfigFile {
             currentDest = max;
         }
         skills.remove(from);
-        skills.put(to, currentDest);
+        if(to != null) {
+            skills.put(to, currentDest);
+        }
         return freePoints;
     }
 
@@ -111,7 +118,7 @@ public class PlayerConfigFile {
         for(Collection<String> set : bumpedSkills.values()) {
             if (set.contains(from)) {
                 set.remove(from);
-                set.add(to);
+                if(to != null) set.add(to);
             }
         }
     }
@@ -122,9 +129,15 @@ public class PlayerConfigFile {
             @JsonSetter("bumped_skills") Map<Item, Collection<String>> bumpedSkillsMap,
             @JsonSetter("skill_points") Integer currentSkillPointsObj
     ) {
+        // Transfer some skills
         int currentSkillPoints = currentSkillPointsObj != null ? currentSkillPointsObj : 0;
+
         currentSkillPoints += transferSkill(skillsMap, "science", "barter", Player.MAX_NATURAL_SKILL_LEVEL);
         transferBumpedSkill(bumpedSkillsMap, "science", "barter");
+
+        currentSkillPoints += transferSkill(skillsMap, "automata", null, 0);
+        transferBumpedSkill(bumpedSkillsMap, "automata", null);
+
         this.skillPoints = currentSkillPoints;
         for(Map.Entry<String, Integer> entry : skillsMap.entrySet()) {
             this.skills.put(Skill.fromId(entry.getKey()), entry.getValue());
