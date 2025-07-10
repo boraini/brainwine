@@ -99,20 +99,14 @@ public class DirectDataFetcher implements DataFetcher {
     private static PlayerInfo createPlayerInfo(Player player) {
         Map<String, Object> stats;
         try {
-            Map<String, Object> all = JsonHelper.readValue(player.getStatistics(), new TypeReference<Map<String, Object>>() {});
-            stats = MapHelper.map(
-                    String.class, Object.class,
-                    "items_mined", all.get("items_mined"),
-                    "items_scavenged", all.get("items_scavenged"),
-                    "items_crafted", all.get("items_crafted")
-            );
+            stats = JsonHelper.readValue(player.getStatistics(), new TypeReference<Map<String, Object>>() {});
         } catch(JsonProcessingException e) {
             stats = new HashMap<>();
         }
         return new PlayerInfo(
                 player.getName(),
                 player.getLevel(),
-                player.getSkills().values().stream().collect(Collectors.summingInt(x -> (Integer)x - 1)),
+                player.getSkills().values().stream().collect(Collectors.summingInt(x -> x - 1)),
                 player.getStatistics().getDeaths(),
                 player.getStatistics().getTotalItemsMined(),
                 player.getStatistics().getTotalItemsScavenged(),
