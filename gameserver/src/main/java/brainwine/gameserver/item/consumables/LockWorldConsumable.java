@@ -14,7 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LockWorldConsumable implements Consumable {
-    public static final int CROWN_REWARD = 50;
+    public static final int SMALL_WORLD_CROWN_REWARD = 25;
+    public static final int LARGE_WORLD_CROWN_REWARD = 100;
+    public static final int LARGE_WORLD_THRESHOLD = 2000 * 1000;
 
     @Override
     public void consume(Item item, Player player, Object details) {
@@ -38,8 +40,11 @@ public class LockWorldConsumable implements Consumable {
             return;
         }
 
+        int blockSize = zone.getWidth() * zone.getHeight();
+        int crownReward = blockSize >= LARGE_WORLD_THRESHOLD ? LARGE_WORLD_CROWN_REWARD : SMALL_WORLD_CROWN_REWARD;
+
         player.showDialog(new Dialog()
-                        .addSection(new DialogSection().setText("You have chosen to delete this world in exchange of " + CROWN_REWARD + " crowns."))
+                        .addSection(new DialogSection().setText("You have chosen to delete this world in exchange of " + crownReward + " crowns."))
                         .addSection(new DialogSection().setText("You will lose access to the world for the foreseeable future. Are you sure you want to continue?")),
                 ans -> {
                     if(ans.length == 0) confirm(player, item, zone);
@@ -53,9 +58,12 @@ public class LockWorldConsumable implements Consumable {
     }
 
     public void confirm(Player player, Item item, Zone zone) {
+        int blockSize = zone.getWidth() * zone.getHeight();
+        int crownReward = blockSize >= LARGE_WORLD_THRESHOLD ? LARGE_WORLD_CROWN_REWARD : SMALL_WORLD_CROWN_REWARD;
+
         if(!player.isGodMode()) {
             player.getInventory().removeItem(item, true);
-            player.addCrowns(CROWN_REWARD);
+            player.addCrowns(crownReward);
         }
         zone.getRules().setDeleted(true);
 
@@ -67,6 +75,6 @@ public class LockWorldConsumable implements Consumable {
         zone.setOwner(null);
 
         zone.setPrivate(true);
-        player.sendDelayedMessage(new NotificationMessage("This world is being deleted. Thank you for helping us free server storage. You are getting " + CROWN_REWARD + "crowns as a reward.", NotificationType.POPUP), 3000);
+        player.sendDelayedMessage(new NotificationMessage("This world is being deleted. Thank you for helping us free server storage. You are getting " + crownReward + "crowns as a reward.", NotificationType.POPUP), 3000);
     }
 }
