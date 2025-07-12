@@ -7,6 +7,7 @@ import java.util.Map;
 public class PlayerInfo extends PlayerInfoSummary {
     private String apiToken = "";
     private boolean tokenValidated = false;
+    private Map<String, String> appearance;
     private Map<String, Object> statistics;
     public PlayerInfo(
                       String name,
@@ -18,10 +19,12 @@ public class PlayerInfo extends PlayerInfoSummary {
                       int itemsPlaced,
                       int itemsCrafted,
                       String apiToken,
+                      Map<String, String> appearance,
                       Map<String, Object> statistics
     ) {
         super(name, level, skillLevel, deaths, itemsMined, itemsScavenged, itemsPlaced, itemsCrafted);
         this.apiToken = apiToken;
+        this.appearance = appearance;
         this.statistics = statistics;
     }
 
@@ -36,6 +39,10 @@ public class PlayerInfo extends PlayerInfoSummary {
     @JsonIgnore
     public String getApiToken() {
         return apiToken;
+    }
+
+    public Map<String, String> getAppearance() {
+        return appearance;
     }
 
     public Map<String, Object> getStatistics() {

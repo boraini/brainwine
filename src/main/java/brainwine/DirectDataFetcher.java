@@ -12,6 +12,9 @@ import brainwine.api.DataFetcher;
 import brainwine.api.models.PlayerInfo;
 import brainwine.api.models.PlayerInfoSummary;
 import brainwine.api.models.ZoneInfo;
+import brainwine.gameserver.item.Item;
+import brainwine.gameserver.item.ItemGroup;
+import brainwine.gameserver.item.ItemRegistry;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.player.PlayerManager;
 import brainwine.gameserver.util.MapHelper;
@@ -97,12 +100,42 @@ public class DirectDataFetcher implements DataFetcher {
     }
 
     private static PlayerInfo createPlayerInfo(Player player) {
-        Map<String, Object> stats;
-        try {
-            stats = JsonHelper.readValue(player.getStatistics(), new TypeReference<Map<String, Object>>() {});
-        } catch(JsonProcessingException e) {
-            stats = new HashMap<>();
+        Map<String, String> appearance = new HashMap<>();
+        for(Map.Entry<String, Object> entry : player.getAppearance().entrySet()) {
+            if(entry.getKey() == null || entry.getValue() == null) continue;
+            if(entry.getKey().contains("*")) {
+                appearance.put(entry.getKey(), Objects.toString(entry.getValue()));
+            } else {
+                if(entry.getValue() instanceof Integer) {
+                    appearance.put(entry.getKey(), ItemRegistry.getItem((int) entry.getValue()).getId());
+                }
+            }
         }
+
+        String[] includedStats = { "discoveries", "kills", "assists", "play_time", "areas_explored", "containers_looted",
+                "dungeons_raided", "maws_plugged", "undertakings", "deliverances", "deaths", "landmarks_upvoted", "landmark_votes_received" };
+
+        // TODO: this serializes the items mined and scavenged for no reason.
+        Map<String, Object> stats = new HashMap<>();
+        try {
+            Map<String, Object> allStats = JsonHelper.readValue(player.getStatistics(), new TypeReference<Map<String, Object>>() {});
+            for(String key : includedStats) {
+                stats.put(key, allStats.get(key));
+            }
+
+            int treesMined = 0;
+            int mineralsMined = 0;
+            for(Map.Entry<Item, Integer> entry : player.getStatistics().getItemsScavenged().entrySet()) {
+                if(entry.getKey().getGroup() == ItemGroup.TREE) treesMined += entry.getValue();
+                if(entry.getKey().getGroup() == ItemGroup.MINERAL) mineralsMined += entry.getValue();
+            }
+
+            stats.put("trees_mined", treesMined);
+            stats.put("minerals_mined", mineralsMined);
+        } catch(JsonProcessingException e) {
+            stats = null;
+        }
+
         return new PlayerInfo(
                 player.getName(),
                 player.getLevel(),
@@ -113,6 +146,7 @@ public class DirectDataFetcher implements DataFetcher {
                 player.getStatistics().getItemsPlaced(),
                 player.getStatistics().getTotalItemsCrafted(),
                 player.getApiToken(),
+                appearance,
                 stats
         );
     }
