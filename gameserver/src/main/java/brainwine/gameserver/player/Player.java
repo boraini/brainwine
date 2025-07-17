@@ -1700,6 +1700,12 @@ public class Player extends Entity implements CommandExecutor {
     
     public void consume(Item item, Object details) {
         Consumable consumable = item.getAction().getConsumable();
+
+        if(!isGodMode() && !inventory.hasItem(item)) {
+            sendMessage(new InventoryMessage(inventory.getClientConfig(item)));
+            notify("Sorry, you currently don't have any " + item.getTitle() + ".");
+            return;
+        }
         
         if(consumable == null) {
             sendMessage(new InventoryMessage(inventory.getClientConfig(item)));
