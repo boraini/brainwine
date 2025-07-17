@@ -1,6 +1,8 @@
 package brainwine.gameserver.item.consumables;
 
 import brainwine.gameserver.GameServer;
+import brainwine.gameserver.dialog.Dialog;
+import brainwine.gameserver.dialog.DialogSection;
 import brainwine.gameserver.item.Item;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.server.messages.InventoryMessage;
@@ -14,11 +16,25 @@ public class UnlockWorldConsumable implements Consumable {
     private static final String actionKey = "unlockWorld";
     @Override
     public void consume(Item item, Player player, Object details) {
-        if(player.isActionOnCooldown(actionKey, 5L, ChronoUnit.MINUTES)) {
+        if (!player.isGodMode() && player.isActionOnCooldown(actionKey, 5L, ChronoUnit.MINUTES)) {
             fail(player, item, "You can only use an " + item.getTitle() + " every 5 minutes.");
             return;
         }
 
+        player.showDialog(new Dialog()
+                        .setTitle("Using " + item.getTitle())
+                        .addSection(new DialogSection().setText("Would you like to use this " + item.getTitle() + "?"))
+                , ans -> {
+                    if(ans.length == 0) {
+                        confirm(item, player);
+                    } else {
+                        fail(player, item, null);
+                    }
+                }
+        );
+    }
+
+    private void confirm(Item item, Player player) {
         player.recordActionTime(actionKey);
 
         Biome biome = Biome.getRandomBiome();
@@ -46,7 +62,9 @@ public class UnlockWorldConsumable implements Consumable {
     }
 
     private void fail(Player player, Item item, String message) {
-        player.notify(message);
+        if(message != null) {
+            player.notify(message);
+        }
         player.sendMessage(new InventoryMessage(player.getInventory().getClientConfig(item)));
     }
 }
