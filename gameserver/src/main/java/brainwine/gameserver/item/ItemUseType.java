@@ -65,6 +65,7 @@ public enum ItemUseType {
     PLENTY,
     PROTECTED,
     PUBLIC,
+    REVENANT_DISH,
     QUIPPER(new QuipperInteraction()),
     RECYCLER(new RecyclerInteraction()),
     SUMMONING_CIRCLE(new SummoningCircleInteraction()),

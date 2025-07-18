@@ -1041,6 +1041,8 @@ public class Zone {
                             addGuardianEntities(metadata, frontItem.getGuardLevel(), y + j, random);
                             guardBlocks++;
                         }
+
+                        entityManager.updateRevenantDish(x, y, true);
                     }
 
                     if(dungeonId != null && frontItem.hasId("mechanical/spawner-brain")) {
@@ -1737,7 +1739,11 @@ public class Zone {
             
             for(int y = chunkY; y < chunkY + chunk.getHeight(); y++) {
                 // Spawn block-related entities
-                entityManager.trySpawnBlockEntity(x, y);
+                if(chunk.getBlock(x, y).getFrontItem().hasUse(ItemUseType.REVENANT_DISH)) {
+                    entityManager.updateRevenantDish(x, y, true);
+                } else {
+                    entityManager.trySpawnBlockEntity(x, y);
+                }
                 Block block = chunk.getBlock(x, y);
                 
                 // Index front item

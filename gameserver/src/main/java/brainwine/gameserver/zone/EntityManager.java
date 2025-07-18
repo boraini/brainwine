@@ -16,6 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
+import brainwine.gameserver.item.ItemUseType;
 import brainwine.gameserver.player.NotificationType;
 import brainwine.gameserver.server.messages.EventMessage;
 import brainwine.gameserver.server.messages.NotificationMessage;
@@ -274,7 +275,7 @@ public class EntityManager {
         int index = zone.getBlockIndex(x, y);
         
         // Check for guardian entity
-        if(item.getGuardLevel() > 0) {
+        if(item.getGuardLevel() > 0 || item.hasUse(ItemUseType.REVENANT_DISH)) {
             MetaBlock metaBlock = zone.getMetaBlock(x, y);
             
             if(metaBlock != null) {
@@ -315,7 +316,58 @@ public class EntityManager {
             }
         }
     }
-    
+
+    public void updateRevenantDish(int x, int y, boolean newlyLoaded) {
+        MetaBlock metaBlock = zone.getMetaBlock(x, y);
+        if(metaBlock != null && metaBlock.getItem().hasUse(ItemUseType.REVENANT_DISH)) {
+            int wave;
+            if(!metaBlock.hasProperty("w") || !metaBlock.hasProperty("!")) {
+                wave = 3;
+                startRevenantDishWave(x, y, 3);
+            } else {
+                List<String> guards = MapHelper.getList(metaBlock.getMetadata(), "!");
+                if(guards == null) {
+                    guards = new ArrayList<>();
+                    newlyLoaded = true;
+                }
+
+                int currentWave = metaBlock.hasProperty("!") ? metaBlock.getIntProperty("w") : 0;
+                if(!guards.isEmpty()) {
+                    wave = currentWave;
+                } else {
+                    wave = currentWave - 1;
+                }
+
+                if(currentWave != wave) {
+                    startRevenantDishWave(x, y, wave);
+                    newlyLoaded = true;
+                }
+            }
+
+            if(newlyLoaded) trySpawnBlockEntity(x, y);
+
+            if(wave <= 0) {
+                zone.updateBlock(x, y, Layer.FRONT, Item.AIR);
+                zone.spawnEffect(x, y, "bomb-electric", 5);
+            }
+        }
+    }
+
+    public void startRevenantDishWave(int x, int y, int wave) {
+        String type = wave <= 1 ? "revenant-lord" : "revenant";
+        int count = wave == 3 ? 3 : wave == 2 ? 5 : wave == 1 ? 1 : 0;
+        List<String> guards = new ArrayList<>();
+        for(int i = 0; i < count; i++) {
+            guards.add(type);
+        }
+
+        MetaBlock metaBlock = zone.getMetaBlock(x, y);
+        if(metaBlock != null) {
+            metaBlock.setProperty("w", wave);
+            metaBlock.setProperty("!", guards);
+        }
+    }
+
     public void spawnPersistentNpcs(Collection<NpcData> data) {
         for(NpcData entry : data) {
             if(entry.getType() == null) {
