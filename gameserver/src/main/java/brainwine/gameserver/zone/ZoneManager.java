@@ -48,6 +48,7 @@ public class ZoneManager {
     // player count influence has to be positive and a greater value means
     // more players are needed for a given increase in generation rate
     final double PLAYER_COUNT_INFLUENCE = 16;
+    final int UNEXPLORED_XL_PLAYERS = 8;
 
     private static final Logger logger = LogManager.getLogger();
     private final ObjectMapper mapper = new ObjectMapper(new MessagePackFactory())
@@ -56,7 +57,8 @@ public class ZoneManager {
     private Map<String, Zone> zones = new HashMap<>();
     private Map<String, Zone> zonesByName = new HashMap<>();
     private Map<String, Zone> entryCodes = new HashMap<>();
-    private long lastZoneGenerationTime = System.currentTimeMillis();
+    private OffsetDateTime unexploredHardBiomeTrackingStart = OffsetDateTime.now().minusMinutes(30);
+    private long lastZoneGenerationTime = System.currentTimeMillis() - (long)(GENERATION_INTERVAL_ZERO_PLAYERS_SECONDS * 1000);
     private boolean generatingZone = false;
     private Set<String> unexploredZones = new HashSet<>();
     private Biome lastGeneratedBiome = Biome.PLAIN;
@@ -117,6 +119,7 @@ public class ZoneManager {
 
         if(timeSinceLastGeneration < requiredInterval) return;
 
+        boolean xl = shouldGenerateXlUnexploredZone();
         if(shouldGenerateUnexploredZone()) {
             List<Biome> biomeOptions = Arrays.stream(Biome.values()).collect(Collectors.toList());
 
@@ -126,12 +129,23 @@ public class ZoneManager {
                 biomeOptions.remove(Biome.DEEP);
             }
 
-            lastGeneratedBiome = biomeOptions.get((int)(biomeOptions.size() * Math.random()));
+            Biome biome = biomeOptions.get((int)(biomeOptions.size() * Math.random()));
+            lastGeneratedBiome = biome;
 
-            ZoneGenerator generator = ZoneGenerator.getZoneGenerator(lastGeneratedBiome);
+            int width, height;
+
+            if(xl) {
+                width = biome == Biome.DEEP ? 1800 : 3000;
+                height = biome == Biome.DEEP ? 1500 : 800;
+            } else {
+                width = biome ==  Biome.DEEP ? 1200 : 2000;
+                height = biome == Biome.DEEP ? 1000 : 600;
+            }
+
+            ZoneGenerator generator = ZoneGenerator.getZoneGenerator(biome);
             generatingZone = true;
             lastZoneGenerationTime = System.currentTimeMillis();
-            generator.generateZoneAsync(lastGeneratedBiome, zone -> {
+            generator.generateZoneAsync(biome, width, height, zone -> {
                 if (zone != null) {
                     this.addZone(zone);
                     GameServer.getInstance().getPusher().handleZoneDiscovered(zone);
@@ -144,6 +158,17 @@ public class ZoneManager {
                 generatingZone = false;
             });
         }
+    }
+
+    /**
+     * Have too many people explored the last zone so we should generate an XL zone next?
+     *
+     * @return {@code true} if 8 or more people have explored the last zone, otherwise {@code false}.
+     */
+    public boolean shouldGenerateXlUnexploredZone() {
+        return unexploredZones.stream().anyMatch(
+                id -> getZone(id).getEntityManager().getCurrentMaxPlayers() >= UNEXPLORED_XL_PLAYERS
+        );
     }
 
     /**
@@ -165,7 +190,10 @@ public class ZoneManager {
         return zone != null
                 && !zone.isPrivate()
                 && !zone.isOwned()
-                && zone.getBiome() != Biome.HELL && zone.getBiome() != Biome.DEEP;
+                && (
+                        zone.getCreationDate().isAfter(unexploredHardBiomeTrackingStart)
+                                || zone.getBiome() != Biome.HELL && zone.getBiome() != Biome.DEEP
+                );
     }
 
     public void onShutdown() {

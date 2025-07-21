@@ -59,6 +59,7 @@ public class EntityManager {
     private final Map<String, Player> playersByName = new HashMap<>();
     private final Zone zone;
     private int entityDiscriminator;
+    private int currentMaxPlayers;
     private long lastSpawnAt = System.currentTimeMillis();
     private long lastInvasionAt;
     private long timeUntilNextInvasion = 10000;
@@ -376,6 +377,7 @@ public class EntityManager {
             player.sendMessageToPeers(new EntityStatusMessage(player, EntityStatus.ENTERING));
             player.sendMessageToPeers(new EntityPositionMessage(player));
             player.sendMessage(new EventMessage("playerIconDidChange", player.getIconEmoji()));
+            currentMaxPlayers = Math.max(currentMaxPlayers, getPlayerCount());
         } else if(entity instanceof Npc) {
             npcs.put(entityId, (Npc)entity);
         }
@@ -529,5 +531,9 @@ public class EntityManager {
     
     public Collection<Player> getPlayers() {
         return Collections.unmodifiableCollection(players.values());
+    }
+
+    public int getCurrentMaxPlayers() {
+        return currentMaxPlayers;
     }
 }
