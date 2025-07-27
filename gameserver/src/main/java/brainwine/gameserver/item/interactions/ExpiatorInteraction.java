@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import brainwine.gameserver.entity.Entity;
+import brainwine.gameserver.item.Item;
+import brainwine.gameserver.item.ItemRegistry;
+import brainwine.gameserver.item.ItemUseType;
 import brainwine.gameserver.item.Layer;
 import brainwine.gameserver.player.NotificationType;
 import brainwine.gameserver.player.Player;
@@ -33,9 +36,16 @@ public class ExpiatorInteraction extends EcologicalMachineInteraction {
             player.notify("No ghosts in range.");
             return;
         }
-        
-        List<MetaBlock> protectors = zone.getMetaBlocksWithItem("hell/dish");
-        Collections.shuffle(protectors);
+
+        // This allows the server operator to choose what infernal protectors do.
+        Item hellDish = ItemRegistry.getItem("hell/dish");
+        List<MetaBlock> protectors;
+        if(hellDish.hasUse(ItemUseType.REVENANT_DISH)) {
+            protectors = Collections.emptyList();
+        } else {
+            protectors = zone.getMetaBlocksWithItem(hellDish);
+            Collections.shuffle(protectors);
+        }
         
         // Expiate nearby ghosts
         for(Entity ghost : ghosts) {
