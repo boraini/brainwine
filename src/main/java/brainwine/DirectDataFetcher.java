@@ -3,10 +3,13 @@ package brainwine;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import brainwine.api.DataFetcher;
 import brainwine.api.models.PlayerInfo;
@@ -204,7 +207,8 @@ public class DirectDataFetcher implements DataFetcher {
     }
     
     private static ZoneInfo createZoneInfo(Zone zone) {
-        return new ZoneInfo(zone.getName(), 
+        return new ZoneInfo(zone.getDocumentId(),
+                zone.getName(),
                 zone.getBiome().getId(), 
                 null,
                 zone.isPvp(),
@@ -219,16 +223,37 @@ public class DirectDataFetcher implements DataFetcher {
                 zone.getCreationDate(),
                 zone.getOwner(),
                 zone.getMembers(),
-                zone.getGlobalMetaBlocks().stream().map(DirectDataFetcher::createMetaBlockData).collect(Collectors.toList()));
+                null
+        );
     }
 
+    public List<Map<String, Object>> getZoneMetaBlocks(String documentId) {
+        Zone zone = zoneManager.getZone(documentId);
+        if(zone == null) return null;
+        return zone.getGlobalMetaBlocks().stream()
+                .filter(b -> b.getItem().hasUse(ItemUseType.ZONE_TELEPORT)
+                        || b.getItem().hasUse(ItemUseType.TELEPORT)
+                        || b.getItem().getId().contains("sign")
+                )
+                .map(DirectDataFetcher::createMetaBlockData)
+                .collect(Collectors.toList());
+    }
+
+    private static final Set<String> includedMetablockKeys = Stream.of( "n", "t1", "t2", "t3", "vc" ).collect(Collectors.toCollection(HashSet::new));
     private static Map<String, Object> createMetaBlockData(MetaBlock m) {
+        Map<String, Object> metadata = new HashMap<>();
+        for(Map.Entry<String, Object> entry : m.getMetadata().entrySet()) {
+            if(includedMetablockKeys.contains(entry.getKey())) {
+                metadata.put(entry.getKey(), entry.getValue());
+            }
+        }
+
         Map<String, Object> data = MapHelper.map(
                 String.class, Object.class,
                 "x", m.getX(),
                 "y", m.getY(),
                 "item", m.getItem().getId(),
-                "metadata", m.getMetadata()
+                "metadata", metadata
         );
 
         Player owner = m.getOwner();

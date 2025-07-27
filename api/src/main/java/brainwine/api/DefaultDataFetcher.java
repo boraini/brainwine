@@ -1,6 +1,8 @@
 package brainwine.api;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 import brainwine.api.models.PlayerInfo;
 import brainwine.api.models.PlayerInfoSummary;
@@ -54,7 +56,12 @@ public class DefaultDataFetcher implements DataFetcher {
     public ZoneInfo getZoneInfo(String nameOrId) {
         throw exception;
     }
-    
+
+    @Override
+    public List<Map<String, Object>> getZoneMetaBlocks(String documentId) {
+        throw exception;
+    }
+
     @Override
     public Collection<ZoneInfo> fetchZoneInfo() {
         throw exception;
