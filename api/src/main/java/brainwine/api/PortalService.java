@@ -177,8 +177,8 @@ public class PortalService {
         // TODO this modifies the objects returned from the direct data fetcher directly
         Validator<Boolean> param = ctx.queryParamAsClass("metablocks", Boolean.class);
         Boolean value = param.getOrDefault(null);
-        if(value == null || value.equals(false)) {
-            zones.forEach(z -> z.setMetablocks(null));
+        if(value != null && value.equals(true)) {
+            zones.forEach(z -> z.setMetablocks(dataFetcher.getZoneMetaBlocks(z.getDocumentId())));
         }
 
         // Page

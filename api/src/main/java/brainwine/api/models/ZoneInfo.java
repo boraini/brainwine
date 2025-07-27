@@ -13,7 +13,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * TODO split model in two: one for internal use & one for {@code /v1/worlds} serialization.
  */
 public class ZoneInfo {
-    
+
+    private final String documentId;
     private final String name;
     private final String biome;
     private final String activity;
@@ -33,8 +34,9 @@ public class ZoneInfo {
     private final List<String> members;
     private List<Map<String, Object>> metablocks;
 
-    public ZoneInfo(String name, String biome, String activity, boolean pvp, boolean market, boolean tutorial, boolean premium, boolean isPrivate, boolean isProtected,
+    public ZoneInfo(String documentId, String name, String biome, String activity, boolean pvp, boolean market, boolean tutorial, boolean premium, boolean isPrivate, boolean isProtected,
             int playerCount, int width, int height, int[] surface, double explorationProgress, OffsetDateTime creationDate, String owner, List<String> members, List<Map<String, Object>> metablocks) {
+        this.documentId = documentId;
         this.name = name;
         this.biome = biome;
         this.activity = activity;
@@ -54,7 +56,12 @@ public class ZoneInfo {
         this.members = members;
         this.metablocks = metablocks;
     }
-    
+
+    @JsonIgnore
+    public String getDocumentId() {
+        return documentId;
+    }
+
     public String getName() {
         return name;
     }
