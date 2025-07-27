@@ -13,7 +13,6 @@ import brainwine.gameserver.util.randomobject.RandomInteger;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Random;
 
 public class EventAndQuantity extends RandomQuest {
@@ -89,7 +88,7 @@ public class EventAndQuantity extends RandomQuest {
                 new QuestTask()
                         .setDescription(format(quantity == 1 ? singularTaskDescription : pluralTaskDescription, quantity))
                         .setQuantity(quantity)
-                        .setEvents(List.of(List.of(event)))
+                        .setEvents(Arrays.asList(Arrays.asList(event)))
         ));
 
         quest.setTitle(title);
