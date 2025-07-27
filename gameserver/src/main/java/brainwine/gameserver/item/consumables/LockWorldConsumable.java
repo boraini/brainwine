@@ -43,7 +43,7 @@ public class LockWorldConsumable implements Consumable {
 
         player.showDialog(new Dialog()
                         .addSection(new DialogSection().setText("You have chosen to delete this world in exchange of " + crownReward + " crowns."))
-                        .addSection(new DialogSection().setText("You will lose access to the world for the foreseeable future. Are you sure you want to continue?")),
+                        .addSection(new DialogSection().setText("You will permanently lose access to this world. Are you sure you want to continue?")),
                 ans -> {
                     if(ans.length == 0) confirm(player, item, zone);
                 }
