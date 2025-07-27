@@ -62,6 +62,11 @@ public class LockWorldConsumable implements Consumable {
         int crownReward = blockSize >= LARGE_WORLD_THRESHOLD ? LARGE_WORLD_CROWN_REWARD : SMALL_WORLD_CROWN_REWARD;
 
         if(!player.isGodMode()) {
+            if(!player.getInventory().hasItem(item)) {
+                fail(player, item, String.format("Sorry, you don't have any %ss.", item.getTitle()));
+                return;
+            }
+
             player.getInventory().removeItem(item, true);
             player.addCrowns(crownReward);
         }

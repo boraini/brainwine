@@ -35,6 +35,11 @@ public class UnlockWorldConsumable implements Consumable {
     }
 
     private void confirm(Item item, Player player) {
+        if(!player.getInventory().hasItem(item)) {
+            fail(player, item, String.format("Sorry, you don't have any %ss.", item.getTitle()));
+            return;
+        }
+
         player.recordActionTime(actionKey);
 
         Biome biome = Biome.getRandomBiome();

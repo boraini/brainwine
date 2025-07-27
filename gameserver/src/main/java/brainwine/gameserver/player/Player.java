@@ -1703,7 +1703,7 @@ public class Player extends Entity implements CommandExecutor {
 
         if(!isGodMode() && !inventory.hasItem(item)) {
             sendMessage(new InventoryMessage(inventory.getClientConfig(item)));
-            notify("Sorry, you currently don't have any " + item.getTitle() + ".");
+            notify(String.format("Sorry, you don't have any %ss.", item.getTitle()));
             return;
         }
         

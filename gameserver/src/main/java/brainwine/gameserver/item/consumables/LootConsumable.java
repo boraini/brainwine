@@ -37,6 +37,16 @@ public class LootConsumable implements Consumable {
     }
 
     private void confirm(Item item, Player player) {
+        if(!player.isGodMode() && !player.getInventory().hasItem(item)) {
+            fail(player, item, String.format("Sorry, you don't have any %ss.", item.getTitle()));
+            return;
+        }
+
+        if(!player.isGodMode() && item.isLocked() && !player.getInventory().hasItem(keyItem.get())) {
+            fail(player, item, "You need a key to unlock this " + item.getTitle() + "!");
+            return;
+        }
+
         String[] lootTables = item.getLootCategories();
         Loot loot = GameServer.getInstance().getLootManager().getRandomLoot(player, lootTables);
         if(loot == null) {
