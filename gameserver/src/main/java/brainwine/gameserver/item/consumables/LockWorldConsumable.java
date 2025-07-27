@@ -1,6 +1,5 @@
 package brainwine.gameserver.item.consumables;
 
-import brainwine.gameserver.GameServer;
 import brainwine.gameserver.dialog.Dialog;
 import brainwine.gameserver.dialog.DialogSection;
 import brainwine.gameserver.item.Item;
@@ -9,9 +8,7 @@ import brainwine.gameserver.player.Player;
 import brainwine.gameserver.server.messages.InventoryMessage;
 import brainwine.gameserver.server.messages.NotificationMessage;
 import brainwine.gameserver.zone.Zone;
-
-import java.util.ArrayList;
-import java.util.List;
+import brainwine.gameserver.zone.ZoneManager;
 
 public class LockWorldConsumable implements Consumable {
     public static final int SMALL_WORLD_CROWN_REWARD = 25;
@@ -70,16 +67,9 @@ public class LockWorldConsumable implements Consumable {
             player.getInventory().removeItem(item, true);
             player.addCrowns(crownReward);
         }
-        zone.getRules().setDeleted(true);
 
-        List<String> members = new ArrayList<>(zone.getMembers());
-        for(String memberId : members) {
-            Player member = GameServer.getInstance().getPlayerManager().getPlayerById(memberId);
-            if(member != null) zone.removeMember(member);
-        }
-        zone.setOwner(null);
+        ZoneManager.markZoneForDeletion(zone, player);
 
-        zone.setPrivate(true);
         player.sendDelayedMessage(new NotificationMessage("This world is being deleted. Thank you for helping us free server storage. You are getting " + crownReward + "crowns as a reward.", NotificationType.POPUP), 3000);
     }
 }

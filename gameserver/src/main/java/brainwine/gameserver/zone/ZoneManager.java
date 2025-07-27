@@ -291,6 +291,24 @@ public class ZoneManager {
         }
     }
 
+    public static void markZoneForDeletion(Zone zone, Player executor) {
+        zone.getRules().setDeleted(true);
+
+        List<String> members = new ArrayList<>(zone.getMembers());
+        for(String memberId : members) {
+            Player member = GameServer.getInstance().getPlayerManager().getPlayerById(memberId);
+            if(member != null) zone.removeMember(member);
+        }
+        zone.setOwner(null);
+
+        zone.setPrivate(true);
+        if(executor != null) {
+            logger.info("Zone " + zone.getName() + " is marked for deletion by " + executor.getName() + ".");
+        } else {
+            logger.info("Zone " + zone.getName() + " is marked for deletion.");
+        }
+    }
+
     public void deleteZone(Zone zone) {
         zone.freeze("This zone is being deleted.");
 
