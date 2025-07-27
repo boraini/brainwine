@@ -2,17 +2,30 @@ package brainwine;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 import brainwine.api.DataFetcher;
+import brainwine.api.models.PlayerInfo;
+import brainwine.api.models.PlayerInfoSummary;
 import brainwine.api.models.ZoneInfo;
+import brainwine.gameserver.item.Item;
+import brainwine.gameserver.item.ItemGroup;
+import brainwine.gameserver.item.ItemRegistry;
+import brainwine.gameserver.item.ItemUseType;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.player.PlayerManager;
+import brainwine.gameserver.util.MapHelper;
+import brainwine.gameserver.zone.MetaBlock;
 import brainwine.gameserver.zone.Zone;
 import brainwine.gameserver.zone.ZoneActivity;
 import brainwine.gameserver.zone.ZoneManager;
+import brainwine.shared.JsonHelper;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 public class DirectDataFetcher implements DataFetcher {
     
@@ -55,7 +68,97 @@ public class DirectDataFetcher implements DataFetcher {
     public boolean verifyAuthToken(String name, String token) {
         return playerManager.verifyAuthToken(name, token);
     }
-    
+
+    @Override
+    public PlayerInfo getPlayerInfo(String nameOrId) {
+        Player player = playerManager.getPlayer(nameOrId);
+
+        if(player == null) {
+            player = playerManager.getPlayerById(nameOrId);
+        }
+
+        return player == null ? null : createPlayerInfo(player);
+    }
+
+    @Override
+    public Collection<PlayerInfoSummary> fetchPlayerInfo() {
+        return playerManager.getPlayers().stream()
+                .filter(Objects::nonNull)
+                .map(DirectDataFetcher::createPlayerInfoSummary)
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    private static PlayerInfoSummary createPlayerInfoSummary(Player player) {
+        return new PlayerInfoSummary(
+                player.getName(),
+                player.getLevel(),
+                player.getLevelFromExperience(player.getExperience()),
+                player.getStatistics().getDeaths(),
+                player.getStatistics().getTotalItemsMined(),
+                player.getStatistics().getTotalItemsScavenged(),
+                player.getStatistics().getItemsPlaced(),
+                player.getStatistics().getTotalItemsCrafted()
+        );
+    }
+
+    private static PlayerInfo createPlayerInfo(Player player) {
+        Map<String, String> appearance = new HashMap<>();
+        for(Map.Entry<String, Object> entry : player.getAppearance().entrySet()) {
+            if(entry.getKey() == null || entry.getValue() == null) continue;
+            if(entry.getKey().contains("*")) {
+                appearance.put(entry.getKey(), Objects.toString(entry.getValue()));
+            } else {
+                if(entry.getValue() instanceof Integer) {
+                    appearance.put(entry.getKey(), ItemRegistry.getItem((int) entry.getValue()).getId());
+                }
+            }
+        }
+
+        // TODO: include hover and propel accessories.
+        Item flyAccessory = player.getInventory().findAccessoryWithUse(ItemUseType.FLY);
+        if(!flyAccessory.isAir()) {
+            appearance.put("u", flyAccessory.getId());
+        }
+
+        String[] includedStats = { "discoveries", "kills", "assists", "play_time", "areas_explored", "containers_looted",
+                "dungeons_raided", "maws_plugged", "undertakings", "deliverances", "deaths", "landmarks_upvoted", "landmark_votes_received" };
+
+        // TODO: this serializes the items mined and scavenged for no reason.
+        Map<String, Object> stats = new HashMap<>();
+        try {
+            Map<String, Object> allStats = JsonHelper.readValue(player.getStatistics(), new TypeReference<Map<String, Object>>() {});
+            for(String key : includedStats) {
+                stats.put(key, allStats.get(key));
+            }
+
+            int treesMined = 0;
+            int mineralsMined = 0;
+            for(Map.Entry<Item, Integer> entry : player.getStatistics().getItemsScavenged().entrySet()) {
+                if(entry.getKey().getGroup() == ItemGroup.TREE) treesMined += entry.getValue();
+                if(entry.getKey().getGroup() == ItemGroup.MINERAL) mineralsMined += entry.getValue();
+            }
+
+            stats.put("trees_mined", treesMined);
+            stats.put("minerals_mined", mineralsMined);
+        } catch(JsonProcessingException e) {
+            stats = null;
+        }
+
+        return new PlayerInfo(
+                player.getName(),
+                player.getLevel(),
+                player.getSkills().values().stream().collect(Collectors.summingInt(x -> x - 1)),
+                player.getStatistics().getDeaths(),
+                player.getStatistics().getTotalItemsMined(),
+                player.getStatistics().getTotalItemsScavenged(),
+                player.getStatistics().getItemsPlaced(),
+                player.getStatistics().getTotalItemsCrafted(),
+                player.getApiToken(),
+                appearance,
+                stats
+        );
+    }
+
     @Override
     public ZoneInfo getZoneInfo(String nameOrId) {
         Zone zone = zoneManager.getZoneByName(nameOrId);
@@ -118,6 +221,27 @@ public class DirectDataFetcher implements DataFetcher {
                 zone.getExplorationProgress(),
                 zone.getCreationDate(),
                 zone.getOwner(),
-                zone.getMembers());
+                zone.getMembers(),
+                zone.getGlobalMetaBlocks().stream().map(DirectDataFetcher::createMetaBlockData).collect(Collectors.toList()));
+    }
+
+    private static Map<String, Object> createMetaBlockData(MetaBlock m) {
+        Map<String, Object> data = MapHelper.map(
+                String.class, Object.class,
+                "x", m.getX(),
+                "y", m.getY(),
+                "item", m.getItem().getId(),
+                "metadata", m.getMetadata()
+        );
+
+        Player owner = m.getOwner();
+        if(owner != null) {
+            data.put("owner", MapHelper.map(
+                    String.class, Object.class,
+                    "name", owner.getName()
+            ));
+        }
+
+        return data;
     }
 }

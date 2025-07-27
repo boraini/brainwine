@@ -1,12 +1,17 @@
 package brainwine.api;
 
 import static brainwine.api.util.ContextUtils.error;
+import static brainwine.api.util.ContextUtils.handleQueryParam;
 import static brainwine.shared.LogMarkers.SERVER_MARKER;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
+import brainwine.api.models.PlayerInfo;
+import brainwine.api.models.PlayerInfoSummary;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -19,7 +24,8 @@ import io.javalin.http.Context;
 import io.javalin.plugin.json.JavalinJackson;
 
 public class GatewayService {
-    
+
+    private static final int playerSearchPageSize = 50;
     private static final Pattern namePattern = Pattern.compile("^[a-zA-Z0-9_.-]{4,20}$");
     private static final Logger logger = LogManager.getLogger();
     private final Api api;
@@ -33,6 +39,8 @@ public class GatewayService {
         gateway = Javalin.create(config -> config.jsonMapper(new JavalinJackson(JsonHelper.MAPPER)))
             .exception(Exception.class, this::handleException)
             .get("/clients", this::handleNewsRequest)
+            .get("/players", this::handlePlayerSearch)
+            .get("/players/{player}", this::handleGetPlayer)
             .post("/players", this::handlePlayerRegistration)
             .post("/sessions", this::handlePlayerLogin)
             .post("/passwords/request", this::handlePasswordForget)
@@ -57,6 +65,62 @@ public class GatewayService {
         news.put("posts", api.getNews());
         news.put("beta", api.getBeta());
         ctx.json(news);
+    }
+
+    private void handleGetPlayer(Context ctx) {
+        String nameOrId = ctx.pathParam("player");
+        PlayerInfo info = dataFetcher.getPlayerInfo(nameOrId);
+        if(info == null) {
+            error(ctx, "Player not found.");
+            return;
+        }
+
+        handleQueryParam(ctx, "api_token", String.class, token -> {
+            if(Objects.equals(info.getApiToken(), token)) {
+                info.setTokenValidated();
+            }
+        });
+
+        ctx.json(info);
+    }
+
+    private void handlePlayerSearch(Context ctx) {
+        List<PlayerInfoSummary> players = (List<PlayerInfoSummary>)dataFetcher.fetchPlayerInfo();
+
+        handleQueryParam(ctx, "name", String.class, name -> {
+            players.removeIf(player -> !player.getName().toLowerCase().contains(name.toLowerCase()));
+        });
+
+        handleQueryParam(ctx, "min_level", Integer.class, minLevel -> {
+            players.removeIf(player -> player.getLevel() < minLevel);
+        });
+
+        handleQueryParam(ctx, "max_level", Integer.class, maxLevel -> {
+            players.removeIf(player -> player.getLevel() > maxLevel);
+        });
+
+        handleQueryParam(ctx, "sort", String.class, sort -> {
+            switch(sort) {
+                case "items_mined": // Sort by total items mined
+                    players.sort((a, b) -> Integer.compare(b.getItemsMined(), a.getItemsMined()));
+                    break;
+                case "items_scavenged": // Sort by total items scavenged
+                    players.sort((a, b) -> Integer.compare(b.getItemsScavenged(), a.getItemsMined()));
+                    break;
+                case "items_placed": // Sort by total items placed
+                    players.sort((a, b) -> Integer.compare(b.getItemsPlaced(), a.getItemsPlaced()));
+                    break;
+                case "items_crafted": // Sort by total items crafted
+                    players.sort((a, b) -> Integer.compare(b.getItemsCrafted(), a.getItemsCrafted()));
+                    break;
+            }
+        });
+
+        // Page
+        int page = ctx.queryParamAsClass("page", Integer.class).getOrDefault(1);
+        int fromIndex = (page - 1) * playerSearchPageSize;
+        int toIndex = page * playerSearchPageSize;
+        ctx.json(players.subList(fromIndex < 0 ? 0 : fromIndex > players.size() ? players.size() : fromIndex, toIndex > players.size() ? players.size() : toIndex));
     }
     
     /**

@@ -16,6 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.imageio.ImageIO;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.javalin.core.validation.Validator;
 import io.javalin.websocket.WsConfig;
 import io.javalin.websocket.WsContext;
 import org.apache.logging.log4j.LogManager;
@@ -40,7 +41,7 @@ public class PortalService {
     private final DataFetcher dataFetcher;
     private final Javalin portal;
     private final Set<WsContext> wsConnections = ConcurrentHashMap.newKeySet();
-    
+
     public PortalService(Api api, int port) {
         this.dataFetcher = api.getDataFetcher();
         logger.info(SERVER_MARKER, "Starting PortalService @ port {} ...", port);
@@ -142,7 +143,7 @@ public class PortalService {
         handleQueryParam(ctx, "market", boolean.class, pvp -> {
             zones.removeIf(zone -> zone.isMarket() != pvp);
         });
-        
+
         handleQueryParam(ctx, "protected", boolean.class, value -> {
             zones.removeIf(zone -> zone.isProtected() != value);
         });
@@ -172,7 +173,14 @@ public class PortalService {
                 break;
             }
         });
-        
+
+        // TODO this modifies the objects returned from the direct data fetcher directly
+        Validator<Boolean> param = ctx.queryParamAsClass("metablocks", Boolean.class);
+        Boolean value = param.getOrDefault(null);
+        if(value == null || value.equals(false)) {
+            zones.forEach(z -> z.setMetablocks(null));
+        }
+
         // Page
         int page = ctx.queryParamAsClass("page", Integer.class).getOrDefault(1);
         int fromIndex = (page - 1) * zoneSearchPageSize;
@@ -217,7 +225,7 @@ public class PortalService {
             }
         }
     }
-    
+
     /**
      * Stops the portal service.
      * @see Javalin#stop()
