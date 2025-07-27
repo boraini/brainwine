@@ -14,6 +14,7 @@ import brainwine.gameserver.item.Layer;
 import brainwine.gameserver.item.ModType;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.player.Skill;
+import brainwine.gameserver.quest.QuestEvents;
 import brainwine.gameserver.server.PlayerRequest;
 import brainwine.gameserver.server.RequestInfo;
 import brainwine.gameserver.server.messages.BlockChangeMessage;
@@ -314,6 +315,7 @@ public class BlockPlaceRequest extends PlayerRequest {
         }
         
         player.getStatistics().trackUndertaking();
+        QuestEvents.handleBury(player);
     }
     
     private void createBlockTimer(Zone zone, Player player) {

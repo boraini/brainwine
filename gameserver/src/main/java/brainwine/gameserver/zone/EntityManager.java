@@ -17,6 +17,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 import brainwine.gameserver.player.NotificationType;
+import brainwine.gameserver.quest.QuestEvents;
 import brainwine.gameserver.server.messages.EventMessage;
 import brainwine.gameserver.server.messages.NotificationMessage;
 import brainwine.gameserver.util.MathUtils;
@@ -461,6 +462,7 @@ public class EntityManager {
             Player player = score.getKey();
             int count = score.getValue();
             player.getStatistics().trackEvokersInhibited(count);
+            QuestEvents.handleInhibit(player, count);
             String suffix = count == 1 ? " inhibited an evoker!" : " inhibited " + count + " evokers!";
             player.notify("You" + suffix, NotificationType.SYSTEM);
             player.notifyPeers(player.getName() + suffix, NotificationType.SYSTEM);

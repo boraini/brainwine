@@ -101,7 +101,7 @@ public class RandomQuests {
 
     public static String getString(Random random, String label) {
         List<String> list = configuration.strings.get(label);
-
+        if(list == null) return "Please complete the below tasks.";
         return list.get(random.nextInt(list.size()));
     }
 }

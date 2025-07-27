@@ -23,6 +23,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
         @JsonSubTypes.Type(value = Kill.class, name = "kill"),
         @JsonSubTypes.Type(value = Collect.class, name = "collect"),
         @JsonSubTypes.Type(value = Craft.class, name = "craft"),
+        @JsonSubTypes.Type(value = Inhibit.class, name = "inhibit"),
+        @JsonSubTypes.Type(value = Bury.class, name = "bury"),
 })
 @RandomListObjectMapperProvider(RandomQuests.MapperProvider.class)
 public abstract class RandomQuest {

@@ -119,6 +119,14 @@ public class QuestEvents {
         handleEvent(player, "raid");
     }
 
+    public static void handleInhibit(Player player, int quantity) {
+        handleEventWithQuantity(player, quantity, "inhibit");
+    }
+
+    public static void handleBury(Player player) {
+        handleEvent(player, "bury");
+    }
+
     public static void handleChat(Player player) {
         handleEvent(player, "chat");
     }
