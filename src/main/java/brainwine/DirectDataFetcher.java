@@ -15,6 +15,7 @@ import brainwine.api.models.ZoneInfo;
 import brainwine.gameserver.item.Item;
 import brainwine.gameserver.item.ItemGroup;
 import brainwine.gameserver.item.ItemRegistry;
+import brainwine.gameserver.item.ItemUseType;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.player.PlayerManager;
 import brainwine.gameserver.util.MapHelper;
@@ -110,6 +111,12 @@ public class DirectDataFetcher implements DataFetcher {
                     appearance.put(entry.getKey(), ItemRegistry.getItem((int) entry.getValue()).getId());
                 }
             }
+        }
+
+        // TODO: include hover and propel accessories.
+        Item flyAccessory = player.getInventory().findAccessoryWithUse(ItemUseType.FLY);
+        if(!flyAccessory.isAir()) {
+            appearance.put("u", flyAccessory.getId());
         }
 
         String[] includedStats = { "discoveries", "kills", "assists", "play_time", "areas_explored", "containers_looted",
