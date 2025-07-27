@@ -354,8 +354,23 @@ public class EntityManager {
     }
 
     public void startRevenantDishWave(int x, int y, int wave) {
-        String type = wave <= 1 ? "revenant-lord" : "revenant";
-        int count = wave == 3 ? 3 : wave == 2 ? 5 : wave == 1 ? 1 : 0;
+        String type;
+        int count;
+        // Waves start from 3, go down to 1, and reach 0 which is when the infernal protector is destroyed.
+        if(wave == 3) {
+            type = "revenant";
+            count = 5;
+        } else if(wave == 2) {
+            type = "dire-revenant";
+            count = 3;
+        } else if(wave == 1) {
+            type = "revenant-lord";
+            count = 1;
+        } else {
+            type = "terrapus/adult";
+            count = 0;
+        }
+
         List<String> guards = new ArrayList<>();
         for(int i = 0; i < count; i++) {
             guards.add(type);
