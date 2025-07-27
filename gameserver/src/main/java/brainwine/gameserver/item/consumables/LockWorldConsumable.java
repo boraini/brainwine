@@ -12,8 +12,10 @@ import brainwine.gameserver.zone.ZoneManager;
 
 public class LockWorldConsumable implements Consumable {
     public static final int SMALL_WORLD_CROWN_REWARD = 25;
+    public static final int MEDIUM_WORLD_CROWN_REWARD = 50;
     public static final int LARGE_WORLD_CROWN_REWARD = 100;
-    public static final int LARGE_WORLD_THRESHOLD = 2000 * 1000;
+    public static final int SMALL_MEDIUM_THRESHOLD = 1000 * 500;
+    public static final int MEDIUM_LARGE_THRESHOLD = 2000 * 1000;
 
     @Override
     public void consume(Item item, Player player, Object details) {
@@ -37,8 +39,7 @@ public class LockWorldConsumable implements Consumable {
             return;
         }
 
-        int blockSize = zone.getWidth() * zone.getHeight();
-        int crownReward = blockSize >= LARGE_WORLD_THRESHOLD ? LARGE_WORLD_CROWN_REWARD : SMALL_WORLD_CROWN_REWARD;
+        int crownReward = getCrownReward(zone);
 
         player.showDialog(new Dialog()
                         .addSection(new DialogSection().setText("You have chosen to delete this world in exchange of " + crownReward + " crowns."))
@@ -55,8 +56,7 @@ public class LockWorldConsumable implements Consumable {
     }
 
     public void confirm(Player player, Item item, Zone zone) {
-        int blockSize = zone.getWidth() * zone.getHeight();
-        int crownReward = blockSize >= LARGE_WORLD_THRESHOLD ? LARGE_WORLD_CROWN_REWARD : SMALL_WORLD_CROWN_REWARD;
+        int crownReward = getCrownReward(zone);
 
         if(!player.isGodMode()) {
             if(!player.getInventory().hasItem(item)) {
@@ -71,5 +71,12 @@ public class LockWorldConsumable implements Consumable {
         ZoneManager.markZoneForDeletion(zone, player);
 
         player.sendDelayedMessage(new NotificationMessage("This world is being deleted. Thank you for helping us free server storage. You are getting " + crownReward + "crowns as a reward.", NotificationType.POPUP), 3000);
+    }
+
+    private int getCrownReward(Zone zone) {
+        int blockSize = zone.getWidth() * zone.getHeight();
+        if(blockSize >= MEDIUM_LARGE_THRESHOLD) return LARGE_WORLD_CROWN_REWARD;
+        if(blockSize >= SMALL_MEDIUM_THRESHOLD) return MEDIUM_WORLD_CROWN_REWARD;
+        else return SMALL_WORLD_CROWN_REWARD;
     }
 }
