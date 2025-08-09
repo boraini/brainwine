@@ -20,6 +20,7 @@ import brainwine.gameserver.item.interactions.MinigameInteraction;
 import brainwine.gameserver.item.interactions.NoteInteraction;
 import brainwine.gameserver.item.interactions.QuipperInteraction;
 import brainwine.gameserver.item.interactions.RecyclerInteraction;
+import brainwine.gameserver.item.interactions.SmelterInteraction;
 import brainwine.gameserver.item.interactions.SpawnInteraction;
 import brainwine.gameserver.item.interactions.SpawnTeleportInteraction;
 import brainwine.gameserver.item.interactions.SummoningCircleInteraction;
@@ -68,6 +69,7 @@ public enum ItemUseType {
     REVENANT_DISH,
     QUIPPER(new QuipperInteraction()),
     RECYCLER(new RecyclerInteraction()),
+    SMELTER(new SmelterInteraction()),
     SUMMONING_CIRCLE(new SummoningCircleInteraction()),
     SPAWN(new SpawnInteraction()),
     SPAWN_TELEPORT(new SpawnTeleportInteraction()),
