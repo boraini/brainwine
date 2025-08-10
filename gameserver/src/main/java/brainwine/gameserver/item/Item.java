@@ -235,7 +235,7 @@ public class Item {
     private Map<LazyItemGetter, LazyItemGetter> conversions = new HashMap<>();
 
     @JsonProperty("smelt")
-    private LazyItemGetter smelt = null;
+    private Map<LazyItemGetter, Integer> smelt = new HashMap<>();
     
     @JsonProperty("spawn_entity")
     private WeightedMap<String> entitySpawns = new WeightedMap<>();
@@ -719,8 +719,8 @@ public class Item {
         return conversions.entrySet().stream().collect(Collectors.toMap(entry -> entry.getKey().get(), entry -> entry.getValue().get()));
     }
 
-    public Item getSmelt() {
-        return smelt != null ? smelt.get() : null;
+    public Map<Item, Integer> getSmelt() {
+        return smelt.entrySet().stream().collect(Collectors.toMap(entry -> entry.getKey().get(), Map.Entry::getValue));
     }
     
     public boolean hasEntitySpawns() {

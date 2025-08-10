@@ -15,6 +15,8 @@ import brainwine.gameserver.server.messages.InventoryMessage;
 import brainwine.gameserver.zone.MetaBlock;
 import brainwine.gameserver.zone.Zone;
 
+import java.util.Map;
+
 public class SmelterInteraction implements ItemInteraction {
     @Override
     public void interact(Zone zone, Entity entity, int x, int y, Layer layer, Item item, int mod, MetaBlock metaBlock, Object config, Object[] data) {
@@ -33,7 +35,7 @@ public class SmelterInteraction implements ItemInteraction {
         }
 
         // Check if the item can be smelted
-        if(droppedItem.getSmelt() == null) {
+        if(droppedItem.getSmelt().isEmpty()) {
             player.showDialog(DialogHelper.messageDialog(
                     "Cannot Smelt",
                     "Sorry but you can't smelt " + droppedItem.getTitle() + "."));
@@ -60,13 +62,15 @@ public class SmelterInteraction implements ItemInteraction {
     }
 
     public void confirm(Player player, Item item, Item droppedItem, int quantity) {
-        Item convertedItem = droppedItem.getSmelt();
-
-        if(convertedItem == null) return;
+        if(droppedItem.getSmelt().isEmpty()) {
+            return;
+        }
 
         if(player.getInventory().hasItem(droppedItem, quantity)) {
             player.getInventory().removeItem(droppedItem, quantity, true);
-            player.getInventory().addItem(convertedItem, quantity, true);
+            for(Map.Entry<Item, Integer> entry : droppedItem.getSmelt().entrySet()) {
+                player.getInventory().addItem(entry.getKey(), quantity * entry.getValue(), true);
+            }
         } else {
             player.sendMessage(new InventoryMessage(player.getInventory().getClientConfig(droppedItem)));
         }
