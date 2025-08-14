@@ -189,9 +189,9 @@ public class SteamManager {
             if(direction != 1) processQueue.add(new SteamIteration(x - 1, y, 3, nextDepth)); // Left
         }
 
-        for(int inletIndex : extendedSteamableInletIndices.keySet()) {
+        for(int inletIndex : new HashSet<Integer>(extendedSteamableInletIndices.keySet())) {
             boolean powered = poweredExtendedSteamableInlets.contains(inletIndex);
-            for(int mainIndex : extendedSteamableInletIndices.get(inletIndex)) {
+            for(int mainIndex : new HashSet<Integer>(extendedSteamableInletIndices.get(inletIndex))) {
                 int x = mainIndex % zone.getWidth();
                 int y = mainIndex / zone.getWidth();
 
