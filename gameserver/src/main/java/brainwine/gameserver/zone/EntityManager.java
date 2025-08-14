@@ -334,7 +334,7 @@ public class EntityManager {
         // Add the needed guard counts to each dish's hash map
         for(MetaBlock dish : dishes) {
             List<String> guards = MapHelper.getList(dish.getMetadata(), "!");
-            if(guards == null) return;
+            if(guards == null) continue;
             Map<String, Integer> dishCounts = new HashMap<>();
             guards.forEach(name -> dishCounts.merge(name, 1, Integer::sum));
 
