@@ -11,6 +11,7 @@ import brainwine.gameserver.entity.npc.Npc;
 import brainwine.gameserver.entity.npc.behavior.composed.CrawlerBehavior;
 import brainwine.gameserver.entity.npc.behavior.composed.DiggerBehavior;
 import brainwine.gameserver.entity.npc.behavior.composed.FlyerBehavior;
+import brainwine.gameserver.entity.npc.behavior.composed.HomingFlyerBehavior;
 import brainwine.gameserver.entity.npc.behavior.composed.QuesterBehavior;
 import brainwine.gameserver.entity.npc.behavior.composed.WalkerBehavior;
 import brainwine.gameserver.entity.npc.behavior.parts.ChatterBehavior;
@@ -23,6 +24,7 @@ import brainwine.gameserver.entity.npc.behavior.parts.FallBehavior;
 import brainwine.gameserver.entity.npc.behavior.parts.FlyBehavior;
 import brainwine.gameserver.entity.npc.behavior.parts.FlyTowardBehavior;
 import brainwine.gameserver.entity.npc.behavior.parts.FollowBehavior;
+import brainwine.gameserver.entity.npc.behavior.parts.HomingBehavior;
 import brainwine.gameserver.entity.npc.behavior.parts.IdleBehavior;
 import brainwine.gameserver.entity.npc.behavior.parts.PetBehavior;
 import brainwine.gameserver.entity.npc.behavior.parts.RandomlyTargetBehavior;
@@ -46,6 +48,7 @@ import brainwine.gameserver.player.Player;
     @Type(name = "walker", value = WalkerBehavior.class),
     @Type(name = "crawler", value = CrawlerBehavior.class),
     @Type(name = "flyer", value = FlyerBehavior.class),
+    @Type(name = "homing_flyer", value = HomingFlyerBehavior.class),
     @Type(name = "digger", value = DiggerBehavior.class),
     @Type(name = "quester", value = QuesterBehavior.class),
     // Parts
@@ -59,6 +62,7 @@ import brainwine.gameserver.player.Player;
     @Type(name = "dig", value = DigBehavior.class),
     @Type(name = "fly", value = FlyBehavior.class),
     @Type(name = "fly_toward", value = FlyTowardBehavior.class),
+    @Type(name = "homing", value = HomingBehavior.class),
     @Type(name = "shielder", value = ShielderBehavior.class),
     @Type(name = "spawn_attack", value = SpawnAttackBehavior.class),
     @Type(name = "eruption_attack", value = EruptionAttackBehavior.class),

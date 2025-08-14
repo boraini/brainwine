@@ -66,6 +66,7 @@ public class EntityManager {
     private long lastInvasionAt;
     private long timeUntilNextInvasion = 10000;
     private long lastInhibitionTime = System.currentTimeMillis();
+    private long lastRevenantDishCheckTime = System.currentTimeMillis();
     
     public EntityManager(Zone zone) {
         this.zone = zone;
@@ -174,6 +175,12 @@ public class EntityManager {
             }
             timeUntilNextInvasion = Math.max(10000 / Math.max(zone.getPlayers().size(), 1), 20000);
             lastInvasionAt = System.currentTimeMillis();
+        }
+
+        // Check if all guards are still in the vicinity of the revenant dishes
+        if(System.currentTimeMillis() > lastRevenantDishCheckTime + 5000) {
+            checkGuardians();
+            lastRevenantDishCheckTime = System.currentTimeMillis();
         }
     }
     
@@ -319,6 +326,48 @@ public class EntityManager {
         }
     }
 
+    public void checkGuardians() {
+        Map<Integer, Map<String, Integer>> needs = new HashMap<>();
+        // TODO maybe also include enemy protectors
+        List<MetaBlock> dishes = zone.getMetaBlocksWithUse(ItemUseType.REVENANT_DISH);
+
+        // Add the needed guard counts to each dish's hash map
+        for(MetaBlock dish : dishes) {
+            List<String> guards = MapHelper.getList(dish.getMetadata(), "!");
+            if(guards == null) return;
+            Map<String, Integer> dishCounts = new HashMap<>();
+            guards.forEach(name -> dishCounts.merge(name, 1, Integer::sum));
+
+            needs.put(zone.getBlockIndex(dish.getX(), dish.getY()), dishCounts);
+        }
+
+        // Remove each npc from its dish's guard counts
+        for(Npc npc : npcs.values()) {
+            if(npc.isGuard()) {
+                Map<String, Integer> dishCounts = needs.get(zone.getBlockIndex(npc.getGuardBlock().getX(), npc.getGuardBlock().getY()));
+                if(dishCounts != null) {
+                    dishCounts.merge(npc.getConfig().getName(), -1, Integer::sum);
+                }
+            }
+        }
+
+        // Resolve the difference
+        for(Map.Entry<Integer, Map<String, Integer>> dishCountsPair : needs.entrySet()) {
+            int x = dishCountsPair.getKey() % zone.getWidth();
+            int y = dishCountsPair.getKey() / zone.getWidth();
+            for(Map.Entry<String, Integer> guardian : dishCountsPair.getValue().entrySet()) {
+                // This loop won't run if the need for the entity has fallen to negative
+                for(int i = 0; i < guardian.getValue(); i++) {
+                    Npc entity = spawnEntity(guardian.getKey(), x, y);
+
+                    if(entity != null) {
+                        entity.setGuardBlock(x, y);
+                    }
+                }
+            }
+        }
+    }
+
     public void updateRevenantDish(int x, int y, boolean newlyLoaded) {
         MetaBlock metaBlock = zone.getMetaBlock(x, y);
         if(metaBlock != null && metaBlock.getItem().hasUse(ItemUseType.REVENANT_DISH)) {
@@ -326,6 +375,7 @@ public class EntityManager {
             if(!metaBlock.hasProperty("w") || !metaBlock.hasProperty("!")) {
                 wave = 3;
                 startRevenantDishWave(x, y, 3);
+                newlyLoaded = true;
             } else {
                 List<String> guards = MapHelper.getList(metaBlock.getMetadata(), "!");
                 if(guards == null) {
