@@ -10,6 +10,7 @@ import brainwine.gameserver.item.interactions.BurstInteraction;
 import brainwine.gameserver.item.interactions.ChangeInteraction;
 import brainwine.gameserver.item.interactions.ComposterInteraction;
 import brainwine.gameserver.item.interactions.ContainerInteraction;
+import brainwine.gameserver.item.interactions.ConvertItemInteraction;
 import brainwine.gameserver.item.interactions.DialogInteraction;
 import brainwine.gameserver.item.interactions.ExpiatorInteraction;
 import brainwine.gameserver.item.interactions.FertilizerInteraction;
@@ -20,7 +21,6 @@ import brainwine.gameserver.item.interactions.MinigameInteraction;
 import brainwine.gameserver.item.interactions.NoteInteraction;
 import brainwine.gameserver.item.interactions.QuipperInteraction;
 import brainwine.gameserver.item.interactions.RecyclerInteraction;
-import brainwine.gameserver.item.interactions.SmelterInteraction;
 import brainwine.gameserver.item.interactions.SpawnInteraction;
 import brainwine.gameserver.item.interactions.SpawnTeleportInteraction;
 import brainwine.gameserver.item.interactions.SummoningCircleInteraction;
@@ -55,6 +55,7 @@ public enum ItemUseType {
     FERTILIZER(new FertilizerInteraction()),
     FIELDABLE,
     FLY,
+    GRINDER(new ConvertItemInteraction("Mill", "grind", Item::getGrind)),
     HAZMAT,
     LANDMARK(new LandmarkInteraction()),
     MEMORY,
@@ -69,11 +70,12 @@ public enum ItemUseType {
     REVENANT_DISH,
     QUIPPER(new QuipperInteraction()),
     RECYCLER(new RecyclerInteraction()),
-    SMELTER(new SmelterInteraction()),
+    SMELTER(new ConvertItemInteraction("Forge", "smelt", Item::getSmelt)),
     SUMMONING_CIRCLE(new SummoningCircleInteraction()),
     SPAWN(new SpawnInteraction()),
     SPAWN_TELEPORT(new SpawnTeleportInteraction()),
     STEAM_SOURCE(SteamSourceConfig.class),
+    STRIPPER(new ConvertItemInteraction("Lathe", "strip", Item::getStrip)),
     SUPPRESS_BOMB,
     SWITCH(new SwitchInteraction()),
     SWITCHED,
