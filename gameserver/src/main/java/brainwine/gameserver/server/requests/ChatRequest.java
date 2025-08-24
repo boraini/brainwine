@@ -1,16 +1,12 @@
 package brainwine.gameserver.server.requests;
 
-import brainwine.gameserver.GameServer;
+import brainwine.gameserver.chat.PlayerProfanity;
 import brainwine.gameserver.command.CommandManager;
-import brainwine.gameserver.item.DamageType;
-import brainwine.gameserver.item.Item;
 import brainwine.gameserver.player.NotificationType;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.server.OptionalField;
 import brainwine.gameserver.server.PlayerRequest;
 import brainwine.gameserver.server.RequestInfo;
-
-import java.util.Objects;
 
 @RequestInfo(id = 13)
 public class ChatRequest extends PlayerRequest {
@@ -31,13 +27,7 @@ public class ChatRequest extends PlayerRequest {
             return;
         }
 
-        String filteredText = text;
-        if(!player.isGodMode()) {
-            filteredText = GameServer.getInstance().getProfanityManager().filter(text);
-            if(!Objects.equals(filteredText, text)) {
-                player.attack(null, Item.AIR, 0.5f, DamageType.ENERGY);
-            }
-        }
+        String filteredText = PlayerProfanity.filterAndPunish(player, text);
         
         player.getZone().sendChatMessage(player, filteredText);
     }

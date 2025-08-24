@@ -2,9 +2,12 @@ package brainwine.gameserver.item.interactions;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import brainwine.gameserver.GameServer;
+import brainwine.gameserver.chat.PlayerProfanity;
 import brainwine.gameserver.entity.Entity;
 import brainwine.gameserver.item.Item;
 import brainwine.gameserver.item.Layer;
@@ -62,6 +65,7 @@ public class DialogInteraction implements ItemInteraction {
         }
                 
         if(sections != null && data.length == sections.size()) {
+            Map<String, String> sanitizedSegments = new LinkedHashMap<>();
             for(int i = 0; i < sections.size(); i++) {
                 Map<String, Object> section = sections.get(i);
                 String key = MapHelper.getString(section, "input.key");
@@ -83,6 +87,10 @@ public class DialogInteraction implements ItemInteraction {
                         // Shorten text if it is too long
                         if(max > 0 && text.length() > max) {
                             text = text.substring(0, max);
+                        }
+
+                        if(!player.isGodMode() && shouldFilterValue(item, key)) {
+                            sanitizedSegments.put(key, text);
                         }
                         
                         metadata.put(key, text);
@@ -112,6 +120,12 @@ public class DialogInteraction implements ItemInteraction {
                     }
                 }
             }
+
+            boolean anythingFiltered = GameServer.getInstance().getProfanityManager().filterAll(sanitizedSegments);
+            if(anythingFiltered) {
+                PlayerProfanity.punish(player);
+                metadata.putAll(sanitizedSegments);
+            }
         }
         
         // Set configured flag
@@ -121,5 +135,19 @@ public class DialogInteraction implements ItemInteraction {
         
         // Update meta block
         zone.setMetaBlock(x, y, item, player, metadata);
+    }
+
+    public boolean shouldFilterValue(Item item, String sectionKey) {
+        if(sectionKey != null) {
+            if(item.getId().startsWith("mechanical")) {
+                return sectionKey.equalsIgnoreCase("m");
+            }
+
+            if(item.getId().startsWith("signs")) {
+                return sectionKey.equalsIgnoreCase("msg") || sectionKey.toLowerCase().matches("^[tT]\\d*$");
+            }
+        }
+
+        return false;
     }
 }

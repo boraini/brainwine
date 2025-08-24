@@ -1,6 +1,7 @@
 package brainwine.gameserver.chat;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -24,23 +25,23 @@ public class Corpus {
         }
     }
 
-    public int findLongestMatch(String[] words, int i) {
+    public int findLongestMatch(List<Token> words, int i) {
         return findLongestMatch(words, i, 0);
     }
 
-    public int findLongestMatch(String[] words, int i, int currentCount) {
-        while(i < words.length && words[i].matches("\\s*")) {
+    public int findLongestMatch(List<Token> words, int i, int currentCount) {
+        while(i < words.size() && words.get(i).getType() != TokenType.WORD) {
             i++;
             currentCount++;
         }
 
         int myCount = next.containsKey("") ? currentCount : 0;
 
-        if(i >= words.length) {
+        if(i >= words.size()) {
             return myCount;
         }
 
-        String lower = words[i].toLowerCase();
+        String lower = words.get(i).getValue().toLowerCase();
         if(next.containsKey(lower)) {
             Corpus nextCorpus = next.get(lower);
 

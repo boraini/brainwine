@@ -2,6 +2,7 @@ package brainwine.gameserver.command;
 
 import static brainwine.gameserver.player.NotificationType.SYSTEM;
 
+import brainwine.gameserver.chat.PlayerProfanity;
 import brainwine.gameserver.player.ChatType;
 import brainwine.gameserver.player.Player;
 
@@ -22,7 +23,9 @@ public class ThinkCommand extends Command {
             return;
         }
         
-        String text = String.join(" ", args);
+        String unfiltered = String.join(" ", args);
+        String text = PlayerProfanity.filterAndPunish(player, unfiltered);
+
         player.getZone().sendChatMessage(player, text, ChatType.THOUGHT);
     }
     

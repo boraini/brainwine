@@ -1,6 +1,7 @@
 package brainwine.gameserver.command;
 
 import brainwine.gameserver.GameServer;
+import brainwine.gameserver.chat.PlayerProfanity;
 import brainwine.gameserver.player.ChatType;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.server.messages.ChatMessage;
@@ -39,6 +40,9 @@ public class TellCommand extends Command {
         }
 
         String message = Arrays.stream(args).skip(1).collect(Collectors.joining(" "));
+        if(executorPlayer != null) {
+            message = PlayerProfanity.filterAndPunish(executorPlayer, message);
+        }
 
         String executorName = executorPlayer != null ? executorPlayer.getName() : "Server";
         int executorId = executorPlayer != null ? executorPlayer.getId() : 0;
