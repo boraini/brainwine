@@ -52,7 +52,16 @@ public class ProfanityManager {
             List<Token> words = splitIntoTokens(text);
             for(int i = 0; i < words.size(); i++) {
                 int longest = root.findLongestMatch(words, i);
+                int start = -1;
+                int end = -1;
                 for(int j = i; j < i + longest; j++) {
+                    if(words.get(j).getType() == TokenType.WORD) {
+                        if(start == -1) start = j;
+                        end = j;
+                    }
+                }
+                if(start == -1) continue;
+                for(int j = start; j <= end; j++) {
                     StringBuilder obscuredWord = new StringBuilder(words.get(j).getValue().substring(0, 1));
                     int lastChoice = (int) (Math.random() * obscuredCharacters.length);
                     for(int k = 1; k < words.get(j).getValue().length(); k++) {
