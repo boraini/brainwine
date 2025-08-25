@@ -4,6 +4,7 @@ import brainwine.gameserver.GameServer;
 import brainwine.gameserver.item.Item;
 import brainwine.gameserver.item.ItemRegistry;
 import brainwine.gameserver.player.Player;
+import brainwine.gameserver.player.Skill;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.time.OffsetDateTime;
@@ -78,6 +79,10 @@ public class ScrapMarketProduct {
         return expectSeller().getInventory().hasItem(expectItem(), quantity);
     }
 
+    public boolean checkBarterLevel() {
+        return expectSeller().getTotalSkillLevel(Skill.BARTER) >= ScrapMarket.MIN_BARTER_LEVEL;
+    }
+
     public void purchase(Player buyer, int quantity) {
         Player seller = expectSeller();
         Item item = expectItem();
@@ -96,6 +101,10 @@ public class ScrapMarketProduct {
 
         if(!availableInInventory(quantity)) {
             throw new IllegalArgumentException(seller.getName() + " does not have enough of this item in their inventory.");
+        }
+
+        if(!checkBarterLevel()) {
+            throw new IllegalArgumentException(seller.getName() + " does not have a sufficient barter level.");
         }
 
         if(!buyer.isGodMode()) {

@@ -20,6 +20,7 @@ import brainwine.gameserver.player.TradeSession;
 import brainwine.gameserver.scrapmarket.ScrapMarketSession;
 import brainwine.gameserver.util.MapHelper;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -30,17 +31,27 @@ public class Trader extends DialoguerJob {
     Map<Player, Map<Item, Integer>> offers = new HashMap<>();
     @Override
     public List<DialogSection> getMainDialogSection(Npc me, Player player) {
-        return Arrays.asList(
+        List<DialogSection> sections = new ArrayList<>(Arrays.asList(
                 new DialogSection()
                     .setText(MapHelper.getString(GameConfiguration.getBaseConfig(), "dialogs.android.buy"))
                     .setChoice("buy"),
                 new DialogSection()
                     .setText(MapHelper.getString(GameConfiguration.getBaseConfig(), "dialogs.android.sell"))
-                    .setChoice("sell"),
-                new DialogSection()
+                    .setChoice("sell")
+        ));
+
+        if(player.getTotalSkillLevel(Skill.BARTER) >= ScrapMarket.MIN_BARTER_LEVEL) {
+            sections.add(new DialogSection()
                     .setText(MapHelper.getString(GameConfiguration.getBaseConfig(), "dialogs.android.scrap_market"))
-                    .setChoice("scrap_market")
-        );
+                    .setChoice("scrap_market"));
+        } else {
+            sections.add(new DialogSection().setText(String.format(
+                "You must be at least barter level %d to access the Scrap Market.",
+                ScrapMarket.MIN_BARTER_LEVEL
+            )));
+        }
+
+        return sections;
     }
 
     @Override
