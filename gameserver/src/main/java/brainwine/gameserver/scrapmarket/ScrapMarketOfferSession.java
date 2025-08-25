@@ -101,7 +101,7 @@ public class ScrapMarketOfferSession {
                 if(val instanceof Number) {
                     responses.put(section.getInput().getKey(), (int)val);
                 } else if(val instanceof String) {
-                    if(((String) val).isBlank()) {
+                    if(((String) val).matches("^\\s*$")) {
                         continue;
                     }
                     try {
