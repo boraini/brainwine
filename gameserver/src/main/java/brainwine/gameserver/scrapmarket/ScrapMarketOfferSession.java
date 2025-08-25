@@ -7,13 +7,17 @@ import brainwine.gameserver.dialog.DialogSection;
 import brainwine.gameserver.dialog.DialogType;
 import brainwine.gameserver.dialog.input.DialogTextInput;
 import brainwine.gameserver.item.Item;
+import brainwine.gameserver.item.ItemRegistry;
 import brainwine.gameserver.player.Player;
 
+import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 public class ScrapMarketOfferSession {
+    private static final double SERVICE_CHARGE_FACTOR = 0.05;
+
     private ScrapMarket shop;
     private Player player;
     private Item item;
@@ -38,10 +42,17 @@ public class ScrapMarketOfferSession {
         Map<String, ScrapMarketProduct> playersOldProducts = shop.getProductsBySeller().get(player.getDocumentId());
         ScrapMarketProduct oldProduct = playersOldProducts != null ? playersOldProducts.get(item.getId()) : null;
 
+        DecimalFormat df = new DecimalFormat();
+        df.setMaximumFractionDigits(2);
+        dialog.addSection(new DialogSection().setText(String.format(
+            "All listings are subject to a %s service charge based on the amount listed.",
+            df.format(SERVICE_CHARGE_FACTOR * 100.0)
+        )));
+
         // Show a warning if the player already has this item for offer.
         if(oldProduct != null) {
             String message = String.format(
-                    "You already have this item on the Scrap Market, %s for %d shilling%s, with %d left in stock. Submitting this offer will take that offer down.",
+                    "You already have this item on the Scrap Market, %s for %d shilling%s, with %d left listed. Submitting this offer will take that offer down. You may still pay a service charge.",
                     oldProduct.getUnitQuantity() == 1 ? "each" : Integer.toString(oldProduct.getUnitQuantity()),
                     oldProduct.getPrice(),
                     oldProduct.getPrice() == 1 ? "" : "s",
@@ -58,7 +69,7 @@ public class ScrapMarketOfferSession {
             if(formSection.getInput() != null) {
                 if("stock".equals(formSection.getInput().getKey())) {
                     formSection.setText(String.format(
-                            "You have %d of %s in your inventory, thus you can stock at most this much.",
+                            "You have %d of %s in your inventory, thus you can list at most this much.",
                             player.getInventory().getQuantity(item),
                             item.getTitle()
                     ));
@@ -125,6 +136,7 @@ public class ScrapMarketOfferSession {
         Integer unitQuantity = responses.getOrDefault("unit_quantity", 1);
         Integer price = responses.get("price");
         Integer stock = responses.getOrDefault("stock", inventory);
+        Item shillings = ItemRegistry.getItem("accessories/shillings");
 
         if(unitQuantity == null) {
             fail("Unit quantity is missing.");
@@ -161,12 +173,51 @@ public class ScrapMarketOfferSession {
             return;
         }
 
-        shop.removeProduct(player.getDocumentId(), item.getId());
-        shop.addProduct(new ScrapMarketProduct(player.getDocumentId(), item.getId(), unitQuantity, stock, price));
+        int totalCost = price * stock;
+        int serviceCharge = (int)Math.ceil(SERVICE_CHARGE_FACTOR * totalCost);
+        if(!player.isGodMode()) {
+            if(!player.getInventory().hasItem(shillings, serviceCharge)) {
+                fail(String.format("You do not have enough shillings (%d of them) to pay the service charge.", serviceCharge));
+                return;
+            }
+        }
+
+        Dialog confirmationDialog = new Dialog().setType(DialogType.ANDROID).setTitle("Confirmation");
+
+        confirmationDialog.addSection(new DialogSection().setText(String.format(
+                "You are about to list %d %s for %d shilling%s for %s",
+                stock,
+                item.getTitle(),
+                price,
+                price == 1 ? "" : "s",
+                unitQuantity == 1 ? "each" : Integer.toString(unitQuantity)
+        )));
+        
+        if(!player.isGodMode() && serviceCharge > 0) {
+            confirmationDialog.addSection(new DialogSection().setText(String.format(
+                "There will be a %d shilling%s service charge.",
+                serviceCharge,
+                serviceCharge == 1 ? "" : "s"
+            )));
+        }
+
+        confirmationDialog.addSection(new DialogSection().setText("Are you sure?"));
+
+        confirmationDialog.setActions("yesno");
+
+        player.showDialog(confirmationDialog, ans -> {
+            if(ans.length > 0 && "Yes".equals(ans[0])) {
+                if(!player.getInventory().hasItem(shillings, serviceCharge)) return;
+
+                if(!player.isGodMode()) player.getInventory().removeItem(shillings, serviceCharge, true);
+                shop.removeProduct(player.getDocumentId(), item.getId());
+                shop.addProduct(new ScrapMarketProduct(player.getDocumentId(), item.getId(), unitQuantity, stock, price));
+            }
+        });
     }
 
     public void fail(String message) {
-        player.showDialog(DialogHelper.messageDialog("Error", message));
+        player.showDialog(DialogHelper.messageDialog("Error", message).setType(DialogType.ANDROID));
     }
 
     public ScrapMarketOfferSession setUnitQuantityDefault(Object unitQuantity) {
