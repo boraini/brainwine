@@ -6,6 +6,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import brainwine.gameserver.androidshop.AndroidShop;
+import brainwine.gameserver.scrapmarket.ScrapMarket;
 import brainwine.gameserver.anticheat.AnticheatManager;
 import brainwine.gameserver.chat.ProfanityManager;
 import org.apache.logging.log4j.LogManager;
@@ -80,6 +81,7 @@ public class GameServer implements CommandExecutor {
         zoneManager.tryGenerateDefaultZone();
         zoneActivityManager = new ZoneActivityManager();
         playerManager = new PlayerManager();
+        ScrapMarket.getInstance().loadScrapMarketData();
         pusher = new DefaultPusher();
         NetworkRegistry.init();
         server = new Server();
@@ -111,6 +113,7 @@ public class GameServer implements CommandExecutor {
             zoneManager.saveZones();
             playerManager.savePlayers();
             ipBans.saveIpBans();
+            ScrapMarket.getInstance().saveJson();
             lastSave = System.currentTimeMillis();
         }
         
@@ -154,6 +157,7 @@ public class GameServer implements CommandExecutor {
         logger.info(SERVER_MARKER, "Saving player data ...");
         playerManager.savePlayers();
         ipBans.saveIpBans();
+        ScrapMarket.getInstance().saveJson();
     }
     
     public void stopGracefully() {
