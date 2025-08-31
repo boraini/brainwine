@@ -34,10 +34,17 @@ public class ConvertItemInteraction implements ItemInteraction {
 
     @Override
     public void interact(Zone zone, Entity entity, int x, int y, Layer layer, Item item, int mod, MetaBlock metaBlock, Object config, Object[] data) {
-        if(data == null || data.length == 0 || !(data[0] instanceof Number)) return;
+        if(data == null || data.length == 0) return;
+        int itemCode = -1;
+        // { code }
+        if(data.length == 1 && data[0] instanceof Number) itemCode = (int)data[0];
+        // { "item", code }
+        else if(data.length >= 2 && data[1] instanceof Number) itemCode = (int)data[1];
+        if(itemCode < 0) return;
+
         if(!(entity instanceof Player)) return;
 
-        Item droppedItem = ItemRegistry.getItem((int) data[0]);
+        Item droppedItem = ItemRegistry.getItem(itemCode);
         Player player = (Player) entity;
 
         // Check if the machine is receiving steam
