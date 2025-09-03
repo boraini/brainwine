@@ -37,6 +37,9 @@ public class BlockPlaceRequest extends PlayerRequest {
     @Override
     public void process(Player player) {
         Zone zone = player.getZone();
+
+        // It gets reassigned but the old value is needed on failure.
+        Item item = this.item;
         
         if(player.isDead()) {
             return;
@@ -83,8 +86,8 @@ public class BlockPlaceRequest extends PlayerRequest {
         }
         
         if(!player.isGodMode() && item.hasSpacing() && zone.getMetaBlocks().stream().anyMatch(block 
-                -> (item.hasSpacingItems() ? item.getSpacingItems().contains(block.getItem()) : block.getItem() == item) 
-                && MathUtils.inRange(block.getX(), block.getY(), x, y, item.getSpacing()))) {
+                -> (this.item.hasSpacingItems() ? this.item.getSpacingItems().contains(block.getItem()) : block.getItem() == this.item)
+                && MathUtils.inRange(block.getX(), block.getY(), x, y, this.item.getSpacing()))) {
             fail(player, String.format("%s must be at least %s blocks away from other %ss.", item.getTitle(), item.getSpacing(), item.getTitle().toLowerCase()));
             return;
         }
@@ -136,7 +139,28 @@ public class BlockPlaceRequest extends PlayerRequest {
             mod = findRotationMod(zone, x, y, item.getBlockWidth(), item.getBlockHeight());
         }
 
+        Item inventory = item;
         boolean isBlockPlaced = false;
+        int inventoryRemoveQuantity = 1;
+        boolean inventoryRemoveSendMessage = false;
+
+        // DIFFERENT PLACED ITEM LOGIC
+
+        // Process pile placement if applicable
+        if(!ItemRegistry.getPile(inventory).isAir()) {
+            item = ItemRegistry.getPile(inventory);
+            int unit = (int)item.getUse(ItemUseType.PILE);
+            if(!player.isGodMode() && !player.getInventory().hasItem(inventory, unit)) {
+                fail(player, "You don't have enough of this item to pile.");
+                return;
+            }
+
+            inventoryRemoveQuantity = unit;
+            inventoryRemoveSendMessage = true;
+            mod = 1;
+        }
+
+        // AT THIS POINT `item` IS WHAT THE ITEM THAT IS ACTUALLY PLACED WILL BE.
 
         // Process jar use if applicable
         if(item.getPlaceTransform() != null) {
@@ -165,7 +189,7 @@ public class BlockPlaceRequest extends PlayerRequest {
             zone.updateBlock(x, y, layer, item, mod, player);
         }
 
-        player.getInventory().removeItem(item);
+        player.getInventory().removeItem(inventory, inventoryRemoveQuantity, inventoryRemoveSendMessage);
         player.getStatistics().trackItemPlaced();
         player.trackPlacement(x, y, item);
 

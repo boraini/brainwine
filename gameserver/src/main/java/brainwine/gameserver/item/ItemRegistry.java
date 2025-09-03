@@ -18,6 +18,7 @@ public class ItemRegistry {
     private static final Map<String, Item> items = new HashMap<>();
     private static final Map<Integer, Item> itemsByCode = new HashMap<>();
     private static final Map<String, List<Item>> itemsByCategory = new HashMap<>();
+    private static final Map<Item, Item> pilesByItem = new HashMap<>();
     
     // TODO maybe just move the registry stuff here
     public static void clear() {
@@ -52,6 +53,19 @@ public class ItemRegistry {
         itemsByCode.put(code, item);
         return true;
     }
+
+    public static void registerItemRelationships() {
+        for(Item item : items.values()) {
+            // Record back relationship for piles
+            // TODO maybe there is a better configuration option for this.
+            if(item.hasUse(ItemUseType.PILE)) {
+                Item inventoryItem = item.getInventoryItem();
+                if(inventoryItem != item) {
+                    pilesByItem.put(inventoryItem, item);
+                }
+            }
+        }
+    }
     
     public static Item getItem(String id) {
         return items.getOrDefault(id, Item.AIR);
@@ -67,5 +81,9 @@ public class ItemRegistry {
     
     public static List<Item> getItemsByCategory(String category) {
         return Collections.unmodifiableList(itemsByCategory.getOrDefault(category, Collections.emptyList()));
+    }
+
+    public static Item getPile(Item inventory) {
+        return pilesByItem.getOrDefault(inventory, Item.AIR);
     }
 }

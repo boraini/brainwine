@@ -66,6 +66,9 @@ public class Item {
     
     @JsonProperty("mod")
     private ModType mod = ModType.NONE;
+
+    @JsonProperty("mod_max")
+    private int maxMod = 0;
     
     @JsonProperty("meta")
     private MetaType meta = MetaType.NONE;
@@ -384,6 +387,10 @@ public class Item {
     
     public ModType getMod() {
         return mod;
+    }
+
+    public int getMaxMod() {
+        return maxMod;
     }
     
     public boolean hasMeta() {

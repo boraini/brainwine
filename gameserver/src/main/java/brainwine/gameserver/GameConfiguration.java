@@ -208,7 +208,8 @@ public class GameConfiguration {
                 items.remove(item);
             }
         }
-        
+        ItemRegistry.registerItemRelationships();
+
         logger.info(SERVER_MARKER, "Successfully loaded {} item(s)", ItemRegistry.getItems().size());
     }
     

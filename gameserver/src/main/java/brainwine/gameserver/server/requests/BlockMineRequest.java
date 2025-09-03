@@ -232,6 +232,11 @@ public class BlockMineRequest extends PlayerRequest {
         if(item.getMod() == ModType.STACK) {
             quantity = Math.max(1, block.getMod(layer));
         }
+
+        // Check pile use type
+        if(item.hasUse(ItemUseType.PILE)) {
+            quantity = block.getMod(layer) * (int)item.getUse(ItemUseType.PILE);
+        }
         
         // Apply mining bonus if there is one
         if(item.hasMiningBonus()) {

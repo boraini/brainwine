@@ -20,6 +20,7 @@ import brainwine.gameserver.item.interactions.LandmarkInteraction;
 import brainwine.gameserver.item.interactions.MinigameInteraction;
 import brainwine.gameserver.item.interactions.NoteInteraction;
 import brainwine.gameserver.item.interactions.QuipperInteraction;
+import brainwine.gameserver.item.interactions.PileInteraction;
 import brainwine.gameserver.item.interactions.RecyclerInteraction;
 import brainwine.gameserver.item.interactions.SpawnInteraction;
 import brainwine.gameserver.item.interactions.SpawnTeleportInteraction;
@@ -64,6 +65,7 @@ public enum ItemUseType {
     MULTI,
     NOTE(new NoteInteraction()),
     PET,
+    PILE(new PileInteraction()),
     PLENTY,
     PROTECTED,
     PUBLIC,
