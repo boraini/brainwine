@@ -159,6 +159,30 @@ public class QuestProgress {
         return reason;
     }
 
+    public List<String> getRevertImplicationsMessages(Player player) {
+        List implications = new ArrayList<>();
+        Quest quest = getQuest(player);
+        if(quest == null) {
+            implications.add("Cannot find quest!");
+            return implications;
+        };
+
+        for(QuestAction.Type actionType : new QuestAction.Type[] { QuestAction.Type.BEGIN, QuestAction.Type.INTERACT }) {
+            if(quest.getActions().containsKey(actionType)) {
+                for(QuestAction action : quest.getActions().get(actionType)) {
+                    String currentReason = action.getRevertImplicationsMessage();
+
+                    if(currentReason != null) {
+                        implications.add(currentReason);
+                    }
+                }
+
+            }
+        }
+
+        return implications;
+    }
+
     public boolean revertActions(Player player) {
         Quest quest = getQuest(player);
         if(quest == null) return false;

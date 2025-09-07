@@ -175,7 +175,13 @@ public class Quester extends DialoguerJob {
             QuestProgress progress = player.getQuestProgresses().get(questId);
             String cannotCancelReason = progress.getCannotCancelReason(player);
             if(cannotCancelReason == null) {
-                dialog.addSection(new DialogSection().setText("You can give up on it if you want to."));
+                List<String> implications = progress.getRevertImplicationsMessages(player);
+                if(implications.isEmpty()) {
+                    dialog.addSection(new DialogSection().setText("You can give up on it if you want to."));
+                } else for(String implication : implications) {
+                    dialog.addSection(new DialogSection().setText(implication));
+                }
+                
                 if(player.isV3()) {
                     dialog.addSection(new DialogSection().setText("<color=#ff0000>Cancel Quest</color>").setChoice("cancelquest"));
                 } else {

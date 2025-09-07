@@ -88,6 +88,33 @@ public class QuestAction {
         }
     }
 
+    public String getRevertImplicationsMessage() {
+        switch(getMethod()) {
+            case "gift_items!":
+                try {
+                    String reason = null;
+                    for(Object object : getParams()) {
+                        Map<String, Integer> items = JsonHelper.readValue(object, new TypeReference<Map<String, Integer>>() {});
+                        for(String k : items.keySet()) {
+                            Item item = ItemRegistry.getItem(k);
+                            if(item.isAir()) continue;
+                            if(reason == null) {
+                                reason = String.format("You can cancel this quest but I'm going to have to take back my %d %s", items.get(k), item.getTitle());
+                            } else {
+                                reason += String.format(", %d %s", items.get(k), item.getTitle());
+                            }
+                        }
+                    }
+                    return reason != null ? reason + "." : null;
+                } catch(JsonProcessingException e) {
+                    e.printStackTrace();
+                    return "I would tell you what will happen if you cancelled the quest but I encountered an error.";
+                }
+            default:
+                return null;
+        }
+    }
+
     public DialogSection performAction(Player player, boolean preventMutations) {
         try{
             switch(getMethod()) {
