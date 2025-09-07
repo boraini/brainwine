@@ -10,7 +10,14 @@ import brainwine.gameserver.dialog.DialogSection;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.server.messages.QuestMessage;
 
+import static brainwine.shared.LogMarkers.SERVER_MARKER;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class PlayerQuests {
+    private static final Logger logger = LogManager.getLogger();
+
     private PlayerQuests() {}
 
     public static void deleteUnknownQuestProgress(Player player) {
@@ -94,6 +101,10 @@ public class PlayerQuests {
         if(reason != null) {
             player.showDialog(DialogHelper.messageDialog("Cannot Cancel Quest", reason));
             return;
+        }
+
+        if(!privileged && !progress.revertActions(player)) {
+            logger.warn("Could not revert some quest actions for player {}!", player.getName());
         }
 
         player.getQuestProgresses().remove(questId);

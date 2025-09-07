@@ -99,7 +99,7 @@ public class QuestProgress {
         if(v3) {
             cancelSection.setText("<color=#ff0000>Cancel Quest</color>");
         } else {
-            cancelSection.setText("Cancel Quest").setTextColor("#ff0000");
+            cancelSection.setText("Cancel Quest").setTextColor("ff0000");
         }
 
         result.add(cancelSection);
@@ -142,15 +142,7 @@ public class QuestProgress {
         for(QuestAction.Type actionType : new QuestAction.Type[] { QuestAction.Type.BEGIN, QuestAction.Type.INTERACT }) {
             if(quest.getActions().containsKey(actionType)) {
                 for(QuestAction action : quest.getActions().get(actionType)) {
-                    String currentReason = null;
-                    switch(action.getMethod()) {
-                        case "gift_items!":
-                            currentReason = "gifts you items";
-                            break;
-                        case "add_xp":
-                            currentReason = "gives you XP";
-                            break;
-                    }
+                    String currentReason = action.getCannotCancelReason(player);
 
                     if(currentReason != null) {
                         if (reason == null) {
@@ -164,11 +156,23 @@ public class QuestProgress {
             }
         }
 
-        if(reason == null) {
-            return null;
-        } else {
-            return "Cannot cancel because the quest " + reason + ".";
+        return reason;
+    }
+
+    public boolean revertActions(Player player) {
+        Quest quest = getQuest(player);
+        if(quest == null) return false;
+
+        boolean success = true;
+        for(QuestAction.Type actionType : new QuestAction.Type[] { QuestAction.Type.BEGIN, QuestAction.Type.INTERACT }) {
+            if(quest.getActions().containsKey(actionType)) {
+                for(QuestAction action : quest.getActions().get(actionType)) {
+                    success = success && action.revertAction(player);
+                }
+            }
         }
+
+        return success;
     }
 
 }

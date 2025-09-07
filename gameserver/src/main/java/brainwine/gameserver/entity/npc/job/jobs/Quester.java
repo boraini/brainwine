@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import brainwine.gameserver.GameConfiguration;
+import brainwine.gameserver.dialog.Dialog;
 import brainwine.gameserver.dialog.DialogHelper;
 import brainwine.gameserver.dialog.DialogSection;
 import brainwine.gameserver.dialog.DialogType;
@@ -167,13 +168,28 @@ public class Quester extends DialoguerJob {
 
             return true;
         } else {
-            String message = String.format(
-                "%s. Cancel the quest \"%s\" using the /quests command if you want to give up on the quest.",
-                quest.getStory().getIncomplete(),
-                quest.getTitle()
-            );
+            Dialog dialog = new Dialog().setType(DialogType.ANDROID).setTitle("Cannot Finish Quest Yet");
 
-            player.showDialog(DialogHelper.messageDialog("Cannot Finish Quest Yet", message).setType(DialogType.ANDROID));
+            dialog.addSection(new DialogSection().setText(quest.getStory().getIncomplete()));
+
+            QuestProgress progress = player.getQuestProgresses().get(questId);
+            String cannotCancelReason = progress.getCannotCancelReason(player);
+            if(cannotCancelReason == null) {
+                dialog.addSection(new DialogSection().setText("You can give up on it if you want to."));
+                if(player.isV3()) {
+                    dialog.addSection(new DialogSection().setText("<color=#ff0000>Cancel Quest</color>").setChoice("cancelquest"));
+                } else {
+                    dialog.addSection(new DialogSection().setText("Cancel Quest").setTextColor("ff0000").setChoice("cancelquest"));
+                }
+            } else {
+                dialog.addSection(new DialogSection().setText("You cannot cancel this quest yet. " + cannotCancelReason));
+            }
+            
+            player.showDialog(dialog, ans -> {
+                if(ans.length > 0 && "cancelquest".equals(ans[0])) {
+                    PlayerQuests.cancelQuest(player, questId, player.isGodMode());
+                }
+            });
 
             return true;
         }

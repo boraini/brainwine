@@ -57,6 +57,37 @@ public class QuestAction {
         return params;
     }
 
+    public String getCannotCancelReason(Player player) {
+        switch(getMethod()) {
+            case "gift_items!":
+                try {
+                    String reason = null;
+                    for(Object object : getParams()) {
+                        Map<String, Integer> items = JsonHelper.readValue(object, new TypeReference<Map<String, Integer>>() {});
+                        for(String k : items.keySet()) {
+                            Item item = ItemRegistry.getItem(k);
+                            if(item.isAir()) continue;
+                            if(!player.getInventory().hasItem(item, items.get(k))) {
+                                if(reason == null) {
+                                    reason = String.format("You need to give back my %d %s", items.get(k), item.getTitle());
+                                } else {
+                                    reason += String.format(", %d %s", items.get(k), item.getTitle());
+                                }
+                            }
+                        }
+                    }
+                    return reason != null ? reason + "." : null;
+                } catch(JsonProcessingException e) {
+                    e.printStackTrace();
+                    return "Exception occurred while checking if you can cancel this quest";
+                }
+            case "add_xp":
+                return "I have given you some XP.";
+            default:
+                return null;
+        }
+    }
+
     public DialogSection performAction(Player player, boolean preventMutations) {
         try{
             switch(getMethod()) {
@@ -104,6 +135,35 @@ public class QuestAction {
             player.notify(String.format("Malformed quest action parameters for %d.", getMethod()));
         }
         return null;
+    }
+
+    public boolean revertAction(Player player) {
+        switch(getMethod()) {
+            case "gift_items!":
+                try {
+                    boolean success = true;
+                    for(Object object : getParams()) {
+                        Map<String, Integer> items = JsonHelper.readValue(object, new TypeReference<Map<String, Integer>>() {});
+                        for(String k : items.keySet()) {
+                            Item item = ItemRegistry.getItem(k);
+                            if(item.isAir()) continue;
+                            if(player.getInventory().hasItem(item, items.get(k))) {
+                                player.getInventory().removeItem(item, items.get(k), true);
+                            } else {
+                                success = false;
+                            }
+                        }
+                    }
+                    return success;
+                } catch(JsonProcessingException e) {
+                    e.printStackTrace();
+                    return false;
+                }
+            case "add_xp":
+                return false;
+            default:
+                return true;
+        }
     }
     
 }
