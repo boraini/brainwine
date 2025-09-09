@@ -235,7 +235,7 @@ public class BlockMineRequest extends PlayerRequest {
 
         // Check pile use type
         if(item.hasUse(ItemUseType.PILE)) {
-            quantity = block.getMod(layer) * (int)item.getUse(ItemUseType.PILE);
+            quantity = (block.getMod(layer) + 1) * (int)item.getUse(ItemUseType.PILE);
         }
         
         // Apply mining bonus if there is one

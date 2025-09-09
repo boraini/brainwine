@@ -157,7 +157,7 @@ public class BlockPlaceRequest extends PlayerRequest {
 
             inventoryRemoveQuantity = unit;
             inventoryRemoveSendMessage = true;
-            mod = 1;
+            mod = 0;
         }
 
         // AT THIS POINT `item` IS WHAT THE ITEM THAT IS ACTUALLY PLACED WILL BE.
