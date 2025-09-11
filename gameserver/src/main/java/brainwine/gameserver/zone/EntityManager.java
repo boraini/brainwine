@@ -16,6 +16,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
+import brainwine.gameserver.anticheat.AfkEntitySpawn;
+import brainwine.gameserver.anticheat.AnticheatManager;
 import brainwine.gameserver.item.ItemUseType;
 import brainwine.gameserver.player.NotificationType;
 import brainwine.gameserver.quest.QuestEvents;
@@ -226,7 +228,13 @@ public class EntityManager {
                 }
                 
                 if(spawn != null) {
-                    EntityConfig config = spawn.getEntityConfig();
+                    EntityConfig config;
+                    AfkEntitySpawn afkEntitySpawn = AnticheatManager.getConfig().getAfkEntitySpawn();
+                    if(afkEntitySpawn.isEnabled() && chunk.getLoadTime() + afkEntitySpawn.getDuration() < System.currentTimeMillis()) {
+                        config = spawn.getAfkEntityConfig();
+                    } else {
+                        config = spawn.getEntityConfig();
+                    }
                     
                     if(config != null) {
                         spawnEntity(new Npc(zone, config), x, y);

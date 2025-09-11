@@ -16,6 +16,7 @@ public class Chunk {
     private final int width;
     private final int height;
     private final Block[] blocks;
+    private long loadTime;
     private long saveTime;
     private boolean modified;
     
@@ -83,6 +84,14 @@ public class Chunk {
     
     public Block[] getBlocks() {
         return blocks;
+    }
+
+    public void setLoadTime(long loadTime) {
+        this.loadTime = loadTime;
+    }
+
+    public long getLoadTime() {
+        return loadTime;
     }
     
     public void setSaveTime(long saveTime) {

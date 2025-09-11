@@ -14,6 +14,9 @@ public class EntitySpawn {
     
     @JsonProperty("entity")
     private String entity;
+
+    @JsonProperty("afk")
+    private String afkEntity;
     
     @JsonProperty("locale")
     private String locale;
@@ -41,6 +44,9 @@ public class EntitySpawn {
 
     @JsonIgnore
     private EntityConfig entityConfig = null;
+
+    @JsonIgnore
+    private EntityConfig afkEntityConfig = null;
     
     public EntityConfig getEntityConfig() {
         if(entityConfig == null) {
@@ -48,6 +54,18 @@ public class EntitySpawn {
         }
 
         return entityConfig;
+    }
+
+    public EntityConfig getAfkEntityConfig() {
+        if(afkEntity == null) {
+            return getEntityConfig();
+        }
+
+        if(afkEntityConfig == null) {
+            afkEntityConfig = EntityRegistry.getEntityConfig(afkEntity);
+        }
+
+        return afkEntityConfig;
     }
 
     public String getEntity() {

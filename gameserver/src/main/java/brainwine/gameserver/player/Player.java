@@ -1784,8 +1784,8 @@ public class Player extends Entity implements CommandExecutor {
         return statistics;
     }
     
-    public void addActiveChunk(int index) {
-        activeChunks.add(index);
+    public boolean addActiveChunk(int index) {
+        return activeChunks.add(index);
     }
     
     public void removeActiveChunk(int index) {

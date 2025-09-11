@@ -56,7 +56,11 @@ public class BlocksRequest extends PlayerRequest {
             
             chunks.add(chunk);
             metaBlocks.addAll(zone.getLocalMetaBlocksInChunk(index));
-            player.addActiveChunk(index);
+
+            // If the player is newly seeing the chunk, mark it as fresh
+            if(player.addActiveChunk(index)) {
+                chunk.setLoadTime(System.currentTimeMillis());
+            }
             
             if(chunk.getX() < minX || minX == -1) {
                 minX = chunk.getX();
