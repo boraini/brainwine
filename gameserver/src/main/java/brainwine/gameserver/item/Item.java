@@ -210,6 +210,9 @@ public class Item {
     
     @JsonProperty("damage")
     private Pair<DamageType, Float> damageInfo;
+
+    @JsonProperty("attack_bonus")
+    private Map<Skill, Float> skillAttackBonus = new HashMap<>();
     
     @JsonProperty("timer")
     private Pair<String, Integer> timer;
@@ -647,6 +650,10 @@ public class Item {
     
     public float getDamage() {
         return isWeapon() ? damageInfo.getLast() : 0;
+    }
+
+    public Map<Skill, Float> getSkillAttackBonus() {
+        return skillAttackBonus;
     }
     
     public boolean hasTimer() {

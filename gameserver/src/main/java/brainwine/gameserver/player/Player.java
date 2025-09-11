@@ -450,7 +450,15 @@ public class Player extends Entity implements CommandExecutor {
 
     @Override
     public float getAttackMultiplier(EntityAttack attack) {
-        return isGodMode() ? 9999.0F : 1.0F;
+        if(isGodMode()) {
+            return 9999.0f;
+        }
+        Map<Skill, Float> skillAttackBonus = attack.getWeapon().getSkillAttackBonus();
+        double totalAttackBonus = 1.0;
+        if(skillAttackBonus != null) for(Map.Entry<Skill, Float> bonus : skillAttackBonus.entrySet()) {
+            totalAttackBonus *= Math.pow(bonus.getValue(), getTotalSkillLevel(bonus.getKey()) - 1);
+        }
+        return (float)totalAttackBonus;
     }
     
     @Override
