@@ -304,7 +304,11 @@ public class Zone {
                     // Deal true damage to the target, scaling with distance from field block
                     if(distance < radius) {
                         float damage = maxDamage * (1.0F - distance / radius);
-                        player.attack(null, item, damage, item.getFieldDamage().getType(), true);
+                        if(damage > 0) {
+                            player.attack(null, item, damage, item.getFieldDamage().getType(), true);
+                        } else if(damage < 0) {
+                            player.heal(-damage);
+                        }
                     }
                 }
             }
