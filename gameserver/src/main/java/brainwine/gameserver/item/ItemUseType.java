@@ -19,8 +19,8 @@ import brainwine.gameserver.item.interactions.ItemInteraction;
 import brainwine.gameserver.item.interactions.LandmarkInteraction;
 import brainwine.gameserver.item.interactions.MinigameInteraction;
 import brainwine.gameserver.item.interactions.NoteInteraction;
-import brainwine.gameserver.item.interactions.QuipperInteraction;
 import brainwine.gameserver.item.interactions.PileInteraction;
+import brainwine.gameserver.item.interactions.QuipperInteraction;
 import brainwine.gameserver.item.interactions.RecyclerInteraction;
 import brainwine.gameserver.item.interactions.SpawnInteraction;
 import brainwine.gameserver.item.interactions.SpawnTeleportInteraction;
@@ -31,6 +31,7 @@ import brainwine.gameserver.item.interactions.TeleportInteraction;
 import brainwine.gameserver.item.interactions.TransmitInteraction;
 import brainwine.gameserver.item.interactions.WarmthInteraction;
 import brainwine.gameserver.item.interactions.WorldMachineInteraction;
+import brainwine.gameserver.item.interactions.XpSignInteraction;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 /**
@@ -88,6 +89,7 @@ public enum ItemUseType {
     TRANSMITTED,
     WARMTH(new WarmthInteraction()),
     WORLD_MACHINE(new WorldMachineInteraction()),
+    XP_SIGN(new XpSignInteraction()),
     ZONE_TELEPORT,
     
     @JsonEnumDefaultValue

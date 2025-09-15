@@ -1,5 +1,6 @@
 package brainwine.gameserver.server.requests;
 
+import java.util.HashMap;
 import java.util.UUID;
 
 import brainwine.gameserver.GameServer;
@@ -205,6 +206,17 @@ public class BlockPlaceRequest extends PlayerRequest {
                     zone.updateBlock(x, y, Layer.FRONT, 0);
                 });
             });
+        }
+
+        // TODO: implement item "metadata" field instead
+        if(item.hasUse(ItemUseType.XP_SIGN)) {
+            MetaBlock metaBlock = zone.getMetaBlock(x, y);
+
+            if(metaBlock != null) {
+                HashMap<String, Object> newMetadata = new HashMap<>(metaBlock.getMetadata());
+                newMetadata.put("vc", item.getUse(ItemUseType.XP_SIGN));
+                zone.setMetaBlock(x, y, item, player, newMetadata);
+            }
         }
 
         // Create block timer if applicable
