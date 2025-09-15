@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
 public class Order {
-    private static String[] tierNames = { "Iron", "Brass", "Sapphire", "Ruby", "Onyx" };
+    private static String[] tierNames = { "Iron", "Brass", "Sapphire", "Ruby", "Onyx", "Platinum" };
     @JsonIgnore
     private String title;
     @JsonProperty("induction_message")
