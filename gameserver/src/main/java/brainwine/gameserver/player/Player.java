@@ -456,7 +456,7 @@ public class Player extends Entity implements CommandExecutor {
         Map<Skill, Float> skillAttackBonus = attack.getWeapon().getSkillAttackBonus();
         double totalAttackBonus = 1.0;
         if(skillAttackBonus != null) for(Map.Entry<Skill, Float> bonus : skillAttackBonus.entrySet()) {
-            totalAttackBonus *= (getTotalSkillLevel(bonus.getKey()) - 1) * bonus.getValue();
+            totalAttackBonus += (getTotalSkillLevel(bonus.getKey()) - 1) * bonus.getValue();
         }
         return (float)totalAttackBonus;
     }
