@@ -28,7 +28,7 @@ public class AndroidShopHistory {
         purchases.removeIf(item -> now.isAfter(item.date.plusHours(FORGETTING_INTERVAL_HOURS)));
         summary.clear();
         for(Purchase purchase : purchases) {
-            summary.merge(purchase.item, 1, Integer::sum);
+            summary.merge(purchase.item, purchase.quantity, Integer::sum);
         }
     }
 
@@ -39,7 +39,7 @@ public class AndroidShopHistory {
     public void recordPurchase(Item item, int quantity) {
         OffsetDateTime now = OffsetDateTime.now();
         purchases.add(new Purchase(now, item, quantity));
-        summary.merge(item, 1, Integer::sum);
+        summary.merge(item, quantity, Integer::sum);
     }
 
     public static class Purchase {

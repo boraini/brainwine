@@ -288,7 +288,7 @@ public class AndroidShopSession {
             if(ans.length == 0 || !"cancel".equals(ans[0])) {
                 CanBuy canBuy = canBuy(product, quantity);
                 if(canBuy == CanBuy.OK) {
-                    player.getInventory().removeItem(shillings, getAdjustedPrice(product), true);
+                    player.getInventory().removeItem(shillings, quantity * getAdjustedPrice(product), true);
                     product.purchase(player, quantity);
                     player.getAndroidShopHistory().recordPurchase(product.getItem(), quantity);
                     if(me != null) me.emote("Good trade!");
