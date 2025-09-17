@@ -45,7 +45,7 @@ public class ScrapMarketOfferSession {
         DecimalFormat df = new DecimalFormat();
         df.setMaximumFractionDigits(2);
         dialog.addSection(new DialogSection().setText(String.format(
-            "All listings are subject to a %s service charge based on the amount listed.",
+            "All listings are subject to a %s%% service charge based on the amount listed.",
             df.format(SERVICE_CHARGE_FACTOR * 100.0)
         )));
 
@@ -177,7 +177,7 @@ public class ScrapMarketOfferSession {
         int serviceCharge = (int)Math.ceil(SERVICE_CHARGE_FACTOR * totalCost);
         if(!player.isGodMode()) {
             if(!player.getInventory().hasItem(shillings, serviceCharge)) {
-                fail(String.format("You do not have enough shillings (%d of them) to pay the service charge.", serviceCharge));
+                fail(String.format("You do not have %d shillings to pay the service charge.", serviceCharge));
                 return;
             }
         }
