@@ -45,7 +45,7 @@ public class OrderTier {
                 compare = player.getStatistics().getKills(EntityGroup.SUPERNATURAL);
                 break;
             case "progress/inhibitors activated":
-                // TODO: related to InsurrectionAchievement
+                compare = player.getStatistics().getEvokersInhibited();
                 break;
             case "progress/brains killed":
                 compare = player.getStatistics().getKills(EntityGroup.BRAINS);
