@@ -90,6 +90,7 @@ public class Chunk {
         this.loadTime = loadTime;
     }
 
+    @JsonIgnore
     public long getLoadTime() {
         return loadTime;
     }
