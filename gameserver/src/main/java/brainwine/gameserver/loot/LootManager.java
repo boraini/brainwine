@@ -67,7 +67,7 @@ public class LootManager {
                 .filter(entry -> categories.contains(entry.getKey()))
                 .map(Entry::getValue)
                 .flatMap(Collection::stream)
-                .filter(loot -> (loot.getBiome() == null || loot.getBiome() == biome) && !ignore.containsAll(loot.getItems().keySet()))
+                .filter(loot -> (loot.getBiome() == null || loot.getBiome() == biome) && (loot.getItems().isEmpty() || !ignore.containsAll(loot.getItems().keySet())))
                 .collect(Collectors.toList());
         return eligibleLoot;
     }
