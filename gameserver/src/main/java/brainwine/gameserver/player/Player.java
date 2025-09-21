@@ -613,6 +613,7 @@ public class Player extends Entity implements CommandExecutor {
         // Misc stuff
         updateAchievementProgress(JourneymanAchievement.class);
         checkRegistration();
+        checkMaxLevel();
         PlayerQuests.deleteUnknownQuestProgress(this);
         PlayerQuests.sendInitialPlayerQuestMessages(this);
         QuestEvents.handleEnterZone(this, zone);
@@ -1400,7 +1401,7 @@ public class Player extends Entity implements CommandExecutor {
         sendMessage(new XpMessage(amount, experience, message));
         int newLevel = getLevel();
         
-        if(newLevel != oldLevel) {
+        if(newLevel > oldLevel) {
             skillPoints += Math.max(0, newLevel - oldLevel);
             sendDelayedMessage(new LevelMessage(newLevel), 5000);
             sendDelayedMessage(new EffectMessage(0, 0, "levelup", 1), 5000);
@@ -1439,6 +1440,14 @@ public class Player extends Entity implements CommandExecutor {
     public int getLevel() {
         return getLevelFromExperience(experience);
     }
+
+    public void checkMaxLevel() {
+        if(getExperience() > getExperienceForLevel(getMaxLevel())) {
+            showDialog(DialogHelper.messageDialog(String.format("The maximum player level has changed since you last played. You have been moved down to level %d. Also all your skills have been reset.", getMaxLevel())));
+            resetAllSkills();
+            setLevel(getMaxLevel());
+        }
+    }
     
     public void setSkillPoints(int skillPoints) {
         this.skillPoints = skillPoints;
@@ -1447,6 +1456,34 @@ public class Player extends Entity implements CommandExecutor {
     
     public int getSkillPoints() {
         return skillPoints;
+    }
+
+    public void resetAllSkills() {
+        int pointsToRefund = 0;
+
+        // Reset skill levels and calculate point refund total
+        for(Map.Entry<Skill, Integer> entry : getSkills().entrySet()) {
+            Skill skill = entry.getKey();
+            int level = entry.getValue();
+            int leftover = 1;
+
+            // Count skill bumps and don't reset those bumps
+            for(List<Skill> bumpedSkills : getBumpedSkills().values()) {
+                if(bumpedSkills.contains(skill)) {
+                    leftover++;
+                }
+            }
+
+            // Skip if skill hasn't been upgraded at all
+            if(level <= leftover) {
+                continue;
+            }
+
+            pointsToRefund += level - leftover;
+            setSkillLevel(skill, leftover); // Reset skill level
+        }
+
+        setSkillPoints(getSkillPoints() + pointsToRefund); // Refund skill points
     }
     
     public void setKarma(int karma) {
