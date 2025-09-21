@@ -1395,6 +1395,13 @@ public class Player extends Entity implements CommandExecutor {
     }
     
     public void setExperience(int experience, String message) {
+        int maxExperience = getExperienceForLevel(getMaxLevel());
+        if(experience > maxExperience) {
+            experience = maxExperience;
+        }
+
+        if(experience == this.experience) return;
+
         int amount = experience - this.experience;
         int oldLevel = getLevel();
         this.experience = experience;
