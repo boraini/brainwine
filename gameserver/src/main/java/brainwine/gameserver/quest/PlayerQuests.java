@@ -208,7 +208,7 @@ public class PlayerQuests {
             int wantedProgress = task.getQuantity();
             int currentProgress = progress.getTaskProgress(i);
             if(wantedProgress > 1) {
-                taskDescriptions.set(0, String.format("%s, (Progress: %d/%d)", taskDescriptions.get(i), currentProgress, wantedProgress));
+                taskDescriptions.set(i, String.format("%s, (Progress: %d/%d)", taskDescriptions.get(i), currentProgress, wantedProgress));
             }
         }
 
