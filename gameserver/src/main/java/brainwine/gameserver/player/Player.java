@@ -1449,7 +1449,10 @@ public class Player extends Entity implements CommandExecutor {
     }
 
     public void checkMaxLevel() {
-        if(getExperience() > getExperienceForLevel(getMaxLevel())) {
+        int totalBumps = getBumpedSkills().values().stream().mapToInt(List::size).sum();
+        int totalPoints = getSkills().values().stream().mapToInt(Integer::intValue).sum() - getSkills().size() - totalBumps + getSkillPoints();
+        int possiblePoints = getMaxLevel() - 1;
+        if(getExperience() > getExperienceForLevel(getMaxLevel()) || totalPoints > possiblePoints) {
             showDialog(DialogHelper.messageDialog(String.format("The maximum player level has changed since you last played. You have been moved down to level %d. Also all your skills have been reset.", getMaxLevel())));
             resetAllSkills();
             setLevel(getMaxLevel());
@@ -1490,7 +1493,8 @@ public class Player extends Entity implements CommandExecutor {
             setSkillLevel(skill, leftover); // Reset skill level
         }
 
-        setSkillPoints(getSkillPoints() + pointsToRefund); // Refund skill points
+        int totalBumps = getBumpedSkills().values().stream().mapToInt(List::size).sum();
+        setSkillPoints(Math.min(getMaxLevel() - totalBumps - 1, getSkillPoints() + pointsToRefund)); // Refund skill points
     }
     
     public void setKarma(int karma) {
