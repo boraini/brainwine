@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import brainwine.gameserver.player.TradeSession;
 import org.apache.commons.text.WordUtils;
 
 import brainwine.gameserver.GameServer;
@@ -137,29 +138,64 @@ public class DialogRequest extends PlayerRequest {
                                 .setOptions(upgradeableSkillNames)
                                 .setMaxColumns(3)
                                 .setKey("skill")));
-        
+
         player.showDialog(dialog, input -> {
             if(input.length == 0 || input[0].equals("cancel")) {
                 return;
             }
-            
-            if(player.getSkillPoints() <= 0) {
-                player.notify("Sorry, you are out of skill points. Level up to earn some more!");
-                return;
-            }
-            
+
             Skill skill = Skill.fromId(input[0].toString());
-            
+
             if(!player.getUpgradeableSkills().contains(skill)) {
                 player.notify("Sorry, you cannot upgrade that skill right now.");
                 return;
             }
-            
-            int newSkillLevel = player.getSkillLevel(skill) + 1;
-            player.setSkillLevel(skill, newSkillLevel);
-            player.setSkillPoints(player.getSkillPoints() - 1);
-            player.showDialog(DialogHelper.messageDialog(String.format("You've successfully upgraded your %s skill to level %s!",
-            WordUtils.capitalize(skill.getId()), newSkillLevel)));
+
+            int possibleUpgrade = Math.min(player.getSkillPoints(), Player.MAX_NATURAL_SKILL_LEVEL - player.getSkillLevel(skill));
+            if(possibleUpgrade > 1) {
+                Dialog quantityDialog = new Dialog();
+
+                quantityDialog.setTitle(String.format("Upgrade %s", WordUtils.capitalize(skill.getId())));
+
+                quantityDialog.addSection(TradeSession.Dialogs.createQuantitySelector(possibleUpgrade).setTitle("How many skill points would you like to add?"));
+
+                player.showDialog(quantityDialog, ans -> {
+                    if(ans.length > 0 && !"cancel".equals(ans[0])) {
+                        try {
+                            int quantity = Integer.parseInt(ans[0].toString());
+                            onSkillUpgradeConfirm(player, skill, quantity);
+                        } catch (NumberFormatException e) {
+                            player.notify("Invalid number selection!");
+                        }
+                    }
+                });
+            } else {
+                onSkillUpgradeConfirm(player, skill, 1);
+            }
         });
+    }
+
+    private void onSkillUpgradeConfirm(Player player, Skill skill, int quantity) {
+        if(player.getSkillPoints() < quantity) {
+            player.notify("Sorry, you are out of skill points. Level up to earn some more!");
+            return;
+        }
+
+        if(!player.getUpgradeableSkills().contains(skill)) {
+            player.notify("Sorry, you cannot upgrade that skill right now.");
+            return;
+        }
+
+        int newSkillLevel = player.getSkillLevel(skill) + quantity;
+
+        if(newSkillLevel > Player.MAX_NATURAL_SKILL_LEVEL) {
+            player.notify("Sorry, you cannot upgrade that skill this much right now.");
+            return;
+        }
+
+        player.setSkillLevel(skill, newSkillLevel);
+        player.setSkillPoints(player.getSkillPoints() - quantity);
+        player.showDialog(DialogHelper.messageDialog(String.format("You've successfully upgraded your %s skill to level %s!",
+                WordUtils.capitalize(skill.getId()), newSkillLevel)));
     }
 }
