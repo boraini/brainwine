@@ -1802,8 +1802,11 @@ public class Player extends Entity implements CommandExecutor {
         
         if(crowns > 0) {
             addCrowns(crowns);
-            
-            if(v3) {
+
+            Item crownsIconItem = ItemRegistry.getItem("accessories/crowns");
+            if(hasClientVersion("3.13.8") && !crownsIconItem.isAir()) {
+                section.addItem(new DialogListItem().setItem(crownsIconItem.getCode()).setText(String.format("<color=#ffd95f>%s shiny crowns!</color>", crowns)).setSupportRichText(true));
+            } else if(v3) {
                 section.setText(String.format("<color=#ffd95f>%s shiny crowns!</color>", crowns));
             } else {
                 section.setText(String.format("%s shiny crowns!", crowns));
