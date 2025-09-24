@@ -1449,13 +1449,23 @@ public class Player extends Entity implements CommandExecutor {
     }
 
     public void checkMaxLevel() {
+        Dialog dialog = DialogHelper.messageDialog("The maximum player level has changed since you last played.");
+        if(getExperience() > getExperienceForLevel(getMaxLevel())) {
+            setLevel(getMaxLevel());
+            dialog.addSection(new DialogSection().setText(String.format("You have been moved down to level %d.", getMaxLevel())));
+        }
+
         int totalBumps = getBumpedSkills().values().stream().mapToInt(List::size).sum();
         int totalPoints = getSkills().values().stream().mapToInt(Integer::intValue).sum() - getSkills().size() - totalBumps + getSkillPoints();
-        int possiblePoints = getMaxLevel() - 1;
-        if(getExperience() > getExperienceForLevel(getMaxLevel()) || totalPoints > possiblePoints) {
-            showDialog(DialogHelper.messageDialog(String.format("The maximum player level has changed since you last played. You have been moved down to level %d. Also all your skills have been reset.", getMaxLevel())));
+        int possiblePoints = getLevel() - 1;
+
+        if(totalPoints > possiblePoints) {
             resetAllSkills();
-            setLevel(getMaxLevel());
+            dialog.addSection(new DialogSection().setText("All your skills have been reset because you had too many skill points."));
+        }
+
+        if(dialog.getSections().size() > 1) {
+            showDialog(dialog);
         }
     }
     
@@ -1493,8 +1503,7 @@ public class Player extends Entity implements CommandExecutor {
             setSkillLevel(skill, leftover); // Reset skill level
         }
 
-        int totalBumps = getBumpedSkills().values().stream().mapToInt(List::size).sum();
-        setSkillPoints(Math.min(getMaxLevel() - totalBumps - 1, getSkillPoints() + pointsToRefund)); // Refund skill points
+        setSkillPoints(Math.min(getLevel() - 1, getSkillPoints() + pointsToRefund)); // Refund skill points
     }
     
     public void setKarma(int karma) {
