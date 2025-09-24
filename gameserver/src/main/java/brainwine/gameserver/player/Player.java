@@ -1407,12 +1407,15 @@ public class Player extends Entity implements CommandExecutor {
         this.experience = experience;
         sendMessage(new XpMessage(amount, experience, message));
         int newLevel = getLevel();
-        
-        if(newLevel > oldLevel) {
-            skillPoints += Math.max(0, newLevel - oldLevel);
+
+        if(newLevel != oldLevel) {
             sendDelayedMessage(new LevelMessage(newLevel), 5000);
-            sendDelayedMessage(new EffectMessage(0, 0, "levelup", 1), 5000);
+        }
+
+        if(newLevel > oldLevel) {
+            skillPoints += newLevel - oldLevel;
             sendDelayedMessage(new StatMessage(PlayerStat.POINTS, skillPoints), 5000);
+            sendDelayedMessage(new EffectMessage(0, 0, "levelup", 1), 5000);
             notifyPeers(String.format("%s leveled up to level %s!", name, newLevel), NotificationType.SYSTEM);
         }
     }
