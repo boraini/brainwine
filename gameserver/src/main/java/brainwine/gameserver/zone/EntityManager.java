@@ -354,7 +354,13 @@ public class EntityManager {
             if(npc.isGuard()) {
                 Map<String, Integer> dishCounts = needs.get(zone.getBlockIndex(npc.getGuardBlock().getX(), npc.getGuardBlock().getY()));
                 if(dishCounts != null) {
-                    dishCounts.merge(npc.getConfig().getName(), -1, Integer::sum);
+                    if(npc.inRange(npc.getGuardBlock().getX(), npc.getGuardBlock().getY(), 38.0)) {
+                        dishCounts.merge(npc.getConfig().getName(), -1, Integer::sum);
+                    } else {
+                        // Forget about entity if it has gotten too far.
+                        npc.setGuardBlock(null);
+                        npc.setHealth(0f);
+                    }
                 }
             }
         }
