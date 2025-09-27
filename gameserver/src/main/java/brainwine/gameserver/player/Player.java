@@ -1679,7 +1679,12 @@ public class Player extends Entity implements CommandExecutor {
     }
 
     public Map<String, Object> getVisibleAppearance() {
-        return zone.getHolographConfiguration().overrideAppearance(appearance);
+        Map<String, Object> visibleAppearance = zone.getHolographConfiguration().overrideAppearance(appearance);
+
+        // v3 name icon implementation expects the name icon to be part of the appearance config
+        visibleAppearance.put("ni", getIcon());
+
+        return visibleAppearance;
     }
 
     public Map<String, QuestProgress> getQuestProgresses() {
