@@ -302,11 +302,9 @@ public class StructureGeneratorTask implements GeneratorTask {
             int y = container.getY();
             int offset = getContainerOffset(ctx, x, y);
             
-            // Replace with large chest if container is a small chest
-            if(container.getItem().hasId("containers/chest")) {
-                ctx.updateBlock(x, y, Layer.FRONT, 0);
-                ctx.updateBlock(x + offset, y, Layer.FRONT, "containers/chest-large", 1, container.getMetadata());
-            }
+            // Replace the container with large chest
+            ctx.updateBlock(x, y, Layer.FRONT, 0);
+            ctx.updateBlock(x + offset, y, Layer.FRONT, "containers/chest-large", 1, container.getMetadata());
             
             // Place dish on top of the container
             ctx.updateBlock(x + offset, y - 1, Layer.FRONT, "hell/dish");
