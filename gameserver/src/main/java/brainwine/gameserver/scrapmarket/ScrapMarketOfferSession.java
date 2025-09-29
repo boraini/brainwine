@@ -42,7 +42,7 @@ public class ScrapMarketOfferSession {
                 player.showDialog(DialogHelper.messageDialog(
                     "Low Barter Skill",
                     "You must have at least barter level 6 to be able to list items."
-                ));
+                ).setType(DialogType.ANDROID));
                 return;
             }
 
@@ -55,7 +55,7 @@ public class ScrapMarketOfferSession {
                 player.showDialog(DialogHelper.messageDialog(
                     "Too Many Listings",
                     String.format("You must have higher barter level to list more items. You have already listed your maximum of %d.", getAllowedListings())
-                ));
+                ).setType(DialogType.ANDROID));
                 return;
             }
         }
@@ -129,7 +129,7 @@ public class ScrapMarketOfferSession {
         for(DialogSection section : form.getSections()) {
             if(section.getInput() != null) {
                 if(i >= ans.length) {
-                    player.showDialog(DialogHelper.messageDialog("Error", "Invalid dialog input."));
+                    player.showDialog(DialogHelper.messageDialog("Error", "Invalid dialog input.").setType(DialogType.ANDROID));
                     return;
                 }
                 Object val = ans[i++];
@@ -142,11 +142,11 @@ public class ScrapMarketOfferSession {
                     try {
                         responses.put(section.getInput().getKey(), Integer.parseInt((String)val));
                     } catch(NumberFormatException e) {
-                        player.showDialog(DialogHelper.messageDialog("Error", "Failed to parse number."));
+                        player.showDialog(DialogHelper.messageDialog("Error", "Failed to parse number.").setType(DialogType.ANDROID));
                         return;
                     }
                 } else {
-                    player.showDialog(DialogHelper.messageDialog("Error", "Unexpected data type."));
+                    player.showDialog(DialogHelper.messageDialog("Error", "Unexpected data type.").setType(DialogType.ANDROID));
                     return;
                 }
             }
