@@ -100,6 +100,7 @@ public class Trader extends DialoguerJob {
     }
 
     private Dialog acceptItemLinkToScrapMarket(Dialog dialog) {
+        dialog.addSection(new DialogSection().setText("If you'd like, you can list this on the scrap market in hopes of getting a better deal."));
         DialogSection section = new DialogSection().setText("Offer This on the Scrap Market").setChoice("scrap_market");
         dialog.addSection(section);
         return dialog;
@@ -160,8 +161,6 @@ public class Trader extends DialoguerJob {
 
         dialog.addSection(new DialogSection().setText(header));
 
-        acceptItemLinkToScrapMarket(dialog);
-
         // For -2 and lower it doesn't allow trading at all.
         if(item.getShillingsPrice() < -1) {
             player.showDialog(dialog, scrapMarketOnlyHandler);
@@ -169,6 +168,8 @@ public class Trader extends DialoguerJob {
         }
 
         dialog.addSection(TradeSession.Dialogs.createQuantitySelector(player, item).setText(item.getShillingsPrice() > 0 ? "How many are you selling?" : "How many are you giving?"));
+
+        acceptItemLinkToScrapMarket(dialog);
 
         player.showDialog(dialog, ans -> {
             if(acceptItemHandleScrapMarket(me, player, item, ans)) return;
