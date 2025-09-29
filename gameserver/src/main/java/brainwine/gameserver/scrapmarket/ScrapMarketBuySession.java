@@ -17,6 +17,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Consumer;
@@ -292,7 +293,13 @@ public class ScrapMarketBuySession {
             if(ans.length == 0 || !"cancel".equals(ans[0])) {
                 CanBuy canBuy = canBuy(product, buyQuantity);
                 if(canBuy == CanBuy.OK) {
-                    player.getInventory().removeItem(shillings, getAdjustedPrice(product), true);
+                    Player seller = expectSeller(product);
+
+                    if(!player.isGodMode()) {
+                        seller.getInventory().addItem(shillings, totalPrice, true);
+                        player.getInventory().removeItem(shillings, getAdjustedPrice(product), true);
+                    }
+
                     product.purchase(player, buyQuantity);
                     if(product.getStock() <= 0) {
                         shop.removeProduct(product);
@@ -312,5 +319,14 @@ public class ScrapMarketBuySession {
 
     public void end(boolean outcome) {
         if(onOutcome != null) onOutcome.accept(outcome);
+    }
+
+    private Player expectSeller(ScrapMarketProduct product) {
+        Player seller = GameServer.getInstance().getPlayerManager().getPlayerById(product.getSellerId());
+        if(seller == null) {
+            throw new NoSuchElementException("Selling player does not exist anymore.");
+        }
+
+        return seller;
     }
 }

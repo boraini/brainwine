@@ -86,14 +86,8 @@ public class ScrapMarketProduct {
     public void purchase(Player buyer, int quantity) {
         Player seller = expectSeller();
         Item item = expectItem();
-        Item shillings = expectShillings();
 
         int totalQuantity = quantity;
-        int totalCost = price * totalQuantity;
-
-        if(!buyer.isGodMode() && !buyer.getInventory().hasItem(shillings, totalCost)) {
-            throw new IllegalArgumentException("You do not have enough shillings.");
-        }
 
         if(!inStock(quantity)) {
             throw new IllegalArgumentException("There is not enough of this item for sale.");
@@ -105,11 +99,6 @@ public class ScrapMarketProduct {
 
         if(!checkBarterLevel()) {
             throw new IllegalArgumentException(seller.getName() + " does not have a sufficient barter level.");
-        }
-
-        if(!buyer.isGodMode()) {
-            seller.getInventory().addItem(shillings, totalCost, true);
-            buyer.getInventory().removeItem(shillings, totalCost, true);
         }
 
         seller.getInventory().removeItem(item, totalQuantity, true);
