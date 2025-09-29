@@ -9,6 +9,7 @@ import brainwine.gameserver.dialog.input.DialogTextInput;
 import brainwine.gameserver.item.Item;
 import brainwine.gameserver.item.ItemRegistry;
 import brainwine.gameserver.player.Player;
+import brainwine.gameserver.player.Skill;
 
 import java.text.DecimalFormat;
 import java.util.Collections;
@@ -36,6 +37,29 @@ public class ScrapMarketOfferSession {
     }
 
     public void showNextDialog() {
+        if(!player.isGodMode()) {
+            if(getAllowedListings() == 0) {
+                player.showDialog(DialogHelper.messageDialog(
+                    "Low Barter Skill",
+                    "You must have at least barter level 6 to be able to list items."
+                ));
+                return;
+            }
+
+            Map<String, ScrapMarketProduct> playerProducts = shop.getProductsBySeller().get(player.getDocumentId());
+
+            if(playerProducts != null
+                && !playerProducts.containsKey(item.getId())
+                && playerProducts.size() >= getAllowedListings()
+            ) {
+                player.showDialog(DialogHelper.messageDialog(
+                    "Too Many Listings",
+                    String.format("You must have higher barter level to list more items. You have already listed your maximum of %d.", getAllowedListings())
+                ));
+                return;
+            }
+        }
+
         Dialog dialog = new Dialog().setType(DialogType.ANDROID).setTitle("Offering " + item.getTitle());
 
         dialog.addSection(getProductSection1(item));
@@ -132,6 +156,23 @@ public class ScrapMarketOfferSession {
     }
 
     public void confirm(Map<String, Integer> responses) {
+        if(!player.isGodMode()) {
+            if(getAllowedListings() == 0) {
+                fail("You must have at least barter level 6 to be able to list items.");
+                return;
+            }
+
+            Map<String, ScrapMarketProduct> playerProducts = shop.getProductsBySeller().get(player.getDocumentId());
+
+            if(playerProducts != null
+                && !playerProducts.containsKey(item.getId())
+                && playerProducts.size() >= getAllowedListings()
+            ) {
+                fail(String.format("You can list maximum %d items.", getAllowedListings()));
+                return;
+            }
+        }
+
         int inventory = player.getInventory().getQuantity(item);
         Integer unitQuantity = responses.getOrDefault("unit_quantity", 1);
         Integer price = responses.get("price");
@@ -233,5 +274,14 @@ public class ScrapMarketOfferSession {
     public ScrapMarketOfferSession setStockDefault(Object stock) {
         formDefaults.put("stock", stock.toString());
         return this;
+    }
+
+    private int getAllowedListings() {
+        int barterLevel = player.getTotalSkillLevel(Skill.BARTER);
+
+        if(barterLevel >= 13) return 3;
+        if(barterLevel >= 10) return 2;
+        if(barterLevel >= 6) return 1;
+        return 0;
     }
 }
