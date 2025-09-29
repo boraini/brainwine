@@ -2,6 +2,7 @@ package brainwine.gameserver.item;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -123,6 +124,9 @@ public class Item {
 
     @JsonProperty("locked")
     private boolean locked;
+
+    @JsonProperty("locked_loot")
+    private LinkedHashMap<String, String[]> selectiveLockedLoot;
     
     @JsonProperty("placeover")
     private boolean placeover;
@@ -498,6 +502,10 @@ public class Item {
 
     public boolean isLocked() {
         return locked;
+    }
+
+    public LinkedHashMap<String, String[]> getSelectiveLockedLoot() {
+        return selectiveLockedLoot;
     }
     
     public boolean isBase() {
