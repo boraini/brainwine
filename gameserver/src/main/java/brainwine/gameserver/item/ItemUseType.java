@@ -42,6 +42,7 @@ public enum ItemUseType {
     AFTERBURNER,
     BATTERY(new BatteryInteraction(), BatteryConfig.class),
     BREATH,
+    BUILDING_EXTENSION,
     BURST(new BurstInteraction()),
     COMPOSTER(new ComposterInteraction()),
     CONTAINER(new ContainerInteraction()),
