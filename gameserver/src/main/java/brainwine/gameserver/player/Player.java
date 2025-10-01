@@ -1113,7 +1113,8 @@ public class Player extends Entity implements CommandExecutor {
     }
 
     public double getMiningRange() {
-        return 5 + getTotalSkillLevel(Skill.MINING) / 3.0;
+        double accessoryBonus = getInventory().findAccessoryWithUse(ItemUseType.BUILDING_EXTENSION).isAir() ? 1.0 : 2.0;
+        return accessoryBonus * (5 + getTotalSkillLevel(Skill.MINING) / 3.0);
     }
     
     public double getPlacementRange() {
