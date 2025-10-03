@@ -6,6 +6,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import brainwine.gameserver.androidshop.AndroidShop;
+import brainwine.gameserver.androidshop.AndroidShopPerIpHistory;
 import brainwine.gameserver.anticheat.AnticheatManager;
 import brainwine.gameserver.chat.ProfanityManager;
 import org.apache.logging.log4j.LogManager;
@@ -70,6 +71,7 @@ public class GameServer implements CommandExecutor {
         Pandora.loadConfig();
         Quests.loadQuests();
         AndroidShop.getInstance().loadShopData();
+        AndroidShopPerIpHistory.getInstance().load();
         Fake.loadFake();
         AnticheatManager.loadConfig();
         ipBans.loadIpBans();
@@ -111,6 +113,7 @@ public class GameServer implements CommandExecutor {
             zoneManager.saveZones();
             playerManager.savePlayers();
             ipBans.saveIpBans();
+            AndroidShopPerIpHistory.getInstance().save();
             lastSave = System.currentTimeMillis();
         }
         
@@ -154,6 +157,7 @@ public class GameServer implements CommandExecutor {
         logger.info(SERVER_MARKER, "Saving player data ...");
         playerManager.savePlayers();
         ipBans.saveIpBans();
+        AndroidShopPerIpHistory.getInstance().save();
     }
     
     public void stopGracefully() {

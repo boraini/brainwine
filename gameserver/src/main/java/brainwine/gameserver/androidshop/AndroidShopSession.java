@@ -69,7 +69,10 @@ public class AndroidShopSession {
         int maxPrice = shop.getAdjustments().getMaxPrice(player);
         int adjustedPrice = getAdjustedPrice(product);
         int account = player.getInventory().getQuantity(ItemRegistry.getItem("accessories/shillings"));
-        int purchased = player.getAndroidShopHistory().getPurchases(product.getItem());
+        int purchasedPlayer = player.getAndroidShopHistory().getPurchases(product.getItem());
+        AndroidShopHistory ipHistory = AndroidShopPerIpHistory.getInstance().getHistory(player);
+        int purchasedIp = ipHistory != null ? ipHistory.getPurchases(product.getItem()) : 0;
+        int purchased = Math.max(purchasedPlayer, purchasedIp);
 
         if (adjustedPrice > maxPrice) {
             return CanBuy.TOO_HIGH_PRICE;
@@ -291,6 +294,7 @@ public class AndroidShopSession {
                     player.getInventory().removeItem(shillings, quantity * getAdjustedPrice(product), true);
                     product.purchase(player, quantity);
                     player.getAndroidShopHistory().recordPurchase(product.getItem(), quantity);
+                    AndroidShopPerIpHistory.getInstance().recordPurchase(player, product.getItem(), quantity);
                     if(me != null) me.emote("Good trade!");
                     end(true);
                 } else {
