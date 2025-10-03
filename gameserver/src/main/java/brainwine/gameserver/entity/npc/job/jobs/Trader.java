@@ -169,8 +169,8 @@ public class Trader extends DialoguerJob {
 
         dialog.addSection(TradeSession.Dialogs.createQuantitySelector(player, item).setText(item.getShillingsPrice() > 0 ? "How many are you selling?" : "How many are you giving?"));
 
-        if(barterSkill < 6) {
-            dialog.addSection(new DialogSection().setText("When you reach barter level 6, you will also be able to list this on the Scrap Market and possibly get a better offer there."));
+        if(barterSkill < 10) {
+            dialog.addSection(new DialogSection().setText("When you reach barter level 10, you will also be able to list this on the Scrap Market and possibly get a better offer there."));
         } else {
             acceptItemLinkToScrapMarket(dialog);
         }

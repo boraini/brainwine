@@ -41,7 +41,7 @@ public class ScrapMarketOfferSession {
             if(getAllowedListings() == 0) {
                 player.showDialog(DialogHelper.messageDialog(
                     "Low Barter Skill",
-                    "You must have at least barter level 6 to be able to list items."
+                    "You must have at least barter level 10 to be able to list items."
                 ).setType(DialogType.ANDROID));
                 return;
             }
@@ -158,7 +158,7 @@ public class ScrapMarketOfferSession {
     public void confirm(Map<String, Integer> responses) {
         if(!player.isGodMode()) {
             if(getAllowedListings() == 0) {
-                fail("You must have at least barter level 6 to be able to list items.");
+                fail("You must have at least barter level 10 to be able to list items.");
                 return;
             }
 
@@ -278,10 +278,10 @@ public class ScrapMarketOfferSession {
 
     private int getAllowedListings() {
         int barterLevel = player.getTotalSkillLevel(Skill.BARTER);
-
-        if(barterLevel >= 13) return 3;
-        if(barterLevel >= 10) return 2;
-        if(barterLevel >= 6) return 1;
+        if(barterLevel >= 13) return 4;
+        if(barterLevel >= 12) return 3;
+        if(barterLevel >= 11) return 2;
+        if(barterLevel >= 10) return 1;
         return 0;
     }
 }

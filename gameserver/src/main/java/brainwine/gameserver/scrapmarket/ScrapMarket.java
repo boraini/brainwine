@@ -14,8 +14,8 @@ import static brainwine.shared.LogMarkers.SERVER_MARKER;
 
 public class ScrapMarket {
     private static String FILE_NAME = "scrap-market.json";
-    public static int MIN_BARTER_LEVEL = 5;
-    
+    public static int MIN_BARTER_LEVEL = 1;
+
     private static final Logger logger = LogManager.getLogger();
     private static ScrapMarket instance;
 
