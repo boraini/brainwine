@@ -32,6 +32,7 @@ public enum Action {
     LOOT(new LootConsumable()),
     NAME_CHANGE(new NameChangeConsumable()),
     REFILL(new RefillConsumable()),
+    REVIVE,
     SKILL(new SkillConsumable()),
     SKILL_RESET(new SkillResetConsumable()),
     SMASH,

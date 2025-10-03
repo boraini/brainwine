@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import brainwine.gameserver.GameServer;
+import brainwine.gameserver.item.Action;
 import brainwine.gameserver.item.ItemRegistry;
 import brainwine.gameserver.zone.ZoneActivity;
 import com.fasterxml.jackson.annotation.JsonIncludeProperties;
@@ -174,6 +175,16 @@ public class Inventory {
     public Item findAccessoryWithUse(ItemUseType use) {
         for(Item item : accessories.getItems()) {
             if(item.hasUse(use)) {
+                return item;
+            }
+        }
+
+        return Item.AIR;
+    }
+
+    public Item findAccessoryWithAction(Action action) {
+        for(Item item : accessories.getItems()) {
+            if(item.getAction() == action) {
                 return item;
             }
         }

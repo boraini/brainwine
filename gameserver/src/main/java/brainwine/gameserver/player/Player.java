@@ -39,6 +39,7 @@ import brainwine.gameserver.entity.Entity;
 import brainwine.gameserver.entity.EntityAttack;
 import brainwine.gameserver.entity.EntityStatus;
 import brainwine.gameserver.entity.npc.Npc;
+import brainwine.gameserver.item.Action;
 import brainwine.gameserver.item.DamageType;
 import brainwine.gameserver.item.Item;
 import brainwine.gameserver.item.ItemRegistry;
@@ -264,7 +265,8 @@ public class Player extends Entity implements CommandExecutor {
 
         // Regenerate health out of combat
         if(!isDead() && now >= lastDamagedAt + REGEN_NO_DAMAGE_TIME) {
-            heal(BASE_REGEN_AMOUNT * deltaTime);
+            float bonus = getInventory().findAccessoryWithAction(Action.REVIVE).isAir() ? 1f : 2f;
+            heal(bonus * BASE_REGEN_AMOUNT * deltaTime);
         }
 
         if(!isDead()) {
