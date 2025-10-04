@@ -8,6 +8,7 @@ import brainwine.gameserver.dialog.DialogType;
 import brainwine.gameserver.dialog.input.DialogTextInput;
 import brainwine.gameserver.item.Item;
 import brainwine.gameserver.item.ItemRegistry;
+import brainwine.gameserver.item.Tradeability;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.player.Skill;
 
@@ -59,6 +60,8 @@ public class ScrapMarketOfferSession {
                 return;
             }
         }
+
+        if(!checkCanTradeItem(item)) return;
 
         Dialog dialog = new Dialog().setType(DialogType.ANDROID).setTitle("Offering " + item.getTitle());
 
@@ -247,6 +250,8 @@ public class ScrapMarketOfferSession {
         confirmationDialog.setActions("yesno");
 
         player.showDialog(confirmationDialog, ans -> {
+            if(!checkCanTradeItem(item)) return;
+
             if(ans.length > 0 && "Yes".equals(ans[0])) {
                 if(!player.getInventory().hasItem(shillings, serviceCharge)) return;
 
@@ -283,5 +288,21 @@ public class ScrapMarketOfferSession {
         if(barterLevel >= 11) return 2;
         if(barterLevel >= 10) return 1;
         return 0;
+    }
+
+    public boolean checkCanTradeItem(Item item) {
+        if(player.isGodMode()) return true;
+
+        if(item.getTradeability() == Tradeability.FALSE) {
+            player.showDialog(DialogHelper.messageDialog("Cannot Trade Item", "Sorry but you cannot sell this item.").setType(DialogType.ANDROID));
+            return false;
+        }
+
+        if(item.getTradeability() == Tradeability.LEVELED && player.getLevel() < 20) {
+            player.showDialog(DialogHelper.messageDialog("Cannot Trade Item", "You must be level 20+ to trade this item.").setType(DialogType.ANDROID));
+            return false;
+        }
+
+        return true;
     }
 }
