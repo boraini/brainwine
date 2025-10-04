@@ -5,6 +5,7 @@ import java.util.Collection;
 
 import brainwine.gameserver.entity.Entity;
 import brainwine.gameserver.entity.npc.Npc;
+import brainwine.gameserver.item.Action;
 import brainwine.gameserver.item.Item;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.server.OptionalField;
@@ -36,6 +37,10 @@ public class InventoryUseRequest extends PlayerRequest {
         
         // Try to consume item if it is a consumable
         if(item.isConsumable()) {
+            if(status == 1) {
+                player.consume(item, details);
+            }
+        } else if(item.getAction() == Action.TELEPORT && "accessories".equals(item.getCategory())) {
             if(status == 1) {
                 player.consume(item, details);
             }

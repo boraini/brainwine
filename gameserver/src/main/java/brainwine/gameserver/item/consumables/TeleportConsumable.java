@@ -42,7 +42,7 @@ public class TeleportConsumable implements Consumable {
             return;
         }
         
-        player.getInventory().removeItem(item);
+        if(item.isConsumable()) player.getInventory().removeItem(item);
         player.teleport(x, y);
     }
     
