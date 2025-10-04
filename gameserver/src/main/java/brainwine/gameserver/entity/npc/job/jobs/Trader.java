@@ -3,6 +3,8 @@ package brainwine.gameserver.entity.npc.job.jobs;
 import brainwine.gameserver.GameConfiguration;
 import brainwine.gameserver.androidshop.AndroidShop;
 import brainwine.gameserver.androidshop.AndroidShopSession;
+import brainwine.gameserver.scrapmarket.ScrapMarket;
+import brainwine.gameserver.scrapmarket.ScrapMarketOfferSession;
 import brainwine.gameserver.dialog.Dialog;
 import brainwine.gameserver.dialog.DialogHelper;
 import brainwine.gameserver.dialog.DialogListItem;
@@ -15,25 +17,41 @@ import brainwine.gameserver.item.ItemRegistry;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.player.Skill;
 import brainwine.gameserver.player.TradeSession;
+import brainwine.gameserver.scrapmarket.ScrapMarketSession;
 import brainwine.gameserver.util.MapHelper;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class Trader extends DialoguerJob {
     Map<Player, Map<Item, Integer>> offers = new HashMap<>();
     @Override
     public List<DialogSection> getMainDialogSection(Npc me, Player player) {
-        return Arrays.asList(
+        List<DialogSection> sections = new ArrayList<>(Arrays.asList(
                 new DialogSection()
                     .setText(MapHelper.getString(GameConfiguration.getBaseConfig(), "dialogs.android.buy"))
                     .setChoice("buy"),
                 new DialogSection()
                     .setText(MapHelper.getString(GameConfiguration.getBaseConfig(), "dialogs.android.sell"))
                     .setChoice("sell")
-        );
+        ));
+
+        if(player.getTotalSkillLevel(Skill.BARTER) >= ScrapMarket.MIN_BARTER_LEVEL) {
+            sections.add(new DialogSection()
+                    .setText(MapHelper.getString(GameConfiguration.getBaseConfig(), "dialogs.android.scrap_market"))
+                    .setChoice("scrap_market"));
+        } else {
+            sections.add(new DialogSection().setText(String.format(
+                "You must be at least barter level %d to access the Scrap Market.",
+                ScrapMarket.MIN_BARTER_LEVEL
+            )));
+        }
+
+        return sections;
     }
 
     @Override
@@ -49,6 +67,10 @@ public class Trader extends DialoguerJob {
 
         if (ans.length >= 1 && "buy".equals(ans[0])) {
             new AndroidShopSession(AndroidShop.getInstance(), me, player).showNextDialog();
+        }
+
+        if (ans.length >= 1 && "scrap_market".equals(ans[0])) {
+            new ScrapMarketSession(ScrapMarket.getInstance(), me, player).showNextDialog();
         }
 
         return true;
@@ -77,6 +99,22 @@ public class Trader extends DialoguerJob {
         return payback;
     }
 
+    private Dialog acceptItemLinkToScrapMarket(Dialog dialog) {
+        dialog.addSection(new DialogSection().setText("If you'd like, you can list this on the scrap market in hopes of getting a better deal."));
+        DialogSection section = new DialogSection().setText("Offer This on the Scrap Market").setChoice("scrap_market");
+        dialog.addSection(section);
+        return dialog;
+    }
+
+    private boolean acceptItemHandleScrapMarket(Npc me, Player player, Item item, Object[] ans) {
+        if(ans.length > 0 && "scrap_market".equals(ans[0])) {
+            new ScrapMarketOfferSession(ScrapMarket.getInstance(), player, item).showNextDialog();
+            return true;
+        }
+
+        return false;
+    }
+
     @Override
     public void acceptItem(Npc me, Player player, Item item) {
         String itemTitle = getItemTitle(item);
@@ -85,20 +123,22 @@ public class Trader extends DialoguerJob {
         int barterSkill = player.getTotalSkillLevel(Skill.BARTER);
         int maxPrice = AndroidShop.getInstance().getAdjustments().getMaxPrice(player);
 
+        Consumer<Object[]> scrapMarketOnlyHandler = ans -> acceptItemHandleScrapMarket(me, player, item, ans);
+
         if(item.getShillingsPrice() > maxPrice) {
-            player.showDialog(DialogHelper
+            player.showDialog(acceptItemLinkToScrapMarket(DialogHelper
                     .messageDialog("Low Barter Skill", "Sorry, I don't think we can make a deal on this item right now. Work on your negotiating skills and come back later.")
                     .setType(DialogType.ANDROID)
-            );
+            ), scrapMarketOnlyHandler);
             return;
         }
 
         if(barterSkill < item.getBarterLevel()) {
-            player.showDialog(DialogHelper
+            player.showDialog(acceptItemLinkToScrapMarket(DialogHelper
                     .messageDialog("Low Barter Skill", "Sorry, but I don't trust in the quality of your " + (playerHas == 1 ? itemTitle : itemTitlePlural) + ". Improve on your barter skills and come back.")
                     .addSection(new DialogSection().setText("You need at least barter level " + item.getBarterLevel() + "."))
                     .setType(DialogType.ANDROID)
-            );
+            ), scrapMarketOnlyHandler);
             return;
         }
 
@@ -123,13 +163,20 @@ public class Trader extends DialoguerJob {
 
         // For -2 and lower it doesn't allow trading at all.
         if(item.getShillingsPrice() < -1) {
-            player.showDialog(dialog);
+            player.showDialog(dialog, scrapMarketOnlyHandler);
             return;
         }
 
         dialog.addSection(TradeSession.Dialogs.createQuantitySelector(player, item).setText(item.getShillingsPrice() > 0 ? "How many are you selling?" : "How many are you giving?"));
 
+        if(barterSkill < 10) {
+            dialog.addSection(new DialogSection().setText("When you reach barter level 10, you will also be able to list this on the Scrap Market and possibly get a better offer there."));
+        } else {
+            acceptItemLinkToScrapMarket(dialog);
+        }
+
         player.showDialog(dialog, ans -> {
+            if(acceptItemHandleScrapMarket(me, player, item, ans)) return;
             if(ans.length == 0) return;
 
             if(!(ans[0] instanceof String && "cancel".equals(ans[0]))) {
