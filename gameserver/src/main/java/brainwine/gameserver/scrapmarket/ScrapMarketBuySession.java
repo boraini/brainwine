@@ -308,6 +308,17 @@ public class ScrapMarketBuySession {
                     if(product.getStock() <= 0) {
                         shop.removeProduct(product);
                     }
+
+                    if(seller.isOnline()) {
+                        seller.notify(String.format(
+                                "%s has bought your %s %s on the Scrap Market for %d shillings.",
+                                player.getName(),
+                                totalQuantity == 1 ? "" : Integer.toString(totalQuantity),
+                                purchasedItem.getTitle(),
+                                totalPrice
+                        ));
+                    }
+
                     if(me != null) me.emote("Good trade!");
                     end(true);
                 } else {
