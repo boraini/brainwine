@@ -106,7 +106,9 @@ public class ScrapMarketBuySession {
         Dialog dialog = new Dialog().setType(DialogType.ANDROID).setTitle("Scrap Market");
 
         for(String tab : shop.getProductsByInventoryTab().keySet()) {
-            dialog.addSection(new DialogSection().setChoice(tab).setText(StringUtils.capitalize(tab)));
+            if(player.isGodMode() || shop.getProductsByInventoryTab().get(tab).stream().anyMatch(p -> !player.getDocumentId().equals(p.getSellerId()))) {
+                dialog.addSection(new DialogSection().setChoice(tab).setText(StringUtils.capitalize(tab)));
+            }
         }
 
         dialog.setActions("Cancel");
@@ -146,6 +148,8 @@ public class ScrapMarketBuySession {
         Dialog dialog = new Dialog().setType(DialogType.ANDROID).setTitle(StringUtils.capitalize(currentSection.get()));
 
         for(ScrapMarketProduct product : products) {
+            if(!player.isGodMode() && player.getDocumentId().equals(product.getSellerId())) continue;
+
             int adjustedCost = getAdjustedPrice(product);
             Player seller = GameServer.getInstance().getPlayerManager().getPlayerById(product.getSellerId());
             Item item = ItemRegistry.getItem(product.getItemId());
