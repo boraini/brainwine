@@ -1677,13 +1677,62 @@ public class Player extends Entity implements CommandExecutor {
         zone.sendMessage(new EntityChangeMessage(id, getVisibleAppearance()));
         QuestEvents.handleAppearance(this, appearance);
     }
-    
+
     public Map<String, Object> getAppearance() {
         return Collections.unmodifiableMap(appearance);
     }
 
+    private Item getCustomizedAppearanceSupersedeByMaterial(Item accessory, Item current) {
+        if(current.isAir()) return accessory;
+        else if(current.getId().contains("onyx")) return current;
+        else if(accessory.getId().contains("onyx")) return accessory;
+        else if(current.getId().contains("diamond")) return current;
+        return accessory;
+    }
+
+    public Map<String, Object> getCustomizedAppearance() {
+        Map<String, Object> appearance = new HashMap<>(this.appearance);
+
+        Item exoHeadset = Item.AIR;
+        Item exoTorso = Item.AIR;
+        Item exoLegs = Item.AIR;
+
+        for(Item accessory: getInventory().getAccessories().getItems()) {
+            if("prosthetics".equals(accessory.getCategory())) {
+                AppearanceSlot slot = accessory.getAppearanceSlot();
+
+                if(slot == AppearanceSlot.FACIAL_GEAR) {
+                    exoHeadset = getCustomizedAppearanceSupersedeByMaterial(accessory, exoHeadset);
+                }
+
+                if(slot == AppearanceSlot.TOPS_OVERLAY) {
+                    exoTorso = getCustomizedAppearanceSupersedeByMaterial(accessory, exoTorso);
+                }
+
+                if(slot == AppearanceSlot.LEGS_OVERLAY) {
+                    exoLegs = getCustomizedAppearanceSupersedeByMaterial(accessory, exoLegs);
+                }
+            }
+        }
+
+        if(!exoHeadset.isAir() && MapHelper.getBoolean(appearance, "[" + AppearanceSlot.FACIAL_GEAR.getId() + "]")) {
+            appearance.put(AppearanceSlot.FACIAL_GEAR.getId(), exoHeadset.getCode());
+        }
+
+        if(!exoTorso.isAir() && MapHelper.getBoolean(appearance, "[" + AppearanceSlot.TOPS_OVERLAY.getId() + "]")) {
+            appearance.put(AppearanceSlot.TOPS_OVERLAY.getId(), exoTorso.getCode());
+        }
+
+        if(!exoLegs.isAir() && MapHelper.getBoolean(appearance, "[" + AppearanceSlot.LEGS_OVERLAY.getId() + "]")) {
+            appearance.put(AppearanceSlot.LEGS_OVERLAY.getId(), exoLegs.getCode());
+        }
+
+        return appearance;
+    }
+
     public Map<String, Object> getVisibleAppearance() {
-        Map<String, Object> visibleAppearance = zone.getHolographConfiguration().overrideAppearance(appearance);
+        Map<String, Object> customizedAppearance = getCustomizedAppearance();
+        Map<String, Object> visibleAppearance = zone.getHolographConfiguration().overrideAppearance(customizedAppearance);
 
         // v3 name icon implementation expects the name icon to be part of the appearance config
         visibleAppearance.put("ni", getIcon());

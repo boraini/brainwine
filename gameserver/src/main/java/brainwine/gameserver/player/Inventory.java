@@ -63,6 +63,7 @@ public class Inventory {
     
     public void moveItemToContainer(Item item, ContainerType type, int slot) {
         boolean accessoriesUpdated = false;
+        boolean exoskeletonUpdated = false;
         hotbar.removeItem(item);
         
         if(accessories.hasItem(item)) {
@@ -77,13 +78,23 @@ public class Inventory {
             hotbar.moveItem(item, slot);
             break;
         case ACCESSORIES:
+            Item currentItem = accessories.getItem(slot);
+            if("prosthetics".equals(currentItem.getCategory())) {
+                exoskeletonUpdated = true;
+            }
             accessories.moveItem(item, slot);
             accessoriesUpdated = true;
+            if("prosthetics".equals(item.getCategory())) {
+                exoskeletonUpdated = true;
+            }
             break;
         }
         
         if(accessoriesUpdated) {
             player.sendMessageToPeers(new EntityChangeMessage(player.getId(), player.getStatusConfig()));
+            if(exoskeletonUpdated) {
+                player.sendMessage(new EntityChangeMessage(player.getId(), player.getStatusConfig()));
+            }
         }
     }
     

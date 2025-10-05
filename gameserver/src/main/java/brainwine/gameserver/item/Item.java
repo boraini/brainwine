@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import brainwine.gameserver.GameServer;
 import brainwine.gameserver.command.CommandAccessLevel;
 import brainwine.gameserver.item.usetypeconfig.ItemUseTypeConfig;
+import brainwine.gameserver.player.AppearanceSlot;
 import brainwine.gameserver.player.NotificationType;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -277,6 +278,9 @@ public class Item {
         this.id = id;
         this.code = code;
     }
+
+    @JsonProperty("appearance")
+    public AppearanceSlot appearanceSlot;
 
     @JsonSetter("use")
     public void setUseConfigs(Map<ItemUseType, Object> uses) {
@@ -714,6 +718,10 @@ public class Item {
     
     public List<CraftingRequirement> getCraftingHelpers() {
         return craftingHelpers;
+    }
+
+    public AppearanceSlot getAppearanceSlot() {
+        return appearanceSlot;
     }
     
     public boolean hasUse(ItemUseType... types) {
