@@ -108,9 +108,9 @@ public class Player extends Entity implements CommandExecutor {
     public static final int HEARTBEAT_TIMEOUT = 30000;
     public static final int MAX_AUTH_TOKENS = 3;
     public static final int TRACKED_ENTITY_UPDATE_INTERVAL = 100;
-    public static final int REGEN_NO_DAMAGE_TIME = 10000;
+    public static final int REGEN_NO_DAMAGE_TIME = 5000;
     public static final float ENTITY_VISIBILITY_RANGE = 40;
-    public static final float BASE_REGEN_AMOUNT = 0.1F;
+    public static final float BASE_REGEN_AMOUNT = 0.2F;
     private static final Logger logger = LogManager.getLogger();
     private static int dialogDiscriminator;
     private final String documentId;
@@ -264,9 +264,12 @@ public class Player extends Entity implements CommandExecutor {
         }
 
         // Regenerate health out of combat
-        if(!isDead() && now >= lastDamagedAt + REGEN_NO_DAMAGE_TIME) {
-            float bonus = getInventory().findAccessoryWithAction(Action.REVIVE).isAir() ? 1f : 2f;
-            heal(bonus * BASE_REGEN_AMOUNT * deltaTime);
+        if(!isDead()) {
+            float regenBonus = getInventory().findAccessoryWithAction(Action.REVIVE).isAir() ? 1f : 2f;
+            int regenNoDamageTime = (int)(REGEN_NO_DAMAGE_TIME / regenBonus);
+            if(now >= lastDamagedAt + regenNoDamageTime) {
+                heal(regenBonus * BASE_REGEN_AMOUNT * deltaTime);
+            }
         }
 
         if(!isDead()) {
