@@ -4,11 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import brainwine.gameserver.player.Player;
+import brainwine.gameserver.player.Skill;
 import brainwine.gameserver.server.PlayerRequest;
 import brainwine.gameserver.server.RequestInfo;
 import brainwine.gameserver.server.messages.BlockMetaMessage;
 import brainwine.gameserver.server.messages.BlocksMessage;
 import brainwine.gameserver.server.messages.LightMessage;
+import brainwine.gameserver.util.MathUtils;
 import brainwine.gameserver.zone.Chunk;
 import brainwine.gameserver.zone.MetaBlock;
 import brainwine.gameserver.zone.Zone;
@@ -23,7 +25,7 @@ public class BlocksRequest extends PlayerRequest {
         Zone zone = player.getZone();
         
         // TODO threshold should probably be based on chunk size & perception level
-        if(!player.isGodMode() && player.getActiveChunkCount() > 128) {
+        if(!player.isGodMode() && player.getActiveChunkCount() > 81) {
             return;
         }
         
