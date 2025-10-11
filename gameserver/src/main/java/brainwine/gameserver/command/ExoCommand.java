@@ -18,9 +18,9 @@ public class ExoCommand extends Command {
         }
         Player player = (Player)executor;
 
-        String headgearKey = "[" + AppearanceSlot.FACIAL_GEAR.getId() + "]";
-        String torsoKey = "[" + AppearanceSlot.TOPS_OVERLAY.getId() + "]";
-        String legsKey = "[" + AppearanceSlot.LEGS_OVERLAY.getId() + "]";
+        String headgearKey = AppearanceSlot.FACIAL_GEAR.getId();
+        String torsoKey = AppearanceSlot.TOPS_OVERLAY.getId();
+        String legsKey = AppearanceSlot.LEGS_OVERLAY.getId();
 
         Dialog dialog = DialogHelper.getDialog("exo");
 

@@ -1683,48 +1683,42 @@ public class Player extends Entity implements CommandExecutor {
     }
 
     private Item getCustomizedAppearanceSupersedeByMaterial(Item accessory, Item current) {
-        if(current.isAir()) return accessory;
+        if(current == null || current.isAir()) return accessory;
         else if(current.getId().contains("onyx")) return current;
         else if(accessory.getId().contains("onyx")) return accessory;
         else if(current.getId().contains("diamond")) return current;
         return accessory;
     }
 
+    private static List<AppearanceSlot> customizableAppearanceSlots = Arrays.asList(
+            AppearanceSlot.FACIAL_GEAR,
+            AppearanceSlot.TOPS_OVERLAY,
+            AppearanceSlot.LEGS_OVERLAY
+    );
+
     public Map<String, Object> getCustomizedAppearance() {
         Map<String, Object> appearance = new HashMap<>(this.appearance);
 
-        Item exoHeadset = Item.AIR;
-        Item exoTorso = Item.AIR;
-        Item exoLegs = Item.AIR;
+        Item[] selected = new Item[customizableAppearanceSlots.size()];
 
         for(Item accessory: getInventory().getAccessories().getItems()) {
             if("prosthetics".equals(accessory.getCategory())) {
                 AppearanceSlot slot = accessory.getAppearanceSlot();
 
-                if(slot == AppearanceSlot.FACIAL_GEAR) {
-                    exoHeadset = getCustomizedAppearanceSupersedeByMaterial(accessory, exoHeadset);
-                }
+                int index = customizableAppearanceSlots.indexOf(slot);
 
-                if(slot == AppearanceSlot.TOPS_OVERLAY) {
-                    exoTorso = getCustomizedAppearanceSupersedeByMaterial(accessory, exoTorso);
-                }
-
-                if(slot == AppearanceSlot.LEGS_OVERLAY) {
-                    exoLegs = getCustomizedAppearanceSupersedeByMaterial(accessory, exoLegs);
+                if(index > -1) {
+                    selected[index] = getCustomizedAppearanceSupersedeByMaterial(accessory, selected[index]);
                 }
             }
         }
 
-        if(!exoHeadset.isAir() && MapHelper.getBoolean(appearance, "[" + AppearanceSlot.FACIAL_GEAR.getId() + "]")) {
-            appearance.put(AppearanceSlot.FACIAL_GEAR.getId(), exoHeadset.getCode());
-        }
+        customizableAppearanceSlots.forEach(s -> appearance.remove(s.getId()));
 
-        if(!exoTorso.isAir() && MapHelper.getBoolean(appearance, "[" + AppearanceSlot.TOPS_OVERLAY.getId() + "]")) {
-            appearance.put(AppearanceSlot.TOPS_OVERLAY.getId(), exoTorso.getCode());
-        }
-
-        if(!exoLegs.isAir() && MapHelper.getBoolean(appearance, "[" + AppearanceSlot.LEGS_OVERLAY.getId() + "]")) {
-            appearance.put(AppearanceSlot.LEGS_OVERLAY.getId(), exoLegs.getCode());
+        for(Item customized : selected) {
+            if(customized != null && MapHelper.getBoolean(this.appearance, customized.getAppearanceSlot().getId())) {
+                appearance.put(customized.getAppearanceSlot().getId(), customized.getCode());
+            }
         }
 
         return appearance;
