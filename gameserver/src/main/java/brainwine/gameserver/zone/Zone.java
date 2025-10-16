@@ -951,10 +951,14 @@ public class Zone {
             }
         });
 
+        boolean[] ruinMask = new boolean[width];
         for(int j = 0; j < height; j++) {
             for(int i = 0; i < width; i++) {
+                ruinMask[i] = prefab.isRuin() && SimplexNoise.noise2(seed, (x + i) / 8.0, (y + j) / 8.0, 2) > 0.4;
+            }
+            for(int i = 0; i < width; i++) {
                 // Skip ruined bits
-                if(prefab.isRuin() && SimplexNoise.noise2(seed, (x + i) / 8.0, (y + j) / 8.0, 2) > 0.4) {
+                if(ruinMask[i]) {
                     continue;
                 }
                 
@@ -999,17 +1003,22 @@ public class Zone {
                     
                     // Try to place rubble
                     if(decay && frontItem.isWhole() && !isBlockOccupied(x + i, y + j - 1, Layer.FRONT)
-                            && random.nextDouble() <= 0.2 && findBlock(x + i, y + j - 1, b -> !b.getFrontItem().isAir()) == null) {
+                            && random.nextDouble() <= 0.4 && findBlock(x + i, y + j - 1, b -> !b.getFrontItem().isAir()) == null) {
                         // Find the width of the surface available to place the rubble
-                        int maxRubbleWidth;
-                        for(maxRubbleWidth = 2; maxRubbleWidth <= Math.min(3, width - i); maxRubbleWidth++) {
-                            int currentIndex = index + (mirrored ? -1 : 1) * (maxRubbleWidth - 1);
-                            if(currentIndex < 0 || currentIndex >= blocks.length
-                                    || !blocks[currentIndex].isSolid()
-                                    || findBlock(x + i + maxRubbleWidth - 1, y + j - 1, b -> !b.getFrontItem().isAir()) != null) {
-                                maxRubbleWidth--;
-                                break;
-                            }
+                        int maxRubbleWidth = 1;
+                        for(int currentWidth = 2; currentWidth <= 3; currentWidth++) {
+                            int currentBoundsX = i + currentWidth - 1;
+                            if(!areCoordinatesInBounds(x + currentBoundsX, y + j - 1)) break;
+                            if(currentBoundsX >= width) break;
+                            int prefabX = mirrored ? width - currentBoundsX - 1 : currentBoundsX;
+                            Block belowBlock = blocks[width * j + prefabX];
+                            if(
+                                ruinMask[currentBoundsX]
+                                    || isBlockOccupied(x + currentBoundsX, y + j - 1, Layer.FRONT)
+                                    || !belowBlock.getFrontItem().isWhole()
+                                    || findBlock(x + currentBoundsX, y + j - 1, b -> !b.getFrontItem().isAir()) != null
+                            ) break;
+                            maxRubbleWidth = currentWidth;
                         }
 
                         // Find the rubble items that fit the available surface
