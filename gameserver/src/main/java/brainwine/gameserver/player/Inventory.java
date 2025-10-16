@@ -91,9 +91,10 @@ public class Inventory {
         }
         
         if(accessoriesUpdated) {
-            player.sendMessageToPeers(new EntityChangeMessage(player.getId(), player.getStatusConfig()));
+            Map<String, Object> statusConfig = player.getStatusConfig();
+            player.sendMessageToPeers(new EntityChangeMessage(player.getId(), statusConfig));
             if(exoskeletonUpdated) {
-                player.sendMessage(new EntityChangeMessage(player.getId(), player.getStatusConfig()));
+                player.sendMessage(new EntityChangeMessage(player.getId(), statusConfig));
             }
         }
     }
