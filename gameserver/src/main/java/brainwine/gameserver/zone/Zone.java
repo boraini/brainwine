@@ -178,6 +178,7 @@ public class Zone {
         surface = new int[width];
         sunlight = new int[width];
         chunksExplored = new boolean[numChunksWidth * numChunksHeight];
+        recalculateChunksExploredCount();
         acidity = 1.0f;
         chunkManager = new ChunkManager(this);
         steamManager = new SteamManager(this);
