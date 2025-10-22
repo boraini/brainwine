@@ -27,6 +27,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 import brainwine.gameserver.GameServer;
 import brainwine.gameserver.Timer;
+import brainwine.gameserver.anticheat.AnticheatManager;
+import brainwine.gameserver.anticheat.Exploration;
 import brainwine.gameserver.entity.Entity;
 import brainwine.gameserver.entity.npc.Npc;
 import brainwine.gameserver.entity.npc.NpcData;
@@ -85,6 +87,8 @@ public class Zone {
     private int[] depths;
     private boolean[] chunksExplored;
     private int chunksExploredCount;
+    private int undergroundChunksExploredCount;
+    private int totalUndergroundChunks;
     private OffsetDateTime creationDate = OffsetDateTime.now();
     private float time = (float)Math.random(); // TODO temporary
     private float temperature;
@@ -1935,12 +1939,15 @@ public class Zone {
         if(chunksExplored[chunkIndex]) {
             return false;
         }
-        
-        if(explorer != null && y - y % chunkHeight >= surface[x - x % chunkWidth]) {
+
+        if(explorer != null && AnticheatManager.getConfig().getExploration().shouldTrackStats(this, x, y)) {
             explorer.getStatistics().trackAreaExplored();
         }
         
         chunksExploredCount++;
+        if(isChunkUndergroundXY(x, y)) {
+            undergroundChunksExploredCount++;
+        }
         sendMessage(new ZoneExploredMessage(chunkIndex));
         return chunksExplored[chunkIndex] = true;
     }
@@ -1961,7 +1968,12 @@ public class Zone {
      * @return A float between 0 and 1, where 0 is completely unexplored and 1 is fully explored.
      */
     public float getExplorationProgress() {
-        return (float)getChunksExploredCount() / (numChunksWidth * numChunksHeight);
+        Exploration explorationRules = AnticheatManager.getConfig().getExploration();
+        if(explorationRules.isIncluded(this)) {
+            if(explorationRules.getWorldExplorationPercent() == Exploration.Region.UNDERGROUND) return getUndergroundExplorationProgress();
+            if(explorationRules.getWorldExplorationPercent() == Exploration.Region.SKY) return getSkyExplorationProgress();
+        }
+        return getOverallExplorationProgress();
     }
     
     public boolean[] getChunksExplored() {
@@ -1971,13 +1983,53 @@ public class Zone {
     public int getChunksExploredCount() {
         return chunksExploredCount;
     }
+
+    public boolean isChunkUndergroundXY(int x, int y) {
+        return isChunkUndergroundIJ(x / chunkWidth, y / chunkHeight);
+    }
+
+    private boolean isChunkUndergroundIJ(int i, int j) {
+        // Top middle block of chunk
+        return isUnderground(i * chunkWidth + chunkWidth / 2, j * chunkHeight);
+    }
+
+    private float getUndergroundExplorationProgress() {
+        return (float)getUndergroundChunksExploredCount() / totalUndergroundChunks;
+    }
+
+    private float getSkyExplorationProgress() {
+        return (float)(getChunksExploredCount() - getUndergroundChunksExploredCount())
+                / (numChunksWidth * numChunksHeight - totalUndergroundChunks);
+    }
+
+    public int getUndergroundChunksExploredCount() {
+        return undergroundChunksExploredCount;
+    }
+
+    private float getOverallExplorationProgress() {
+        return (float)getChunksExploredCount() / (numChunksWidth * numChunksHeight);
+    }
     
-    private void recalculateChunksExploredCount() {
+    public void recalculateChunksExploredCount() {
         chunksExploredCount = 0;
-        
-        for(boolean explored : chunksExplored) {
-            if(explored) {
-                chunksExploredCount++;
+        undergroundChunksExploredCount = 0;
+        totalUndergroundChunks = 0;
+
+        int cw = getNumChunksWidth();
+        int ch = getNumChunksHeight();
+
+        int c = 0;
+        for(int j = 0; j < ch; j++) {
+            for(int i = 0; i < cw; i++) {
+                if(isChunkUndergroundIJ(i, j)) {
+                    totalUndergroundChunks++;
+                }
+                if(chunksExplored[c++]) {
+                    chunksExploredCount++;
+                    if(isChunkUndergroundIJ(i, j)) {
+                        undergroundChunksExploredCount++;
+                    }
+                }
             }
         }
     }

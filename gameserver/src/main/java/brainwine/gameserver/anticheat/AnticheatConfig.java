@@ -9,11 +9,18 @@ public class AnticheatConfig {
     @JsonProperty("afk_entity_spawn")
     private AfkEntitySpawn afkEntitySpawn = new AfkEntitySpawn();
 
+    @JsonProperty("exploration")
+    private Exploration exploration = new Exploration();
+
     public ExploderFarm getExploderFarm() {
         return exploderFarm;
     }
 
     public AfkEntitySpawn getAfkEntitySpawn() {
         return afkEntitySpawn;
+    }
+
+    public Exploration getExploration() {
+        return exploration;
     }
 }
