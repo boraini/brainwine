@@ -1713,11 +1713,11 @@ public class Player extends Entity implements CommandExecutor {
             }
         }
 
-        customizableAppearanceSlots.forEach(s -> appearance.remove(s.getId()));
-
-        for(Item customized : selected) {
-            if(customized != null && MapHelper.getBoolean(this.appearance, customized.getAppearanceSlot().getId())) {
-                appearance.put(customized.getAppearanceSlot().getId(), customized.getCode());
+        for(int i = 0; i < customizableAppearanceSlots.size(); i++) {
+            if(selected[i] != null && MapHelper.getBoolean(this.appearance, customizableAppearanceSlots.get(i).getId())) {
+                appearance.put(customizableAppearanceSlots.get(i).getId(), selected[i].getCode());
+            } else {
+                appearance.put(customizableAppearanceSlots.get(i).getId(), 0);
             }
         }
 
