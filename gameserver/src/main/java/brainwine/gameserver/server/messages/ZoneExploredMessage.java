@@ -7,8 +7,10 @@ import brainwine.gameserver.server.MessageInfo;
 public class ZoneExploredMessage extends Message {
     
     public int chunkIndex;
+    public float explorationPercent;
     
-    public ZoneExploredMessage(int chunkIndex) {
+    public ZoneExploredMessage(int chunkIndex, float explorationPercent) {
         this.chunkIndex = chunkIndex;
+        this.explorationPercent = explorationPercent;
     }
 }

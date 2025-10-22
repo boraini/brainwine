@@ -1949,7 +1949,7 @@ public class Zone {
         if(isChunkUndergroundXY(x, y)) {
             undergroundChunksExploredCount++;
         }
-        sendMessage(new ZoneExploredMessage(chunkIndex));
+        sendMessage(new ZoneExploredMessage(chunkIndex, getExplorationProgress()));
         return chunksExplored[chunkIndex] = true;
     }
     
@@ -2328,6 +2328,7 @@ public class Zone {
         config.put("surface", surface);
         config.put("chunks_explored", chunksExplored);
         config.put("chunks_explored_count", getChunksExploredCount());
+        config.put("chunks_explored_percent", getExplorationProgress());
         config.put("private", isPrivate);
         config.put("protected", isProtected(player));
         config.put("protected_player", isProtected(player));
