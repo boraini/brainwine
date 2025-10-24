@@ -155,7 +155,7 @@ public class TradeSession {
         
         // Show offer status dialog
         if(player == initiator) {
-            player.showDialog(Dialogs.createInitiatorOfferStatusDialog(recipient, offers), input -> {
+            player.showDialog(Dialogs.createInitiatorOfferStatusDialog(recipient, offers, player.isV3()), input -> {
                 // Validate input
                 if(input.length != 1) {
                     abort();
@@ -183,7 +183,7 @@ public class TradeSession {
                 }
             });
         } else if(player == recipient) {
-            player.showDialog(Dialogs.createRecipientOfferStatusDialog(initiator, initiatorOffers, offers), input -> {
+            player.showDialog(Dialogs.createRecipientOfferStatusDialog(initiator, initiatorOffers, offers, player.isV3()), input -> {
                 // Validate input
                 if(input.length != 1) {
                     abort();
@@ -242,8 +242,8 @@ public class TradeSession {
         });
         
         // Show feedback
-        initiator.showDialog(Dialogs.createOfferDialog(String.format("You sent free goodies to %s!", recipient.getName()), "Sent:", initiatorOffers));
-        recipient.showDialog(Dialogs.createOfferDialog(String.format("You received goodies from %s!", initiator.getName()), "Received:", initiatorOffers));
+        initiator.showDialog(Dialogs.createOfferDialog(String.format("You sent free goodies to %s!", recipient.getName()), "Sent:", initiatorOffers, initiator.isV3()));
+        recipient.showDialog(Dialogs.createOfferDialog(String.format("You received goodies from %s!", initiator.getName()), "Received:", initiatorOffers, recipient.isV3()));
     }
     
     /**
@@ -273,10 +273,10 @@ public class TradeSession {
         isRecipientAware = true;
         
         // Show feedback to initiator
-        initiator.showDialog(Dialogs.createOfferDialog("Your offer has been sent:", initiatorOffers));
+        initiator.showDialog(Dialogs.createOfferDialog("Your offer has been sent:", initiatorOffers, initiator.isV3()));
         
         // Show trade request dialog to recipient
-        recipient.showDialog(Dialogs.createOfferDialog(String.format("%s wants to trade:", initiator.getName()), null, "Are you interested?", initiatorOffers).setActions("yesno"), input -> {
+        recipient.showDialog(Dialogs.createOfferDialog(String.format("%s wants to trade:", initiator.getName()), null, "Are you interested?", initiatorOffers, recipient.isV3()).setActions("yesno"), input -> {
             // Handle cancellation
             if(input.length == 1 && input[0].equals("cancel")) {
                 cancel(recipient);
@@ -313,7 +313,7 @@ public class TradeSession {
         
         // Show feedback to recipient
         recipient.showDialog(Dialogs.createOfferDialog("You accepted a trade request for:", null,
-                String.format("Drag the item you'd like to trade to %s, then select the amount to offer.", initiator.getName()), initiatorOffers));
+                String.format("Drag the item you'd like to trade to %s, then select the amount to offer.", initiator.getName()), initiatorOffers, recipient.isV3()));
         
         // Update timeout
         setTimeoutSeconds(20);
@@ -338,7 +338,7 @@ public class TradeSession {
         state = State.INITIATOR_VIEWING_OFFER;
         
         // Show feedback to recipient
-        recipient.showDialog(Dialogs.createOfferDialog("Your offer has been sent:", recipientOffers));
+        recipient.showDialog(Dialogs.createOfferDialog("Your offer has been sent:", recipientOffers, recipient.isV3()));
         
         // Show the recipient's offer to the initiator
         initiator.showDialog(Dialogs.createFinalOfferDialog(initiator, recipient, initiatorOffers, recipientOffers), input -> {
@@ -384,8 +384,8 @@ public class TradeSession {
         });
         
         // Show trade completion dialog
-        initiator.showDialog(Dialogs.createOfferDialog(String.format("You traded with %s.", recipient.getName()), "Received:", recipientOffers));
-        recipient.showDialog(Dialogs.createOfferDialog(String.format("You traded with %s.", initiator.getName()), "Received:", initiatorOffers));
+        initiator.showDialog(Dialogs.createOfferDialog(String.format("You traded with %s.", recipient.getName()), "Received:", recipientOffers, initiator.isV3()));
+        recipient.showDialog(Dialogs.createOfferDialog(String.format("You traded with %s.", initiator.getName()), "Received:", initiatorOffers, recipient.isV3()));
     }
     
     /**
@@ -579,12 +579,12 @@ public class TradeSession {
                 .addSection(new DialogSection()
                     .setTitle(String.format("Trade with %s", target.getName())))
                 .addSection(createQuantitySelector(offerer, item)
-                        .setText(String.format("Quantity of %s to trade:", item.getTitle()))
+                        .setText(String.format("Quantity of %s to trade:", offerer.isV3() ? item.getFancyTitle() : item.getTitle()))
                 );
         }
         
-        public static Dialog createInitiatorOfferStatusDialog(Player recipient, Map<Item, Integer> offers) {
-            Dialog dialog = createOfferDialog("Your current offer:", offers);
+        public static Dialog createInitiatorOfferStatusDialog(Player recipient, Map<Item, Integer> offers, boolean isV3) {
+            Dialog dialog = createOfferDialog("Your current offer:", offers, isV3);
             
             // Add multi-item trading hint if the item limit hasn't been reached yet
             if(offers.size() < TradeSession.ITEM_LIMIT) {
@@ -601,9 +601,9 @@ public class TradeSession {
             return dialog;
         }
         
-        public static Dialog createRecipientOfferStatusDialog(Player initiator, Map<Item, Integer> initiatorOffers, Map<Item, Integer> recipientOffers) {
-            Dialog dialog = createOfferDialog(String.format("%s's offer:", initiator.getName()), initiatorOffers).setActions("Cancel", "Submit offer");
-            dialog.addSection(createOfferSection(recipientOffers).setTitle("Your current offer:"));
+        public static Dialog createRecipientOfferStatusDialog(Player initiator, Map<Item, Integer> initiatorOffers, Map<Item, Integer> recipientOffers, boolean isV3) {
+            Dialog dialog = createOfferDialog(String.format("%s's offer:", initiator.getName()), initiatorOffers, isV3).setActions("Cancel", "Submit offer");
+            dialog.addSection(createOfferSection(recipientOffers, isV3).setTitle("Your current offer:"));
             
             // Add multi-item trading hint if the item limit hasn't been reached yet
             if(recipientOffers.size() < TradeSession.ITEM_LIMIT) {
@@ -616,21 +616,21 @@ public class TradeSession {
         }
         
         public static Dialog createFinalOfferDialog(Player initiator, Player recipient, Map<Item, Integer> initiatorOffers, Map<Item, Integer> recipientOffers) {
-            return createOfferDialog(String.format("%s has offered:", recipient.getName()), recipientOffers).setActions("yesno")
-                .addSection(createOfferSection(initiatorOffers).setText("For your:"))
+            return createOfferDialog(String.format("%s has offered:", recipient.getName()), recipientOffers, initiator.isV3()).setActions("yesno")
+                .addSection(createOfferSection(initiatorOffers, initiator.isV3()).setText("For your:"))
                 .addSection(new DialogSection().setText("Do you accept this trade?"));
         }
         
-        public static Dialog createOfferDialog(String title, Map<Item, Integer> offer) {
-            return createOfferDialog(title, null, offer);
+        public static Dialog createOfferDialog(String title, Map<Item, Integer> offer, boolean isV3) {
+            return createOfferDialog(title, null, offer, isV3);
         }
         
-        public static Dialog createOfferDialog(String title, String text, Map<Item, Integer> offer) {
-            return createOfferDialog(title, text, null, offer);
+        public static Dialog createOfferDialog(String title, String text, Map<Item, Integer> offer, boolean isV3) {
+            return createOfferDialog(title, text, null, offer, isV3);
         }
         
-        public static Dialog createOfferDialog(String title, String text, String footer, Map<Item, Integer> offer) {
-            Dialog dialog = new Dialog().addSection(createOfferSection(offer).setTitle(title).setText(text));
+        public static Dialog createOfferDialog(String title, String text, String footer, Map<Item, Integer> offer, boolean isV3) {
+            Dialog dialog = new Dialog().addSection(createOfferSection(offer, isV3).setTitle(title).setText(text));
             
             if(footer != null) {
                 dialog.addSection(new DialogSection().setText(footer));
@@ -639,12 +639,13 @@ public class TradeSession {
             return dialog;
         }
         
-        private static DialogSection createOfferSection(Map<Item, Integer> offers) {
+        private static DialogSection createOfferSection(Map<Item, Integer> offers, boolean isV3) {
             DialogSection section = new DialogSection();
             offers.forEach((item, quantity) -> {
                 section.addItem(new DialogListItem().setItem(item.getCode())
                     .setImage(String.format("inventory/%s", item.getId()))
-                    .setText(String.format("%s x %s", item.getTitle(), quantity)));
+                    .setText(String.format("%s x %s", isV3 ? item.getFancyTitle() : item.getTitle(), quantity))
+                    .setSupportRichText(true));
             });
             return section;
         }

@@ -44,6 +44,9 @@ public class Item {
     @JsonProperty("title")
     private String title;
 
+    @JsonProperty("title_color")
+    private String titleColor;
+
     @JsonProperty("hint")
     @JsonAlias("hintt")
     private String hint = "Little is known about this item...";
@@ -354,6 +357,14 @@ public class Item {
     
     public String getTitle() {
         return title;
+    }
+
+    public String getTitleColor() {
+        return titleColor;
+    }
+
+    public String getFancyTitle() {
+        return titleColor == null ? title : "<color=" + titleColor + ">" + title + "</color>";
     }
 
     public String getHint() {
