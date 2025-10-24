@@ -1680,13 +1680,56 @@ public class Player extends Entity implements CommandExecutor {
         zone.sendMessage(new EntityChangeMessage(id, getVisibleAppearance()));
         QuestEvents.handleAppearance(this, appearance);
     }
-    
+
     public Map<String, Object> getAppearance() {
         return Collections.unmodifiableMap(appearance);
     }
 
+    private Item getCustomizedAppearanceSupersedeByMaterial(Item accessory, Item current) {
+        if(current == null || current.isAir()) return accessory;
+        else if(current.getId().contains("onyx")) return current;
+        else if(accessory.getId().contains("onyx")) return accessory;
+        else if(current.getId().contains("diamond")) return current;
+        return accessory;
+    }
+
+    private static List<AppearanceSlot> customizableAppearanceSlots = Arrays.asList(
+            AppearanceSlot.FACIAL_GEAR,
+            AppearanceSlot.TOPS_OVERLAY,
+            AppearanceSlot.LEGS_OVERLAY
+    );
+
+    public Map<String, Object> getCustomizedAppearance() {
+        Map<String, Object> appearance = new HashMap<>(this.appearance);
+
+        Item[] selected = new Item[customizableAppearanceSlots.size()];
+
+        for(Item accessory: getInventory().getAccessories().getItems()) {
+            if("prosthetics".equals(accessory.getCategory())) {
+                AppearanceSlot slot = accessory.getAppearanceSlot();
+
+                int index = customizableAppearanceSlots.indexOf(slot);
+
+                if(index > -1) {
+                    selected[index] = getCustomizedAppearanceSupersedeByMaterial(accessory, selected[index]);
+                }
+            }
+        }
+
+        for(int i = 0; i < customizableAppearanceSlots.size(); i++) {
+            if(selected[i] != null && MapHelper.getBoolean(this.appearance, customizableAppearanceSlots.get(i).getId())) {
+                appearance.put(customizableAppearanceSlots.get(i).getId(), selected[i].getCode());
+            } else {
+                appearance.put(customizableAppearanceSlots.get(i).getId(), 0);
+            }
+        }
+
+        return appearance;
+    }
+
     public Map<String, Object> getVisibleAppearance() {
-        Map<String, Object> visibleAppearance = zone.getHolographConfiguration().overrideAppearance(appearance);
+        Map<String, Object> customizedAppearance = getCustomizedAppearance();
+        Map<String, Object> visibleAppearance = zone.getHolographConfiguration().overrideAppearance(customizedAppearance);
 
         // v3 name icon implementation expects the name icon to be part of the appearance config
         visibleAppearance.put("ni", getIcon());

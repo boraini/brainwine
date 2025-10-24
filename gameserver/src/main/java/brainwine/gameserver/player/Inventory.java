@@ -63,6 +63,7 @@ public class Inventory {
     
     public void moveItemToContainer(Item item, ContainerType type, int slot) {
         boolean accessoriesUpdated = false;
+        boolean exoskeletonUpdated = false;
         hotbar.removeItem(item);
         
         if(accessories.hasItem(item)) {
@@ -77,13 +78,24 @@ public class Inventory {
             hotbar.moveItem(item, slot);
             break;
         case ACCESSORIES:
+            Item currentItem = accessories.getItem(slot);
+            if("prosthetics".equals(currentItem.getCategory())) {
+                exoskeletonUpdated = true;
+            }
             accessories.moveItem(item, slot);
             accessoriesUpdated = true;
+            if("prosthetics".equals(item.getCategory())) {
+                exoskeletonUpdated = true;
+            }
             break;
         }
         
         if(accessoriesUpdated) {
-            player.sendMessageToPeers(new EntityChangeMessage(player.getId(), player.getStatusConfig()));
+            Map<String, Object> statusConfig = player.getStatusConfig();
+            player.sendMessageToPeers(new EntityChangeMessage(player.getId(), statusConfig));
+            if(exoskeletonUpdated) {
+                player.sendMessage(new EntityChangeMessage(player.getId(), statusConfig));
+            }
         }
     }
     
@@ -240,8 +252,18 @@ public class Inventory {
     
     private void addItemLocation(Item item, List<Object> itemData) {
         int slot = -1;
-        
-        if((slot = hotbar.getSlot(item)) != -1) {
+
+        if(!player.isV3() && item.getCategory().equals("prosthetics") && accessories.getSlot(item) != -1) {
+            // Just putting them into hardcoded slots seems to work well
+            int a = 6;
+            int b = 0;
+            if(item.getId().contains("onyx")) a = 0;
+            else if(item.getId().contains("diamond")) a = 3;
+            if(item.getAppearanceSlot() == AppearanceSlot.FACIAL_GEAR) b = 2;
+            else if(item.getAppearanceSlot() == AppearanceSlot.TOPS_OVERLAY) b = 1;
+            itemData.add("z");
+            itemData.add(a + b);
+        } else if((slot = hotbar.getSlot(item)) != -1) {
             itemData.add(ContainerType.HOTBAR.getId());
             itemData.add(slot);
         } else if((slot = accessories.getSlot(item)) != -1) {
