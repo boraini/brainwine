@@ -40,7 +40,7 @@ public class InventoryUseRequest extends PlayerRequest {
             if(status == 1) {
                 player.consume(item, details);
             }
-        } else if(item.getAction() == Action.TELEPORT && "accessories".equals(item.getCategory())) {
+        } else if(item.getAction() == Action.TELEPORT && !item.isConsumable()) {
             if(status == 1) {
                 player.consume(item, details);
             }
