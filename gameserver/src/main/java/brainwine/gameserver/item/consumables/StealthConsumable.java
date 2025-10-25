@@ -10,7 +10,9 @@ public class StealthConsumable implements Consumable {
 
     @Override
     public void consume(Item item, Player player, Object details) {
-        player.getInventory().removeItem(item);
+        if("consumables".equals(item.getCategory())) {
+            player.getInventory().removeItem(item);
+        }
         player.setStealth(true);
         float seconds = item.getPower();
         
