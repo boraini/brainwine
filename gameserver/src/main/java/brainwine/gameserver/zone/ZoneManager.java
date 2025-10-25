@@ -196,6 +196,10 @@ public class ZoneManager {
                 );
     }
 
+    public Set<String> getUnexploredZones() {
+        return unexploredZones;
+    }
+
     public void onShutdown() {
         for(Zone zone : zones.values()) {
             saveZone(zone);
