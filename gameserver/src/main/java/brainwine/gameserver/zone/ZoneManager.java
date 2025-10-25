@@ -41,6 +41,7 @@ import brainwine.shared.TokenGenerator;
 
 public class ZoneManager {
     private final double ZONE_EXPLORATION_THRESHOLD = 0.25;
+    private final OffsetDateTime ZONE_EXPLORATION_CUTOFF_TIME = OffsetDateTime.of(2025, 10, 25, 2, 15, 0, 0, OffsetDateTime.now().getOffset());
     private final double UNEXPLORED_ZONES_AT_A_TIME = 1;
     // zero players interval has to be greater than the min generation interval
     final double MIN_GENERATION_INTERVAL_SECONDS = 30 * 60;
@@ -183,7 +184,7 @@ public class ZoneManager {
     }
 
     public boolean checkExplorationOfZone(Zone zone) {
-        return zone.getExplorationProgress() >= ZONE_EXPLORATION_THRESHOLD;
+        return zone.getCreationDate().isBefore(ZONE_EXPLORATION_CUTOFF_TIME) || zone.getExplorationProgress() >= ZONE_EXPLORATION_THRESHOLD;
     }
 
     public boolean shouldTrackExplorationOfZone(Zone zone) {
