@@ -177,6 +177,9 @@ public class Player extends Entity implements CommandExecutor {
     private long lastTrackedEntityUpdate;
     private long lastLandmarkVoteAt;
     private long lastQuestTimeMessageAt;
+    private Map<Item, Long> lastMomentaryAccessoryUsedAt = new HashMap<>();
+    private String blockReason;
+    private long blockedUntil;
     private Zone previousZone;
     private Zone nextZone;
     private boolean inTutorial = false;
@@ -1738,6 +1741,37 @@ public class Player extends Entity implements CommandExecutor {
         visibleAppearance.put("ni", getIcon());
 
         return visibleAppearance;
+    }
+
+    public long getMomentaryAccessoryLastUsedAt(Item item) {
+        return lastMomentaryAccessoryUsedAt.getOrDefault(item, 0L);
+    }
+
+    public boolean isMomentaryAccessoryOnCooldown(Item item) {
+        if(item.getFiringDuration() <= 0f) return false;
+        long lastUsed = getMomentaryAccessoryLastUsedAt(item);
+        long currentTime = System.currentTimeMillis();
+        if((item.getFiringInterval() + item.getFiringDuration()) * 1000 - 100 > currentTime - lastUsed) {
+            return true;
+        }
+        lastMomentaryAccessoryUsedAt.put(item, currentTime);
+        return false;
+    }
+
+    public void blockUntil(long endTime, String reason) {
+        if(blockedUntil < endTime) {
+            blockReason = reason;
+            blockedUntil = Math.max(blockedUntil, endTime);
+        }
+        kick(reason, true);
+    }
+
+    public long getBlockedUntil() {
+        return blockedUntil;
+    }
+
+    public String getBlockReason() {
+        return blockReason;
     }
 
     public Map<String, QuestProgress> getQuestProgresses() {

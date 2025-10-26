@@ -2,6 +2,7 @@ package brainwine.gameserver.item.consumables;
 
 import brainwine.gameserver.item.Item;
 import brainwine.gameserver.player.Player;
+import brainwine.gameserver.server.messages.InventoryMessage;
 
 /**
  * Consumable handler for stealth cloaks
@@ -10,6 +11,11 @@ public class StealthConsumable implements Consumable {
 
     @Override
     public void consume(Item item, Player player, Object details) {
+        if("prosthetics".equals(item.getCategory()) && player.isMomentaryAccessoryOnCooldown(item)) {
+            player.notify(String.format("You can't use your %s yet!", item.getTitle()));
+            player.sendMessage(new InventoryMessage(player.getInventory().getClientConfig(item)));
+            return;
+        }
         if("consumables".equals(item.getCategory())) {
             player.getInventory().removeItem(item);
         }

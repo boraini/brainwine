@@ -107,6 +107,12 @@ public class Item {
     
     @JsonProperty("power")
     private float power;
+
+    @JsonProperty("firing_duration")
+    private float firingDuration;
+
+    @JsonProperty("firing_interval")
+    private float firingInterval;
     
     @JsonProperty("toughness")
     private float toughness;
@@ -489,6 +495,14 @@ public class Item {
     
     public float getPower() {
         return power;
+    }
+
+    public float getFiringDuration() {
+        return firingDuration;
+    }
+
+    public float getFiringInterval() {
+        return firingInterval;
     }
     
     public float getToughness() {

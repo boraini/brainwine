@@ -56,10 +56,13 @@ public class AuthenticateRequest extends Request {
 
             Cidr foundCidr = connection.getIpAddress();
             IpBans.Item foundIpBan = server.getIpBans().findMatchingIpBan(foundCidr);
-            
+
             server.queueSynchronousTask(() -> {
                 Player player = playerManager.getPlayer(name);
-
+                if(player.getBlockedUntil() > System.currentTimeMillis()) {
+                    connection.kick(player.getBlockReason() + " You need to wait for " + (player.getBlockedUntil() - System.currentTimeMillis()) / 1000 + " more seconds.");
+                    return;
+                }
                 PlayerRestriction ban = player.getCurrentBan();
                 if(ban == null && foundIpBan != null) {
                     for(String uuid : foundIpBan.getKnownUuids()) {
@@ -82,7 +85,7 @@ public class AuthenticateRequest extends Request {
                     }
                 }
                 Zone zone = player.getZone();
-                
+
                 if(ban != null) {
                     // Send player to jail world if they're banned
                     zone = server.getZoneManager().getZoneByName("Hell");

@@ -33,6 +33,7 @@ public enum Action {
     NAME_CHANGE(new NameChangeConsumable()),
     REFILL(new RefillConsumable()),
     REVIVE,
+    SHIELD,
     SKILL(new SkillConsumable()),
     SKILL_RESET(new SkillResetConsumable()),
     SMASH,

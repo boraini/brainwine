@@ -76,7 +76,23 @@ public class InventoryUseRequest extends PlayerRequest {
                     return;
                 }
             }
-            
+
+            // Check exoskeleton part cooldown
+            if(status == 1
+                    && player.isV3()
+                    && "prosthetics".equals(item.getCategory())
+                    && player.isMomentaryAccessoryOnCooldown(item)
+            ) {
+                if(item.getAction() == Action.SHIELD) {
+                    // Hide player's shield
+                    player.blockUntil(
+                            (long)(player.getMomentaryAccessoryLastUsedAt(item) + (item.getFiringDuration() + item.getFiringInterval()) * 1000),
+                            String.format("You can't use your %s yet!", item.getTitle())
+                    );
+                    return;
+                }
+            }
+
             // Send item use data to other players in the zone if no details are present
             player.sendMessageToTrackers(new EntityItemUseMessage(player.getId(), type, item, status));
         }
