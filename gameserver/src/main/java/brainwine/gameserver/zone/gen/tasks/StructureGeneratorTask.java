@@ -3,8 +3,10 @@ package brainwine.gameserver.zone.gen.tasks;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 import java.util.stream.Collectors;
 
@@ -150,11 +152,12 @@ public class StructureGeneratorTask implements GeneratorTask {
         // Decorate the sky
         if(!globalSkyDecorators.isEmpty()) {
             double yIncrement = skyDecorationDistance * Math.sqrt(3);
+            Map<Prefab, List<Vector2i>> lastPositions = new HashMap<>();
             for(int startX = 0; startX < ctx.getWidth(); startX += skyChunkWidth) {
-                List<SkyDecorator> candidateDecorators = new ArrayList<>();
+                List<StructureSkyDecorator> candidateDecorators = new ArrayList<>();
                 for(SkyDecorator decorator : globalSkyDecorators) {
                     if(decorator instanceof StructureSkyDecorator && ctx.nextDouble() < decorator.getChance()) {
-                        candidateDecorators.add(decorator);
+                        candidateDecorators.add((StructureSkyDecorator)decorator);
                     }
                 }
 
@@ -163,21 +166,56 @@ public class StructureGeneratorTask implements GeneratorTask {
                     final int surface = ctx.getSurface(MathUtils.clamp(startX + skyChunkWidth / 2, 0, ctx.getWidth()));
                     if(y > surface + skyDecorationDistance) break;
                     final double finalY = y;
-                    WeightedMap<SkyDecorator> selection = new WeightedMap<>();
-                    candidateDecorators.stream().filter(skyDecorator -> {
+                    Map<Prefab, Double> selection = new HashMap<>();
+                    candidateDecorators.forEach(skyDecorator -> {
                         double minY = ctx.getHeight() * skyDecorator.getMinDepth();
                         if(skyDecorator.getMaxSurfaceClearance() != Integer.MAX_VALUE) {
                             minY = Math.max(minY, surface - skyDecorator.getMaxSurfaceClearance());
                         }
                         double maxY = Math.min(surface - skyDecorator.getMinSurfaceClearance(), ctx.getHeight() * skyDecorator.getMaxDepth());
-                        return finalY >= minY && finalY <= maxY;
-                    }).forEach(selection::addEntry);
+                        if(finalY >= minY && finalY <= maxY) {
+                            Map<Prefab, Double> originalEntries = skyDecorator.getPrefabs().getEntries();
+                            for(Prefab prefab : originalEntries.keySet()) {
+                                selection.merge(prefab, skyDecorator.getChance() * originalEntries.get(prefab), Double::sum);
+                            }
+                        }
+                    });
+
                     if(!selection.isEmpty()) for(double x = 0; x < skyChunkWidth + skyDecorationDistance; x += 2 * skyDecorationDistance) {
-                        selection.next(ctx.getRandom()).decorate(ctx, (int)(x + startX + xOffset), (int)y);
+                        Map<Prefab, Double> allowed = new HashMap<>(selection);
+                        for(Prefab prefab : selection.keySet()) {
+                            List<Vector2i> lastPrefabPositions = lastPositions.getOrDefault(prefab, Collections.emptyList());
+                            for(Vector2i lastPosition : lastPrefabPositions) {
+                                if(MathUtils.inRange(lastPosition.getX(), lastPosition.getY(), x, finalY, 0.3 * selection.size() * skyDecorationDistance)) {
+                                    allowed.remove(prefab);
+                                    break;
+                                }
+                            }
+                        }
+                        if(allowed.isEmpty()) {
+                            allowed = selection;
+                        }
+                        Prefab prefab = new WeightedMap<>(allowed).next(ctx.getRandom());
+                        Vector2i position = new Vector2i((int)(x + startX + xOffset), (int)y);
+                        StructureSkyDecorator.place(prefab, ctx, position.getX(), position.getY());
+                        lastPositions.computeIfAbsent(prefab, k -> new ArrayList<>()).add(position);
                     }
 
                     // This will create an isometric grid pattern
                     xOffset = xOffset == 0 ? skyDecorationDistance : 0;
+                }
+
+                // Keep only rightmost structure positions
+                for(Prefab prefab : new ArrayList<>(lastPositions.keySet())) {
+                    Vector2i rightmost = null;
+                    List<Vector2i> filtered = new ArrayList<>();
+                    for(Vector2i pos : lastPositions.get(prefab)) {
+                        if(rightmost == null || pos.getY() - rightmost.getY() > 5 || pos.getX() > rightmost.getX()) {
+                            rightmost = pos;
+                            filtered.add(pos);
+                        }
+                    }
+                    lastPositions.put(prefab, filtered);
                 }
             }
         }

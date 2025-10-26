@@ -16,10 +16,23 @@ public class StructureSkyDecorator extends SkyDecorator {
     @Override
     public void decorate(GeneratorContext ctx, int x, int y) {
         if(!prefabs.isEmpty()) {
-            Prefab prefab = prefabs.next(ctx.getRandom());
-            x -= (int)(ctx.nextDouble() * prefab.getWidth());
-            y -= (int)(ctx.nextDouble() * prefab.getHeight());
-            ctx.placePrefab(prefab, x, y);
+            place(prefabs.next(ctx.getRandom()), ctx, x, y);
         }
+    }
+
+    public static void place(Prefab prefab, GeneratorContext ctx, int x, int y) {
+        if(prefab == null) return;
+        int clearance = 2;
+        int minX = Math.max(clearance, x - prefab.getWidth() + 1);
+        int maxX = Math.min(ctx.getWidth() - prefab.getWidth() - clearance, x);
+        int minY = Math.max(clearance, y - prefab.getHeight() + 1);
+        int maxY = Math.min(ctx.getHeight() - prefab.getHeight() - clearance, y);
+        x = minX + (int)(ctx.nextDouble() * (maxX - minX));
+        y = minY + (int)(ctx.nextDouble() * (maxY - minY));
+        ctx.placePrefab(prefab, x, y);
+    }
+
+    public WeightedMap<Prefab> getPrefabs() {
+        return prefabs;
     }
 }
