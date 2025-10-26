@@ -183,10 +183,11 @@ public class StructureGeneratorTask implements GeneratorTask {
 
                     if(!selection.isEmpty()) for(double x = 0; x < skyChunkWidth + skyDecorationDistance; x += 2 * skyDecorationDistance) {
                         Map<Prefab, Double> allowed = new HashMap<>(selection);
+                        int finalX = (int)(x + startX + xOffset);
                         for(Prefab prefab : selection.keySet()) {
                             List<Vector2i> lastPrefabPositions = lastPositions.getOrDefault(prefab, Collections.emptyList());
                             for(Vector2i lastPosition : lastPrefabPositions) {
-                                if(MathUtils.inRange(lastPosition.getX(), lastPosition.getY(), x, finalY, 0.3 * selection.size() * skyDecorationDistance)) {
+                                if(MathUtils.inRange(lastPosition.getX(), lastPosition.getY(), finalX, finalY, 0.6 * selection.size() * skyDecorationDistance)) {
                                     allowed.remove(prefab);
                                     break;
                                 }
@@ -196,7 +197,7 @@ public class StructureGeneratorTask implements GeneratorTask {
                             allowed = selection;
                         }
                         Prefab prefab = new WeightedMap<>(allowed).next(ctx.getRandom());
-                        Vector2i position = new Vector2i((int)(x + startX + xOffset), (int)y);
+                        Vector2i position = new Vector2i(finalX, (int)y);
                         StructureSkyDecorator.place(prefab, ctx, position.getX(), position.getY());
                         lastPositions.computeIfAbsent(prefab, k -> new ArrayList<>()).add(position);
                     }
