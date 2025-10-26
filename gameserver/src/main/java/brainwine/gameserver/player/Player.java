@@ -177,6 +177,7 @@ public class Player extends Entity implements CommandExecutor {
     private long lastTrackedEntityUpdate;
     private long lastLandmarkVoteAt;
     private long lastQuestTimeMessageAt;
+    private Set<Item> momentaryAccessoriesUsedSinceLogin = new HashSet<>();
     private Map<Item, Long> lastMomentaryAccessoryUsedAt = new HashMap<>();
     private String blockReason;
     private long blockedUntil;
@@ -670,6 +671,7 @@ public class Player extends Entity implements CommandExecutor {
         }
         
         trackedEntities.clear();
+        momentaryAccessoriesUsedSinceLogin.clear();
         GameServer.getInstance().getPlayerManager().onPlayerDisconnect(this);
         connection.setPlayer(null);
         connection = null;
@@ -1749,19 +1751,23 @@ public class Player extends Entity implements CommandExecutor {
 
     public boolean isMomentaryAccessoryOnCooldown(Item item) {
         if(item.getFiringDuration() <= 0f) return false;
-        long lastUsed = getMomentaryAccessoryLastUsedAt(item);
-        long currentTime = System.currentTimeMillis();
-        if((item.getFiringInterval() + item.getFiringDuration()) * 1000 - 100 > currentTime - lastUsed) {
+        long cooldownUntil = getMomentaryAccessoryLastUsedAt(item) + (long)((item.getFiringDuration() + item.getFiringInterval()) * 1000);
+        if(cooldownUntil - 2000 > System.currentTimeMillis()) {
             return true;
         }
-        lastMomentaryAccessoryUsedAt.put(item, currentTime);
+        lastMomentaryAccessoryUsedAt.put(item, System.currentTimeMillis());
+        momentaryAccessoriesUsedSinceLogin.add(item);
         return false;
+    }
+
+    public Set<Item> getMomentaryAccessoriesUsedSinceLogin() {
+        return Collections.unmodifiableSet(momentaryAccessoriesUsedSinceLogin);
     }
 
     public void blockUntil(long endTime, String reason) {
         if(blockedUntil < endTime) {
             blockReason = reason;
-            blockedUntil = Math.max(blockedUntil, endTime);
+            blockedUntil = endTime;
         }
         kick(reason, true);
     }

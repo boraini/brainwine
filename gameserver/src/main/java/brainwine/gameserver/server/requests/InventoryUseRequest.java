@@ -82,13 +82,11 @@ public class InventoryUseRequest extends PlayerRequest {
                     && player.isV3()
                     && "prosthetics".equals(item.getCategory())
                     && player.isMomentaryAccessoryOnCooldown(item)
+                    && !player.getMomentaryAccessoriesUsedSinceLogin().contains(item)
             ) {
                 if(item.getAction() == Action.SHIELD) {
-                    // Hide player's shield
-                    player.blockUntil(
-                            (long)(player.getMomentaryAccessoryLastUsedAt(item) + (item.getFiringDuration() + item.getFiringInterval()) * 1000),
-                            String.format("You can't use your %s yet!", item.getTitle())
-                    );
+                    long cooldownUntil = player.getMomentaryAccessoryLastUsedAt(item) + (long)((item.getFiringDuration() + item.getFiringInterval()) * 1000);
+                    player.blockUntil(cooldownUntil, String.format("You can't use your %s yet!", item.getTitle()));
                     return;
                 }
             }
