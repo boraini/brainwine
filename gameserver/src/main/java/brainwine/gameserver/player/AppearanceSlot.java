@@ -34,7 +34,7 @@ public enum AppearanceSlot {
         this.category = category;
         this.changeable = changeable;
     }
-
+    
     @JsonCreator
     public static AppearanceSlot fromId(String id) {
         for(AppearanceSlot value : values()) {

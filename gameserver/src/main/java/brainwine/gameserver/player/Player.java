@@ -294,8 +294,11 @@ public class Player extends Entity implements CommandExecutor {
         // Update tracked entities
         if(now - lastTrackedEntityUpdate >= TRACKED_ENTITY_UPDATE_INTERVAL) {
             updateTrackedEntities();
-            sendMessage(new EntityPositionMessage(trackedEntities));
             lastTrackedEntityUpdate = now;
+            
+            if(!trackedEntities.isEmpty()) {
+                sendMessage(new EntityPositionMessage(trackedEntities));
+            }
         }
 
         DailyQuests.tryIssueDailyQuest(this);
@@ -496,9 +499,7 @@ public class Player extends Entity implements CommandExecutor {
     public Map<String, Object> getStatusConfig() {
         Map<String, Object> config = super.getStatusConfig();
         config.put("id", documentId);
-        config.putAll(getVisibleAppearance());
-        config.put("u", inventory.findJetpack().getCode());
-        config.put("ni", getIcon());
+        config.putAll(getDetails());
         return config;
     }
     
@@ -1709,7 +1710,7 @@ public class Player extends Entity implements CommandExecutor {
 
         Item[] selected = new Item[customizableAppearanceSlots.size()];
 
-        for(Item accessory: getInventory().getAccessories().getItems()) {
+        for(Item accessory: getInventory().getAccessories()) {
             if("prosthetics".equals(accessory.getCategory())) {
                 AppearanceSlot slot = accessory.getAppearanceSlot();
 
@@ -1731,6 +1732,9 @@ public class Player extends Entity implements CommandExecutor {
                 }
             }
         }
+
+        appearance.put("to*", "ffff55"); // Top overlay color
+        appearance.put("fg*", "ffff55"); // Facial gear overlay color
 
         return appearance;
     }
@@ -2067,6 +2071,13 @@ public class Player extends Entity implements CommandExecutor {
         return connection != null && connection.isOpen();
     }
     
+    private Map<String, Object> getDetails() {
+        Map<String, Object> details = new HashMap<>();
+        details.putAll(getVisibleAppearance());
+        details.put("u", inventory.findJetpack().getCode());
+        return details;
+    }
+    
     /**
      * @return A {@link Map} containing all the data necessary for use in {@link ConfigurationMessage}.
      */
@@ -2088,7 +2099,7 @@ public class Player extends Entity implements CommandExecutor {
         config.put("items_crafted", statistics.getTotalItemsCrafted());
         config.put("play_time", (int)(statistics.getPlayTime()));
         config.put("deaths", statistics.getDeaths());
-        config.put("appearance", getVisibleAppearance());
+        config.put("appearance", getDetails());
         config.put("settings", settings);
         config.put("ni", getIcon());
         config.put("api_token", apiToken);

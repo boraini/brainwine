@@ -12,6 +12,8 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import brainwine.gameserver.player.AppearanceSlot;
+
 public class ItemRegistry {
     
     private static final Logger logger = LogManager.getLogger();
@@ -19,6 +21,7 @@ public class ItemRegistry {
     private static final Map<Integer, Item> itemsByCode = new HashMap<>();
     private static final Map<String, List<Item>> itemsByCategory = new HashMap<>();
     private static final Map<Item, Item> pilesByItem = new HashMap<>();
+    private static final List<String> hiddenItems = new ArrayList<>();
     
     // TODO maybe just move the registry stuff here
     public static void clear() {
@@ -49,6 +52,30 @@ public class ItemRegistry {
         }
         
         categorizedItems.add(item);
+        
+        if(item.isHidden()) {
+            while(hiddenItems.size() < 9) {
+                hiddenItems.add("air");
+            }
+            if(item.getCategory().equals("prosthetics") && item.hasAppearanceSlot()) {
+                // Just putting them into hardcoded slots seems to work well
+                int a = 6;
+                int b = 0;
+                if(item.getId().contains("onyx")) a = 0;
+                else if(item.getId().contains("diamond")) a = 3;
+                if(item.getAppearanceSlot() == AppearanceSlot.FACIAL_GEAR) b = 2;
+                else if(item.getAppearanceSlot() == AppearanceSlot.TOPS_OVERLAY) b = 1;
+                hiddenItems.set(a + b, item.getId());
+            } else {
+                // TODO v3 has a hard limit of 20 hidden items (see Inventory#maxLocationSlots in the game client)
+                if(hiddenItems.size() == 20) {
+                    logger.warn(SERVER_MARKER, "Upper hidden item limit has been reached. Certain hidden accessories might not work properly!");
+                }
+                
+                hiddenItems.add(item.getId());
+            }
+        }
+        
         items.put(id, item);
         itemsByCode.put(code, item);
         return true;
@@ -85,5 +112,9 @@ public class ItemRegistry {
 
     public static Item getPile(Item inventory) {
         return pilesByItem.getOrDefault(inventory, Item.AIR);
+    }
+    
+    public static int getHiddenItemIndex(Item item) {
+        return hiddenItems.indexOf(item.getId());
     }
 }
