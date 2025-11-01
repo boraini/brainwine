@@ -162,12 +162,15 @@ public class Inventory {
             
             // Unequip appearance item
             // TODO: potential nullptr if appearance value is null
-            if(slot != null && player.getAppearance().getOrDefault(slot.getId(), 0).equals(item.getCode())) {
-                player.updateAppearance(MapHelper.map(slot.getId(), 0));
+            if(slot != null) {
+                Object oldAppearance = player.getAppearance().getOrDefault(slot.getId(), 0);
+                if(oldAppearance.equals(true) || oldAppearance.equals(item.getCode())) {
+                    player.updateAppearance(MapHelper.map(slot.getId(), 0));
+                }
             }
         } else {
             // Equip appearance item (unless player already has it)
-            if(slot != null && !hasItem(item)) {
+            if(slot != null && !hasItem(item) && player.getAppearance().getOrDefault(slot.getId(), 0).equals(0)) {
                 player.updateAppearance(MapHelper.map(slot.getId(), item.getCode()));
             }
             
