@@ -19,6 +19,8 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import brainwine.gameserver.androidshop.AndroidShopHistory;
+import brainwine.gameserver.anticheat.AnticheatManager;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -41,6 +43,7 @@ import brainwine.gameserver.entity.EntityStatus;
 import brainwine.gameserver.entity.npc.Npc;
 import brainwine.gameserver.item.Action;
 import brainwine.gameserver.item.DamageType;
+import brainwine.gameserver.item.InventoryType;
 import brainwine.gameserver.item.Item;
 import brainwine.gameserver.item.ItemRegistry;
 import brainwine.gameserver.item.ItemUseType;
@@ -1710,7 +1713,7 @@ public class Player extends Entity implements CommandExecutor {
 
         Item[] selected = new Item[customizableAppearanceSlots.size()];
 
-        for(Item accessory: getInventory().getAccessories()) {
+        for(Item accessory: getInventory().getAccessories(AnticheatManager.getConfig().getExoskeleton().getInventoryType() == InventoryType.HIDDEN)) {
             if("prosthetics".equals(accessory.getCategory())) {
                 AppearanceSlot slot = accessory.getAppearanceSlot();
 

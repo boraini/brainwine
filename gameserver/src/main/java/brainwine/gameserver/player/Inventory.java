@@ -11,6 +11,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import brainwine.gameserver.GameServer;
+import brainwine.gameserver.anticheat.AnticheatManager;
+import brainwine.gameserver.anticheat.Exoskeleton;
 import brainwine.gameserver.item.Action;
 import brainwine.gameserver.item.ItemRegistry;
 import brainwine.gameserver.zone.ZoneActivity;
@@ -82,12 +84,22 @@ public class Inventory {
         case ACCESSORIES:
             Item currentItem = accessories.getItem(slot);
             if("prosthetics".equals(currentItem.getCategory())) {
-                exoskeletonUpdated = true;
+                if(AnticheatManager.getConfig().getExoskeleton().getInventoryType() == InventoryType.ACCESSORY) {
+                    Object setting = player.getAppearance().get(currentItem.getAppearanceSlot().getId());
+                    if(setting instanceof Integer && ItemRegistry.getItem((int)setting).equals(currentItem)) {
+                        player.updateAppearance(MapHelper.map(currentItem.getAppearanceSlot().getId(), true));
+                    }
+                }
             }
             accessories.moveItem(item, slot);
             accessoriesUpdated = true;
             if("prosthetics".equals(item.getCategory())) {
-                exoskeletonUpdated = true;
+                if(AnticheatManager.getConfig().getExoskeleton().getInventoryType() == InventoryType.ACCESSORY) {
+                    Object setting = player.getAppearance().get(item.getAppearanceSlot().getId());
+                    if(setting instanceof Integer && ItemRegistry.getItem((int)setting).equals(item)) {
+                        player.updateAppearance(MapHelper.map(item.getAppearanceSlot().getId(), true));
+                    }
+                }
             }
             break;
         }
@@ -95,9 +107,6 @@ public class Inventory {
         if(accessoriesUpdated) {
             Map<String, Object> statusConfig = player.getStatusConfig();
             player.sendMessageToPeers(new EntityChangeMessage(player.getId(), statusConfig));
-            if(exoskeletonUpdated) {
-                player.sendMessage(new EntityChangeMessage(player.getId(), statusConfig));
-            }
         }
     }
     
@@ -124,12 +133,6 @@ public class Inventory {
             finalQuantity = Math.max(currentQuantity, Math.min(finalQuantity, allowed));
         }
         setItem(item, finalQuantity, sendMessage);
-
-        if(currentQuantity == 0 && finalQuantity > 0) {
-            if(item.hasId("accessories/makeup")) {
-                player.sendMessage(new WardrobeMessage(getClientWardrobe()));
-            }
-        }
     }
     
     public void removeItem(Item item) {
@@ -170,8 +173,13 @@ public class Inventory {
             }
         } else {
             // Equip appearance item (unless player already has it)
-            if(slot != null && !hasItem(item) && player.getAppearance().getOrDefault(slot.getId(), 0).equals(0)) {
+            if(slot != null && !hasItem(item) && (!"prosthetics".equals(item.getCategory()) || AnticheatManager.getConfig().getExoskeleton().getInventoryType() == InventoryType.HIDDEN) && player.getAppearance().getOrDefault(slot.getId(), 0).equals(0)) {
                 player.updateAppearance(MapHelper.map(slot.getId(), item.getCode()));
+            }
+
+            // Send wardrobe message with the new available colors if the player is newly obtaining a makeup kit
+            if(item.hasId("accessories/makeup") && !hasItem(item)) {
+                player.sendMessage(new WardrobeMessage(getClientWardrobe()));
             }
             
             items.put(item, quantity);
@@ -284,8 +292,7 @@ public class Inventory {
     
     private void addItemLocation(Item item, List<Object> itemData) {
         int slot = -1;
-        // TODO use exo behavior switch here if the hidden slots work in stock v3
-        if(item.isHidden() && (!"prosthetics".equals(item.getCategory()) || (!player.isV3() && accessories.getSlot(item) != -1))) {
+        if(item.isHidden() && (!(AnticheatManager.getConfig().getExoskeleton().getInventoryType() == InventoryType.ACCESSORY && "prosthetics".equals(item.getCategory())) || !player.isV3())) {
             itemData.add("z");
             itemData.add(ItemRegistry.getHiddenItemIndex(item));
         } else if((slot = hotbar.getSlot(item)) != -1) {
