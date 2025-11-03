@@ -301,7 +301,7 @@ public class ScrapMarketBuySession {
 
                     if(!player.isGodMode()) {
                         seller.getInventory().addItem(shillings, totalPrice, true);
-                        player.getInventory().removeItem(shillings, getAdjustedPrice(product), true);
+                        player.getInventory().removeItem(shillings, totalPrice, true);
                     }
 
                     product.purchase(player, buyQuantity);
