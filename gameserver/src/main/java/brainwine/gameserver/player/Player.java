@@ -1902,9 +1902,11 @@ public class Player extends Entity implements CommandExecutor {
         loot.getItems().forEach((item, quantity) -> {
             inventory.addItem(item, quantity, true);
             QuestEvents.handleCollectItem(this, item, quantity);
-            section.addItem(new DialogListItem()
-                    .setItem(item.getCode())
-                    .setText(String.format("%s x %s", item.getTitle(), quantity)));
+            if(hasClientVersion("3.13.8")) {
+                section.addItem(new DialogListItem().setItem(item.getCode()).setText(String.format("%s x %s", item.getFancyTitle(), quantity)).setSupportRichText(true));
+            } else {
+                section.addItem(new DialogListItem().setItem(item.getCode()).setText(String.format("%s x %s", item.getTitle(), quantity)));
+            }
         });
         
         int crowns = loot.getCrowns();
