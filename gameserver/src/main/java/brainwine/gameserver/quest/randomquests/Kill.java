@@ -107,7 +107,12 @@ public class Kill extends RandomQuest {
             message = taskDescription.replaceAll("\\{QUANTITY\\}", Integer.toString(quantity));
         }
 
-        return new QuestTask().setDescription(message).setEvents(events).setQuantity(quantity);
+        return new QuestTask().setDescription(message)
+            .setEvents(events)
+            .setQuantity(quantity)
+            .setQualify(Arrays.asList(
+                Arrays.asList("pvp?")
+            ));
     }
 
     @Override
