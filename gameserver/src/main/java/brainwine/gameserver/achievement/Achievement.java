@@ -25,6 +25,7 @@ import brainwine.gameserver.util.MathUtils;
     @Type(name = "ExploringAchievement", value = ExploringAchievement.class),
     @Type(name = "HuntingAchievement", value = HuntingAchievement.class),
     @Type(name = "SidekickAchievement", value = SidekickAchievement.class),
+    @Type(name = "KillerAchievement", value = KillerAchievement.class),
     @Type(name = "ScavengingAchievement", value = ScavengingAchievement.class),
     @Type(name = "DiscoveryAchievement", value = DiscoveryAchievement.class),
     @Type(name = "SpawnerStoppageAchievement", value = SpawnerStoppageAchievement.class),

@@ -92,12 +92,12 @@ public class QuestEvents {
 
     public static void handleKill(Player player, Entity other) {
         handleEvent(player, "kill");
-        handleEvent(player, "kill", "code", other.getType());
 
         if(other.isPlayer()) {
-            // don't reward players for killing each other
+            handleEvent(player, "kill", "player");
         } else {
             Npc npc = (Npc) other;
+            handleEvent(player, "kill", "code", other.getType());
             handleEvent(player, "kill", "category", npc.getConfig().getCategory());
         }
         
@@ -108,7 +108,7 @@ public class QuestEvents {
         handleEvent(player, "explode", "code", other.getType());
 
         if(other.isPlayer()) {
-            // don't reward players for killing each other
+            handleEvent(player, "explode", "player");
         } else {
             Npc npc = (Npc) other;
             handleEvent(player, "explode", "category", npc.getConfig().getCategory());

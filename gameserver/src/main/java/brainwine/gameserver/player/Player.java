@@ -28,6 +28,7 @@ import brainwine.gameserver.Timer;
 import brainwine.gameserver.achievement.Achievement;
 import brainwine.gameserver.achievement.AchievementManager;
 import brainwine.gameserver.achievement.JourneymanAchievement;
+import brainwine.gameserver.achievement.KillerAchievement;
 import brainwine.gameserver.achievement.PositionAchievement;
 import brainwine.gameserver.command.CommandExecutor;
 import brainwine.gameserver.dialog.Dialog;
@@ -318,7 +319,11 @@ public class Player extends Entity implements CommandExecutor {
             details.put("<", killer.getId());
             
             if(killer.isPlayer()) {
-                // TODO track kill for killer achievement in pvp zones
+                if(zone.isPvp()) {
+                    Player playerKiller = (Player) killer;
+                    playerKiller.getStatistics().trackPlayerKill();
+                    playerKiller.updateAchievementProgress(KillerAchievement.class);
+                }
                 serverMessage = String.format("%s killed %s.", killer.getName(), name);
             }
         }

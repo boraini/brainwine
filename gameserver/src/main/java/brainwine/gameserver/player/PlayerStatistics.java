@@ -59,6 +59,7 @@ public class PlayerStatistics {
     private int deliverances;
     private int evokersInhibited;
     private int deaths;
+    private int playersKilled;
     private int landmarksUpvoted;
     private int landmarkVotesReceived;
     private int crownsSpent;
@@ -476,6 +477,14 @@ public class PlayerStatistics {
     
     public int getDeaths() {
         return deaths;
+    }
+
+    public void trackPlayerKill() {
+        playersKilled++;
+    }
+
+    public int getPlayersKilled() {
+        return playersKilled;
     }
 
     public int getCrownsSpent() {

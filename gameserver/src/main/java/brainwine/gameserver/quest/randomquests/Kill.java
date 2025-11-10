@@ -34,6 +34,8 @@ public class Kill extends RandomQuest {
     private RandomInteger codeQuantity = null;
     @JsonProperty("entity_quantity")
     private RandomInteger entityIdQuantity = null;
+    @JsonProperty("player_quantity")
+    private RandomInteger playerQuantity = null;
     @JsonProperty("task_description")
     private String taskDescription = null;
     @JsonProperty("actions")
@@ -95,6 +97,19 @@ public class Kill extends RandomQuest {
         return new QuestTask().setDescription(message).setEvents(events).setQuantity(quantity);
     }
 
+    private QuestTask makeTaskForPlayers(List<String> actions, int quantity) {
+        List<List<Object>> events = actions.stream().map(a -> Arrays.asList(a, (Object)"player")).collect(Collectors.toList());
+
+        String message;
+        if(taskDescription == null) {
+            message = quantity == 1 ? "Kill a player" : String.format("Kill %d players", quantity);
+        } else {
+            message = taskDescription.replaceAll("\\{QUANTITY\\}", Integer.toString(quantity));
+        }
+
+        return new QuestTask().setDescription(message).setEvents(events).setQuantity(quantity);
+    }
+
     @Override
     public Quest nextQuest(Random random, Player player) {
         try {
@@ -147,6 +162,12 @@ public class Kill extends RandomQuest {
 
                 tasks.add(makeTaskForEntityTypes(actions, names, codes, quantity));
                 title = titleActionMessage + " " + joinWithOr(names);
+            }
+
+            if(playerQuantity != null) {
+                int quantity = playerQuantity.next(random);
+                tasks.add(makeTaskForPlayers(actions, quantity));
+                title = titleActionMessage + " Players";
             }
 
             quest.setTitle(title);

@@ -1,12 +1,14 @@
 package brainwine.gameserver.quest;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
 
 import brainwine.gameserver.dialog.DialogListItem;
 import brainwine.gameserver.dialog.DialogSection;
@@ -51,7 +53,7 @@ public class QuestTask {
         }
 
         if(Objects.equals("pvp?", qualification[0])) {
-            return true; // TODO: change when PVP is supported.
+            return player.getZone().isPvp();
         }
 
         if(Objects.equals("current_biome?", qualification[0])) {
@@ -144,8 +146,16 @@ public class QuestTask {
         return progressRequirements;
     }
 
+    @JsonSetter
     public QuestTask setProgressRequirements(List<List<Object>> progress) {
         this.progressRequirements = progress;
+        // Literally only for the PVP quest by Arthur
+        if(progress != null && !progress.isEmpty()) {
+            if(progress.get(0).contains("players_killed")) {
+                this.events.removeIf(e -> e.size() == 1 && e.get(0).equals("kill"));
+                this.events.add(Arrays.asList("kill", "player"));
+            }
+        }
         return this;
     }
 

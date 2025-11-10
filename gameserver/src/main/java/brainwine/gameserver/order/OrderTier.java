@@ -33,7 +33,7 @@ public class OrderTier {
                 compare = player.getStatistics().getTotalKills();
                 break;
             case "players_killed":
-                // TODO: related to KillerAchievement
+                compare = player.getStatistics().getPlayersKilled();
                 break;
             case "progress/dungeons raided":
                 compare = player.getStatistics().getDungeonsRaided();
