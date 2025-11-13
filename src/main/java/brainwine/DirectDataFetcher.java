@@ -123,8 +123,9 @@ public class DirectDataFetcher implements DataFetcher {
             appearance.put("u", flyAccessory.getId());
         }
 
-        String[] includedStats = { "discoveries", "kills", "assists", "play_time", "areas_explored", "containers_looted",
-                "dungeons_raided", "maws_plugged", "undertakings", "deliverances", "deaths", "landmarks_upvoted", "landmark_votes_received" };
+        String[] includedStats = { "discoveries", "kills", "assists", "play_time", "areas_explored",
+                "containers_looted", "dungeons_raided", "maws_plugged", "undertakings", "deliverances", "deaths",
+                "players_killed", "landmarks_upvoted", "landmark_votes_received" };
 
         // TODO: this serializes the items mined and scavenged for no reason.
         Map<String, Object> stats = new HashMap<>();
