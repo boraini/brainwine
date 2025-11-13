@@ -16,7 +16,7 @@ import java.util.Map;
 
 public class AndroidShopPerIpHistory {
     private static final String FILE_NAME = "android-purchases-per-ip.json";
-    Map<String, ValueWithExpiry<AndroidShopHistory>> historyByIp = new HashMap<>();
+    Map<String, AndroidShopHistory> historyByIp = new HashMap<>();
     private static final Logger logger = LogManager.getLogger();
 
     private static AndroidShopPerIpHistory instance = null;
@@ -29,18 +29,32 @@ public class AndroidShopPerIpHistory {
             File file = new File(FILE_NAME);
 
             if(file.exists()) {
-                historyByIp.putAll(JsonHelper.readValue(file, new TypeReference<Map <String, ValueWithExpiry<AndroidShopHistory>>>() {}));
+                try {
+                    historyByIp.putAll(JsonHelper.readValue(file, new TypeReference<Map<String, AndroidShopHistory>>() {}));
+                } catch(Exception ignored) {
+                    System.out.println("trying old format");
+                    // Old format
+                    Map<String, ValueWithExpiry<AndroidShopHistory>> oldFormatHistories = JsonHelper.readValue(file, new TypeReference<Map <String, ValueWithExpiry<AndroidShopHistory>>>() {});
+                    for(Map.Entry<String, ValueWithExpiry<AndroidShopHistory>> history : oldFormatHistories.entrySet()) {
+                        historyByIp.put(history.getKey(), history.getValue().getValue());
+                    }
+                }
             }
         } catch(Exception e) {
             logger.error("Could not read the android shop purchase history by IP.", e);
         }
+
+        purgeExpired();
     }
 
     public void purgeExpired() {
         List<String> entriesToRemove = new ArrayList<>();
 
-        for(Map.Entry<String, ValueWithExpiry<AndroidShopHistory>> entry : historyByIp.entrySet()) {
-            if(entry.getValue().isExpired()) entriesToRemove.add(entry.getKey());
+        for(Map.Entry<String, AndroidShopHistory> entry : historyByIp.entrySet()) {
+            entry.getValue().removeOldPurchases();
+            if(entry.getValue().getPurchases().isEmpty()) {
+                entriesToRemove.add(entry.getKey());
+            }
         }
 
         entriesToRemove.forEach(historyByIp::remove);
@@ -70,14 +84,7 @@ public class AndroidShopPerIpHistory {
 
     public AndroidShopHistory getHistory(Player player) {
         String key = getKey(player);
-        if(key != null) {
-            ValueWithExpiry<AndroidShopHistory> stored = historyByIp.get(key);
-            if(stored != null && !stored.isExpired()) {
-                return stored.getValue();
-            }
-        }
-
-        return null;
+        return historyByIp.get(key);
     }
 
     public void recordPurchase(Player player, Item item, int quantity) {
@@ -91,7 +98,7 @@ public class AndroidShopPerIpHistory {
 
         shopHistory.recordPurchase(item, quantity);
 
-        historyByIp.put(key, new ValueWithExpiry<AndroidShopHistory>(shopHistory, "2d"));
+        historyByIp.put(key, shopHistory);
     }
 
     public static AndroidShopPerIpHistory getInstance() {

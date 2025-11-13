@@ -41,6 +41,10 @@ public class AndroidShopSession {
         this.player = player;
         this.onOutcome = onOutcome;
         player.getAndroidShopHistory().removeOldPurchases();
+        AndroidShopHistory ipHistory = AndroidShopPerIpHistory.getInstance().getHistory(player);
+        if(ipHistory != null) {
+            ipHistory.removeOldPurchases();
+        }
     }
 
     private enum CanBuy {

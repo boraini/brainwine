@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +41,10 @@ public class AndroidShopHistory {
         OffsetDateTime now = OffsetDateTime.now();
         purchases.add(new Purchase(now, item, quantity));
         summary.merge(item, quantity, Integer::sum);
+    }
+
+    public List<Purchase> getPurchases() {
+        return Collections.unmodifiableList(purchases);
     }
 
     public static class Purchase {
