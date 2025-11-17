@@ -125,7 +125,7 @@ public class DirectDataFetcher implements DataFetcher {
 
         String[] includedStats = { "discoveries", "kills", "assists", "play_time", "areas_explored",
                 "containers_looted", "dungeons_raided", "maws_plugged", "undertakings", "deliverances", "deaths",
-                "players_killed", "landmarks_upvoted", "landmark_votes_received" };
+                "players_killed", "landmarks_upvoted", "landmark_votes_received", "evokers_inhibited" };
 
         // TODO: this serializes the items mined and scavenged for no reason.
         Map<String, Object> stats = new HashMap<>();
@@ -158,6 +158,7 @@ public class DirectDataFetcher implements DataFetcher {
                 player.getStatistics().getItemsPlaced(),
                 player.getStatistics().getTotalItemsCrafted(),
                 player.getApiToken(),
+                player.getOrders(),
                 appearance,
                 stats
         );
