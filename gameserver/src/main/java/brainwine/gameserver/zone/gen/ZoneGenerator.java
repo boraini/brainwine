@@ -152,6 +152,8 @@ public class ZoneGenerator {
                 ctx.updateBlock(x, 0, Layer.FRONT, "ground/bedrock");
             }
         }
+
+        zone.recalculateChunksExploredCount();
         
         return zone;
     }
