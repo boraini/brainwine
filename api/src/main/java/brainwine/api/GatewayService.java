@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.regex.Pattern;
 
 import brainwine.api.models.PlayerInfo;
+import brainwine.api.models.PlayerInfoQuery;
 import brainwine.api.models.PlayerInfoSummary;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,6 +19,7 @@ import org.apache.logging.log4j.Logger;
 import brainwine.api.models.PlayersRequest;
 import brainwine.api.models.ServerConnectInfo;
 import brainwine.api.models.SessionsRequest;
+
 import brainwine.shared.JsonHelper;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
@@ -85,7 +87,24 @@ public class GatewayService {
     }
 
     private void handlePlayerSearch(Context ctx) {
-        List<PlayerInfoSummary> players = (List<PlayerInfoSummary>)dataFetcher.fetchPlayerInfo();
+        PlayerInfoQuery query = new PlayerInfoQuery();
+        for(String paramName : ctx.queryParamMap().keySet()) {
+            if(paramName.startsWith("order-")) {
+                try {
+                    String orderKey = paramName.substring("order-".length());
+                    if(!orderKey.isEmpty()) {
+                        query.setOrderLevel(orderKey, Integer.parseInt(Objects.requireNonNull(ctx.queryParam(paramName))));
+                    }
+                } catch(NullPointerException | NumberFormatException e) {
+                    Map<String, Object> result = new HashMap<>();
+                    result.put("paramName", "Must be a number!");
+                    ctx.status(422).json(result);
+                    return;
+                }
+            }
+        }
+
+        List<PlayerInfoSummary> players = (List<PlayerInfoSummary>)dataFetcher.fetchPlayerInfo(query);
 
         handleQueryParam(ctx, "name", String.class, name -> {
             players.removeIf(player -> !player.getName().toLowerCase().contains(name.toLowerCase()));
@@ -113,6 +132,9 @@ public class GatewayService {
                 case "items_crafted": // Sort by total items crafted
                     players.sort((a, b) -> Integer.compare(b.getItemsCrafted(), a.getItemsCrafted()));
                     break;
+                case "level":
+                default:
+                    players.sort((a, b) -> Integer.compare(b.getLevel(), a.getLevel()));
             }
         });
 

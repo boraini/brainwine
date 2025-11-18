@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 
 import brainwine.api.DataFetcher;
 import brainwine.api.models.PlayerInfo;
+import brainwine.api.models.PlayerInfoQuery;
 import brainwine.api.models.PlayerInfoSummary;
 import brainwine.api.models.ZoneInfo;
 import brainwine.gameserver.item.Item;
@@ -84,9 +85,12 @@ public class DirectDataFetcher implements DataFetcher {
     }
 
     @Override
-    public Collection<PlayerInfoSummary> fetchPlayerInfo() {
+    public Collection<PlayerInfoSummary> fetchPlayerInfo(PlayerInfoQuery query) {
         return playerManager.getPlayers().stream()
                 .filter(Objects::nonNull)
+                .filter(player -> query.getOrderLevel().keySet().stream().allMatch(
+                        orderKey -> Objects.equals(player.getOrders().getOrDefault(orderKey, 0), query.getOrderLevel().get(orderKey))
+                ))
                 .map(DirectDataFetcher::createPlayerInfoSummary)
                 .collect(Collectors.toCollection(ArrayList::new));
     }

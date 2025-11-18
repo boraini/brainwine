@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import brainwine.api.models.PlayerInfo;
+import brainwine.api.models.PlayerInfoQuery;
 import brainwine.api.models.PlayerInfoSummary;
 import brainwine.api.models.ZoneInfo;
 
@@ -17,7 +18,7 @@ public interface DataFetcher {
     public String fetchPlayerId(String apiToken);
     public boolean verifyAuthToken(String name, String token);
     public PlayerInfo getPlayerInfo(String nameOrId);
-    public Collection<PlayerInfoSummary> fetchPlayerInfo();
+    public Collection<PlayerInfoSummary> fetchPlayerInfo(PlayerInfoQuery query);
     public ZoneInfo getZoneInfo(String nameOrId);
     public List<Map<String, Object>> getZoneMetaBlocks(String documentId);
     public Collection<ZoneInfo> fetchZoneInfo();

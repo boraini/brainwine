@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import brainwine.api.models.PlayerInfo;
+import brainwine.api.models.PlayerInfoQuery;
 import brainwine.api.models.PlayerInfoSummary;
 import brainwine.api.models.ZoneInfo;
 
@@ -48,7 +49,7 @@ public class DefaultDataFetcher implements DataFetcher {
     }
 
     @Override
-    public Collection<PlayerInfoSummary> fetchPlayerInfo() {
+    public Collection<PlayerInfoSummary> fetchPlayerInfo(PlayerInfoQuery query) {
         throw exception;
     }
 
