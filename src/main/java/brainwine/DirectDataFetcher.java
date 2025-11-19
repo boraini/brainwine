@@ -129,7 +129,10 @@ public class DirectDataFetcher implements DataFetcher {
 
         String[] includedStats = { "discoveries", "kills", "assists", "play_time", "areas_explored",
                 "containers_looted", "dungeons_raided", "maws_plugged", "undertakings", "deliverances", "deaths",
-                "players_killed", "landmarks_upvoted", "landmark_votes_received", "evokers_inhibited" };
+                "players_killed", "landmarks_upvoted", "landmark_votes_received", "evokers_inhibited",
+                "shillings_spent_in_android_shop", "shillings_received_in_android_shop",
+                "shillings_spent_in_scrap_market", "shillings_received_in_scrap_market",
+                "android_shop_purchases", "android_shop_sales", "scrap_market_purchases", "scrap_market_sales" };
 
         // TODO: this serializes the items mined and scavenged for no reason.
         Map<String, Object> stats = new HashMap<>();
