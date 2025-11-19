@@ -228,6 +228,7 @@ public class SteamManager {
     }
 
     public boolean isSteamSourcePowered(int x, int y) {
+        if(!zone.isChunkLoaded(x, y)) return false;
         Block block = zone.getBlock(x, y);
         Item item = block.getFrontItem();
         if(!item.hasUse(ItemUseType.STEAM_SOURCE)) return false;
@@ -240,6 +241,11 @@ public class SteamManager {
     }
 
     private void tickSteamSources() {
+        // Do nothing if there are no players in this zone
+        if(zone.getPlayerCount() == 0) {
+            return;
+        }
+
         long currentTime = System.currentTimeMillis();
         for(MetaBlock metaBlock : zone.getMetaBlocksWithUse(ItemUseType.STEAM_SOURCE)) {
             if(isSteamSourcePowered(metaBlock.getX(), metaBlock.getY())) {
