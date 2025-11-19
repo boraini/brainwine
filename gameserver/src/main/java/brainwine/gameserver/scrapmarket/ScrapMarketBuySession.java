@@ -309,6 +309,9 @@ public class ScrapMarketBuySession {
                         shop.removeProduct(product);
                     }
 
+                    player.getStatistics().trackScrapMarketPurchase(buyQuantity, totalPrice);
+                    seller.getStatistics().trackScrapMarketSale(buyQuantity, totalPrice);
+
                     if(seller.isOnline()) {
                         seller.notify(String.format(
                                 "%s has bought your %s %s on the Scrap Market for %d shillings.",

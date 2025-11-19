@@ -63,6 +63,14 @@ public class PlayerStatistics {
     private int landmarksUpvoted;
     private int landmarkVotesReceived;
     private int crownsSpent;
+    private int androidShopPurchases;
+    private int androidShopSales;
+    private int shillingsSpentInAndroidShop;
+    private int shillingsReceivedInAndroidShop;
+    private int scrapMarketPurchases;
+    private int scrapMarketSales;
+    private int shillingsSpentInScrapMarket;
+    private int shillingsReceivedInScrapMarket;
 
     @JsonIgnore
     private Player player;
@@ -493,5 +501,57 @@ public class PlayerStatistics {
 
     public void trackCrownsSpent(int crowns) {
         crownsSpent += crowns;
+    }
+
+    public int getAndroidShopPurchases() {
+        return androidShopPurchases;
+    }
+
+    public int getAndroidShopSales() {
+        return androidShopSales;
+    }
+
+    public int getShillingsSpentInAndroidShop() {
+        return shillingsSpentInAndroidShop;
+    }
+
+    public int getShillingsReceivedInAndroidShop() {
+        return shillingsReceivedInAndroidShop;
+    }
+
+    public int getScrapMarketPurchases() {
+        return scrapMarketPurchases;
+    }
+
+    public int getScrapMarketSales() {
+        return scrapMarketSales;
+    }
+
+    public int getShillingsSpentInScrapMarket() {
+        return shillingsSpentInScrapMarket;
+    }
+
+    public int getShillingsReceivedInScrapMarket() {
+        return shillingsReceivedInScrapMarket;
+    }
+
+    public void trackAndroidShopPurchase(int numItems, int shillingsSpent) {
+        androidShopPurchases += numItems;
+        shillingsSpentInAndroidShop += shillingsSpent;
+    }
+
+    public void trackAndroidShopSale(int numItems, int shillingsReceived) {
+        androidShopSales += numItems;
+        shillingsReceivedInAndroidShop += shillingsReceived;
+    }
+
+    public void trackScrapMarketPurchase(int numItems, int shillingsSpent) {
+        scrapMarketPurchases += numItems;
+        shillingsSpentInScrapMarket += shillingsSpent;
+    }
+
+    public void trackScrapMarketSale(int numItems, int shillingsReceived) {
+        scrapMarketSales += numItems;
+        shillingsReceivedInScrapMarket += shillingsReceived;
     }
 }

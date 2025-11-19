@@ -295,10 +295,12 @@ public class AndroidShopSession {
             if(ans.length == 0 || !"cancel".equals(ans[0])) {
                 CanBuy canBuy = canBuy(product, quantity);
                 if(canBuy == CanBuy.OK) {
-                    player.getInventory().removeItem(shillings, quantity * getAdjustedPrice(product), true);
+                    int currentTotalPrice = quantity * getAdjustedPrice(product);
+                    player.getInventory().removeItem(shillings, currentTotalPrice, true);
                     product.purchase(player, quantity);
                     player.getAndroidShopHistory().recordPurchase(product.getItem(), quantity);
                     AndroidShopPerIpHistory.getInstance().recordPurchase(player, product.getItem(), quantity);
+                    player.getStatistics().trackAndroidShopPurchase(quantity, currentTotalPrice);
                     if(me != null) me.emote("Good trade!");
                     end(true);
                 } else {

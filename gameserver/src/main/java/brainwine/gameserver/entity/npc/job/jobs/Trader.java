@@ -224,11 +224,14 @@ public class Trader extends DialoguerJob {
             player.showDialog(dialog, ans -> {
                 if(!(ans.length == 0 || "cancel".equals(ans[0]))) {
                     validateOffer(player, offer);
+                    int totalQuantity = 0;
                     int finalPayback = calculatePayback(player, offer);
                     for(Map.Entry<Item, Integer> entry : offer.entrySet()) {
                         player.getInventory().removeItem(entry.getKey(), entry.getValue(), true);
+                        totalQuantity += entry.getValue();
                     }
                     player.getInventory().addItem(shillings, finalPayback, true);
+                    player.getStatistics().trackAndroidShopSale(totalQuantity, finalPayback);
                     me.emote("Good trade.");
                 }
             });
