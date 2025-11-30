@@ -210,7 +210,6 @@ public class QuestTask {
 
         if(getCollectInventory() != null && !getCollectInventory().getRequirements().isEmpty()) {
             DialogSection section = getCollectInventory().getDialogSection();
-            System.out.println("Collect Item num Items " + section.getItems().size());
 
             allResult.add(section);
         }

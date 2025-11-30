@@ -32,7 +32,6 @@ public class AndroidShopPerIpHistory {
                 try {
                     historyByIp.putAll(JsonHelper.readValue(file, new TypeReference<Map<String, AndroidShopHistory>>() {}));
                 } catch(Exception ignored) {
-                    System.out.println("trying old format");
                     // Old format
                     Map<String, ValueWithExpiry<AndroidShopHistory>> oldFormatHistories = JsonHelper.readValue(file, new TypeReference<Map <String, ValueWithExpiry<AndroidShopHistory>>>() {});
                     for(Map.Entry<String, ValueWithExpiry<AndroidShopHistory>> history : oldFormatHistories.entrySet()) {
