@@ -1491,6 +1491,7 @@ public class Zone {
         }
         
         machineManager.indexMetaBlock(index, block);
+        growthManager.indexMetaBlock(index, block);
     }
     
     private void unindexMetaBlock(int index) {
@@ -1499,6 +1500,7 @@ public class Zone {
         fieldBlocks.remove(index);
         damageFieldBlocks.remove(index);
         machineManager.unindexMetaBlock(index);
+        growthManager.unindexMetaBlock(index);
     }
     
     protected void setMetaBlocks(List<MetaBlock> metaBlocks) {

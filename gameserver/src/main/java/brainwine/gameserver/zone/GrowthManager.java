@@ -8,7 +8,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,11 +39,12 @@ public class GrowthManager {
     private final Set<Integer> sourceIndices = new HashSet<>();
     private final Map<Item, WeightedMap<Item>> sources;
     private final Zone zone;
-    private List<MetaBlock> growLamps = new ArrayList<>();
+    private final Set<MetaBlock>[] growLampsByChunkIndex;
     
     public GrowthManager(Zone zone) {
         this.sources = sourcesByBiome.getOrDefault(zone.getBiome(), Collections.emptyMap());
         this.zone = zone;
+        growLampsByChunkIndex = new Set[zone.getNumChunksWidth() * zone.getNumChunksHeight()];
     }
     
     public static void loadGrowthData() {
@@ -65,18 +65,32 @@ public class GrowthManager {
         if(zone.getSunlight()[x] >= y) {
             return true;
         } else {
-            for(MetaBlock growLamp : growLamps) {
-                if(y >= growLamp.getY() && MathUtils.distance(x, y, growLamp.getX() + GROW_LAMP_CENTER_OFFSET, growLamp.getY()) < GROW_LAMP_RANGE) {
-                    return true;
-                }
-            }
-            return false;
+            int c = zone.getChunkIndex(x, y);
+            if(isReceivingLightFromGrowLamps(x, y, c)) return true;
+            boolean checkLeft = x >= zone.getChunkWidth();
+            boolean checkRight = x < zone.getWidth() - zone.getChunkWidth();
+            boolean checkTop = y >= zone.getChunkHeight();
+            if(checkLeft && isReceivingLightFromGrowLamps(x, y, c - 1)) return true;
+            if(checkRight && isReceivingLightFromGrowLamps(x, y, c + 1)) return true;
+            if(checkTop && isReceivingLightFromGrowLamps(x, y, c - zone.getNumChunksWidth())) return true;
+            if(checkTop && checkLeft && isReceivingLightFromGrowLamps(x, y, c - zone.getNumChunksWidth() - 1)) return true;
+            return checkTop && checkRight && isReceivingLightFromGrowLamps(x, y, c - zone.getNumChunksWidth() + 1);
         }
     }
 
+    private boolean isReceivingLightFromGrowLamps(int x, int y, int c) {
+        Set<MetaBlock> selection = growLampsByChunkIndex[c];
+        if(selection != null) for(MetaBlock growLamp : selection) {
+            if(y >= growLamp.getY() && MathUtils.distance(x, y, growLamp.getX() + GROW_LAMP_CENTER_OFFSET, growLamp.getY()) < GROW_LAMP_RANGE) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public boolean fertilize(int x, int y) {
-        growLamps = zone.getMetaBlocksWithItem(GROW_LAMP);
         if(!isReceivingLight(x, y)) return false;
+        if(!zone.isPurified()) return false;
         if(!zone.areCoordinatesInBounds(x, y) || !zone.areCoordinatesInBounds(x, y + 1)) return false;
 
         int replaceY = -1;
@@ -157,8 +171,6 @@ public class GrowthManager {
         if(rainCycles < 1 || sourceIndices.isEmpty()) {
             return;
         }
-
-        growLamps = zone.getMetaBlocksWithItem(GROW_LAMP);
         
         // Reduce overhead by reducing the number of iterations in exchange for a growth chance boost
         rainCycles = Math.min(MAX_RAIN_CYCLES, rainCycles);
@@ -231,5 +243,22 @@ public class GrowthManager {
         
         sourceIndices.add(zone.getBlockIndex(x, y));
         return true;
+    }
+
+    public void indexMetaBlock(int index, MetaBlock metaBlock) {
+        if(metaBlock.getItem().hasId(GROW_LAMP)) {
+            int chunkIndex = zone.getChunkIndex(metaBlock.getX(), metaBlock.getY());
+            Set<MetaBlock> selection = growLampsByChunkIndex[chunkIndex];
+            if(selection == null) selection = growLampsByChunkIndex[chunkIndex] = new HashSet<>();
+            selection.add(metaBlock);
+        }
+    }
+
+    public void unindexMetaBlock(int index) {
+        int x = index % zone.getWidth();
+        int y = index / zone.getWidth();
+        int chunkIndex = zone.getChunkIndex(x, y);
+        Set<MetaBlock> selection = growLampsByChunkIndex[chunkIndex];
+        if(selection != null) selection.removeIf(metaBlock -> metaBlock.getX() == x && metaBlock.getY() == y);
     }
 }
