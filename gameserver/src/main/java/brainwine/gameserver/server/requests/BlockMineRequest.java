@@ -1,5 +1,6 @@
 package brainwine.gameserver.server.requests;
 
+import java.util.Deque;
 import java.util.Map;
 
 import brainwine.gameserver.command.CommandAccessLevel;
@@ -25,6 +26,7 @@ import brainwine.gameserver.util.Pair;
 import brainwine.gameserver.zone.Block;
 import brainwine.gameserver.zone.MetaBlock;
 import brainwine.gameserver.zone.Zone;
+import brainwine.gameserver.zone.dynamics.SummonedInvasion;
 
 @RequestInfo(id = 11)
 public class BlockMineRequest extends PlayerRequest {
@@ -114,6 +116,17 @@ public class BlockMineRequest extends PlayerRequest {
 
                     break;
                 default: break;
+            }
+        }
+
+        // Check if mining a summoning circle
+        if(item.hasUse(ItemUseType.SUMMONING_CIRCLE)) {
+            Deque<SummonedInvasion> invasions = zone.getDynamicsManager().getOngoingDynamics(SummonedInvasion.class);
+            for(SummonedInvasion invasion : invasions) {
+                if(invasion.getX() == x && invasion.getY() == y) {
+                    fail(player, "This circle is being used for a curse right now. Its powerful aura is keeping you from mining it.");
+                    return;
+                }
             }
         }
 

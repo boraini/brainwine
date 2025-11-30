@@ -8,6 +8,8 @@ import brainwine.gameserver.zone.Zone;
 import java.util.List;
 
 public class SummonedInvasion extends Invasion {
+    int x;
+    int y;
     List<Entity> targets;
 
     private static WeightedMap<String> getInvaderTable(int difficulty) {
@@ -24,8 +26,10 @@ public class SummonedInvasion extends Invasion {
         }
     }
 
-    public SummonedInvasion(Zone zone, List<Entity> targets, int difficulty, int totalWaves) {
+    public SummonedInvasion(Zone zone, int x, int y, List<Entity> targets, int difficulty, int totalWaves) {
         super(zone, getInvaderTable(difficulty), totalWaves);
+        this.x = x;
+        this.y = y;
         this.targets = targets;
     }
 
@@ -42,5 +46,13 @@ public class SummonedInvasion extends Invasion {
     @Override
     public boolean isFinished() {
         return startTime + 600_000 < System.currentTimeMillis();
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
     }
 }

@@ -16,7 +16,6 @@ import brainwine.gameserver.zone.MetaBlock;
 import brainwine.gameserver.zone.Zone;
 import brainwine.gameserver.zone.dynamics.EvokerInvasion;
 import brainwine.gameserver.zone.dynamics.SummonedInvasion;
-import brainwine.gameserver.zone.dynamics.ZoneDynamic;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,15 +43,22 @@ public class SummoningCircleInteraction implements ItemInteraction {
         boolean useSpell = !player.isGodMode() && configUseSpell;
 
         if(cooldown > 0 && !player.isGodMode()) {
-            Deque<ZoneDynamic> dynamics = zone.getDynamicsManager().getOngoingDynamics(SummonedInvasion.class);
+            Deque<SummonedInvasion> invasions = zone.getDynamicsManager().getOngoingDynamics(SummonedInvasion.class);
 
-            int count = dynamics.size();
+            int count = invasions.size();
             int circles = zone.getMetaBlocksWithUse(ItemUseType.SUMMONING_CIRCLE).size();
-            long lastUsed = dynamics.isEmpty() ? 0L : dynamics.peekFirst().getStartTime();
+            long lastUsed = invasions.isEmpty() ? 0L : invasions.peekFirst().getStartTime();
 
             if(count >= circles && lastUsed + cooldown >= System.currentTimeMillis()) {
-                player.notify("This item is on cooldown. Either place more summoning circles or wait.");
+                player.notify("This summoning circle is on cooldown. Try using another one or wait.");
                 return;
+            }
+
+            for(SummonedInvasion invasion : invasions) {
+                if(invasion.getX() == x && invasion.getY() == y) {
+                    player.notify("This summoning circle is on cooldown. Try using another one or wait.");
+                    return;
+                }
             }
         }
 
@@ -145,7 +151,7 @@ public class SummoningCircleInteraction implements ItemInteraction {
 
             if(accepted) {
                 player.notify("Summoning " + option);
-                zone.getDynamicsManager().beginDynamic(new SummonedInvasion(zone, new ArrayList<>(players), difficulty, numWaves));
+                zone.getDynamicsManager().beginDynamic(new SummonedInvasion(zone, x, y, new ArrayList<>(players), difficulty, numWaves));
             } else {
                 player.notify("Too bad, you casted the wrong spell!");
                 zone.getDynamicsManager().beginDynamic(
