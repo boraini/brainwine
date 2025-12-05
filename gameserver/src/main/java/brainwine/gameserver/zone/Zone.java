@@ -89,6 +89,7 @@ public class Zone {
     private int chunksExploredCount;
     private int undergroundChunksExploredCount;
     private int totalUndergroundChunks;
+    private boolean metaBlocksLoaded;
     private OffsetDateTime creationDate = OffsetDateTime.now();
     private float time = (float)Math.random(); // TODO temporary
     private float temperature;
@@ -143,6 +144,7 @@ public class Zone {
         this.sunlight = sunlight != null && sunlight.length == width ? sunlight : this.sunlight;
         this.depths = depths != null && depths.length == 3 ? depths : this.depths;
         this.chunksExplored = chunksExplored != null && chunksExplored.length == getChunkCount() ? chunksExplored : this.chunksExplored;
+        metaBlocksLoaded = false;
         recalculateChunksExploredCount();
         steamManager.setData(data.getSteamData());
         machineManager.loadData(config);
@@ -178,6 +180,7 @@ public class Zone {
         surface = new int[width];
         sunlight = new int[width];
         chunksExplored = new boolean[numChunksWidth * numChunksHeight];
+        metaBlocksLoaded = true;
         // Needs to be calculated after the zone is generated.
         // recalculateChunksExploredCount();
         acidity = 1.0f;
@@ -2090,6 +2093,17 @@ public class Zone {
     
     public int getChunkCount() {
         return numChunksWidth * numChunksHeight;
+    }
+
+    public void tryToLoadMetaBlocks() throws Exception {
+        if(!metaBlocksLoaded) {
+            GameServer.getInstance().getZoneManager().loadZoneMetaBlocks(this);
+        }
+        metaBlocksLoaded = true;
+    }
+
+    public boolean areMetaBlocksLoaded() {
+        return metaBlocksLoaded;
     }
     
     public void setTime(float time) {

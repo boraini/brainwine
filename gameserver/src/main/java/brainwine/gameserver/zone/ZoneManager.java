@@ -220,10 +220,9 @@ public class ZoneManager {
         File dataFile = new File(file, "zone.dat");
         File legacyDataFile = new File(file, "shape.cmp");
         File configFile = new File(file, "config.json");
-        File metaBlocksFile = new File(file, "metablocks.json");
         File charactersFile = new File(file, "characters.json");
         
-        try {            
+        try {
             if(legacyDataFile.exists() && !dataFile.exists()) {
                 throw new IOException("Zone data format is outdated. Please try to load this zone with an older server version to update it.");
             }
@@ -231,11 +230,6 @@ public class ZoneManager {
             ZoneDataFile data = mapper.readValue(ZipUtils.inflateBytes(Files.readAllBytes(dataFile.toPath())), ZoneDataFile.class);
             ZoneConfigFile config = JsonHelper.readValue(configFile, ZoneConfigFile.class);
             Zone zone = new Zone(id, config, data);
-            
-            // Load meta blocks
-            if(metaBlocksFile.exists()) {
-                zone.setMetaBlocks(JsonHelper.readList(metaBlocksFile, MetaBlock.class));
-            }
             
             // Load characters
             if(charactersFile.exists()) {
@@ -246,6 +240,15 @@ public class ZoneManager {
             addZone(zone);
         } catch (Exception e) {
             logger.error(SERVER_MARKER, "Zone load failure. id: {}", id, e);
+        }
+    }
+
+    public void loadZoneMetaBlocks(Zone zone) throws IOException {
+        File file = new File(dataDir, zone.getDocumentId());
+        File metaBlocksFile = new File(file, "metablocks.json");
+        // Load meta blocks
+        if(metaBlocksFile.exists()) {
+            zone.setMetaBlocks(JsonHelper.readList(metaBlocksFile, MetaBlock.class));
         }
     }
     
@@ -267,7 +270,7 @@ public class ZoneManager {
             // Write data to files
             zone.saveChunks();
             Files.write(new File(file, "characters.json").toPath(), charactersBytes);
-            Files.write(new File(file, "metablocks.json").toPath(), metaBlocksBytes);
+            if(zone.areMetaBlocksLoaded()) Files.write(new File(file, "metablocks.json").toPath(), metaBlocksBytes);
             Files.write(new File(file, "config.json").toPath(), configBytes);
             Files.write(new File(file, "zone.dat").toPath(), dataBytes);
             zone.setModified(false);

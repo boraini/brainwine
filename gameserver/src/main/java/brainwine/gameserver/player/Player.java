@@ -511,6 +511,15 @@ public class Player extends Entity implements CommandExecutor {
      * Called by {@link Zone#addEntity(Entity)} when the player is added to it.
      */
     public void onZoneEntered() {
+        if(zone != null && !zone.areMetaBlocksLoaded()) {
+            try {
+                zone.tryToLoadMetaBlocks();
+            } catch(Exception e) {
+                setZone(null);
+                kick("Failed to load this zone!", true);
+                logger.error("Failed to load metablocks in " + zone.getDocumentId() + " (" + zone.getName() + ")!");
+            }
+        }
         boolean spawnEffect = false;
 
         // Find new spawn point if zone has changed
