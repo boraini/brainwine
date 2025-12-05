@@ -3,12 +3,15 @@ package brainwine.gameserver.item.interactions;
 import java.util.stream.Stream;
 
 import brainwine.gameserver.GameServer;
+import brainwine.gameserver.dialog.Dialog;
+import brainwine.gameserver.dialog.DialogSection;
 import brainwine.gameserver.entity.Entity;
 import brainwine.gameserver.item.Item;
 import brainwine.gameserver.item.ItemRegistry;
 import brainwine.gameserver.item.ItemUseType;
 import brainwine.gameserver.item.Layer;
 import brainwine.gameserver.loot.Loot;
+import brainwine.gameserver.loot.LootManager;
 import brainwine.gameserver.player.NotificationType;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.util.MapHelper;
@@ -59,7 +62,50 @@ public class ContainerInteraction implements ItemInteraction {
             }
         }
         
+        // Check for locked chests
+        if(item.isLocked()) {
+            Item keyToUse = LootManager.getKeyItemToUse(player, item);
+            if(item.isLocked() && keyToUse.isAir()) {
+                player.notify("You need a key to unlock this " + item.getTitle() + "!");
+                return;
+            }
+            player.showDialog(new Dialog()
+                .setTitle("Opening " + item.getTitle())
+                .addSection(new DialogSection().setText("Would you like to open this " + item.getTitle() + " using a " + keyToUse.getTitle() + "?"))
+                , ans -> {
+                    if(ans.length == 0) {
+                        awardLoot(zone, player, x, y, keyToUse);
+                    }
+                }
+            );
+        } else {
+            awardLoot(zone, player, x, y, Item.AIR);
+        }
+    }
+
+    public void awardLoot(Zone zone, Player player, int x, int y, Item keyToUse) {
+        MetaBlock metaBlock = zone.getMetaBlock(x, y);
+        if(metaBlock == null) {
+            player.notify("Cannot find the block you are trying to loot.");
+        }
+        Item item = metaBlock.getItem();
+        boolean plenty = item.hasUse(ItemUseType.PLENTY);
+        String lootCode = metaBlock.getStringProperty("y");
         String specialItem = metaBlock.getStringProperty("$");
+
+        if(!keyToUse.isAir() && !player.getInventory().hasItem(keyToUse)) {
+            player.notify("You don't have any " + keyToUse.getTitle() + " anymore.");
+            return;
+        }
+
+        String[] lootCategories = item.getLootCategories();
+        if(item.isLocked()) {
+            lootCategories = LootManager.getLootCategoriesForKey(item, keyToUse);
+            if(lootCategories.length == 0) {
+                player.notify("You need a key to unlock this " + item.getTitle() + "!");
+                return;
+            }
+        }
         
         // Award loot
         if(specialItem != null) {
@@ -108,6 +154,8 @@ public class ContainerInteraction implements ItemInteraction {
                 }
             }
         }
+
+        if(!keyToUse.isAir()) player.getInventory().removeItem(keyToUse, true);
         
         // Update container mod
         if(!plenty && !metaBlock.hasProperty("$")) {
