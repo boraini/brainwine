@@ -93,6 +93,7 @@ public class ContainerInteraction implements ItemInteraction {
         MetaBlock metaBlock = zone.getMetaBlock(x, y);
         if(metaBlock == null) {
             player.notify("Cannot find the block you are trying to loot.");
+            return;
         }
         Item item = metaBlock.getItem();
         boolean plenty = item.hasUse(ItemUseType.PLENTY);
