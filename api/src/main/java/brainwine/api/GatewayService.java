@@ -87,6 +87,8 @@ public class GatewayService {
     }
 
     private void handlePlayerSearch(Context ctx) {
+        final String keyRegex = "^[a-zA-Z0-9_]+$";
+
         PlayerInfoQuery query = new PlayerInfoQuery();
         for(String paramName : ctx.queryParamMap().keySet()) {
             if(paramName.startsWith("order-")) {
@@ -104,6 +106,26 @@ public class GatewayService {
             }
         }
 
+        handleQueryParam(ctx, "statistics", String.class, csv -> {
+            for(String key : csv.split(",")) {
+                // Statistics are always alphanumeric, with underscores in between
+                if(key.matches(keyRegex)) {
+                    query.addStatistic(key);
+                }
+            }
+        });
+
+        // Workaround for if the sorting key will be missing from the queried data
+        handleQueryParam(ctx, "sort", String.class, sort -> {
+            if(sort.startsWith("statistics.")) {
+                String key = sort.substring(sort.indexOf(".") + 1);
+                // Statistics are always alphanumeric, with underscores in between
+                if(key.matches(keyRegex)) {
+                    query.addStatistic(key);
+                }
+            }
+        });
+
         List<PlayerInfoSummary> players = (List<PlayerInfoSummary>)dataFetcher.fetchPlayerInfo(query);
 
         handleQueryParam(ctx, "name", String.class, name -> {
@@ -119,6 +141,26 @@ public class GatewayService {
         });
 
         handleQueryParam(ctx, "sort", String.class, sort -> {
+            if(sort.startsWith("statistics.")) {
+                String key = sort.substring(sort.indexOf(".") + 1);
+                // Statistics are always alphanumeric, with underscores in between
+                if(key.matches("^[a-zA-Z0-9_]+$")) {
+                    players.sort((a, b) -> {
+                        Object valA = a.getStatistics().get(key);
+                        Object valB = b.getStatistics().get(key);
+                        if(valA instanceof Integer) {
+                            if(valB instanceof Integer) {
+                                return Integer.compare((Integer)valB, (Integer)valA);
+                            }
+                            return -1;
+                        } else {
+                            return valB instanceof Integer ? 1 : a.getName().compareTo(b.getName());
+                        }
+                    });
+                }
+                return;
+            }
+
             switch(sort) {
                 case "items_mined": // Sort by total items mined
                     players.sort((a, b) -> Integer.compare(b.getItemsMined(), a.getItemsMined()));

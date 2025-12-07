@@ -35,6 +35,15 @@ public class DirectDataFetcher implements DataFetcher {
     
     private final PlayerManager playerManager;
     private final ZoneManager zoneManager;
+
+    private static final Set<String> includedStats = Stream.of(
+            "discoveries", "kills", "assists", "play_time", "areas_explored",
+            "containers_looted", "dungeons_raided", "maws_plugged", "undertakings", "deliverances", "deaths",
+            "players_killed", "landmarks_upvoted", "landmark_votes_received", "evokers_inhibited",
+            "shillings_spent_in_android_shop", "shillings_received_in_android_shop",
+            "shillings_spent_in_scrap_market", "shillings_received_in_scrap_market",
+            "android_shop_purchases", "android_shop_sales", "scrap_market_purchases", "scrap_market_sales"
+            ).collect(Collectors.toSet());
     
     public DirectDataFetcher(PlayerManager playerManager, ZoneManager zoneManager) {
         this.playerManager = playerManager;
@@ -91,12 +100,12 @@ public class DirectDataFetcher implements DataFetcher {
                 .filter(player -> query.getOrderLevel().keySet().stream().allMatch(
                         orderKey -> Objects.equals(player.getOrders().getOrDefault(orderKey, 0), query.getOrderLevel().get(orderKey))
                 ))
-                .map(DirectDataFetcher::createPlayerInfoSummary)
+                .map(player -> DirectDataFetcher.createPlayerInfoSummary(player, query))
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    private static PlayerInfoSummary createPlayerInfoSummary(Player player) {
-        return new PlayerInfoSummary(
+    private static PlayerInfoSummary createPlayerInfoSummary(Player player, PlayerInfoQuery query) {
+        PlayerInfoSummary info = new PlayerInfoSummary(
                 player.getName(),
                 player.getLevel(),
                 player.getLevelFromExperience(player.getExperience()),
@@ -106,6 +115,24 @@ public class DirectDataFetcher implements DataFetcher {
                 player.getStatistics().getItemsPlaced(),
                 player.getStatistics().getTotalItemsCrafted()
         );
+
+        if(!query.getStatistics().isEmpty()) {
+            try {
+                Map<String, Object> stats = JsonHelper.readValue(player.getStatistics(), new TypeReference<Map<String, Object>>() {});
+                Map<String, Object> selectedStats = new HashMap<>();
+                for(String statistic : query.getStatistics()) {
+                    if(includedStats.contains(statistic)) {
+                        Object value = stats.get(statistic);
+                        if(value != null) {
+                            selectedStats.put(statistic, value);
+                        }
+                    }
+                }
+                info.setStatistics(selectedStats);
+            } catch(JsonProcessingException ignored) {}
+        }
+
+        return info;
     }
 
     private static PlayerInfo createPlayerInfo(Player player) {
@@ -126,13 +153,6 @@ public class DirectDataFetcher implements DataFetcher {
         if(!flyAccessory.isAir()) {
             appearance.put("u", flyAccessory.getId());
         }
-
-        String[] includedStats = { "discoveries", "kills", "assists", "play_time", "areas_explored",
-                "containers_looted", "dungeons_raided", "maws_plugged", "undertakings", "deliverances", "deaths",
-                "players_killed", "landmarks_upvoted", "landmark_votes_received", "evokers_inhibited",
-                "shillings_spent_in_android_shop", "shillings_received_in_android_shop",
-                "shillings_spent_in_scrap_market", "shillings_received_in_scrap_market",
-                "android_shop_purchases", "android_shop_sales", "scrap_market_purchases", "scrap_market_sales" };
 
         // TODO: this serializes the items mined and scavenged for no reason.
         Map<String, Object> stats = new HashMap<>();
