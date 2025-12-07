@@ -61,14 +61,20 @@ public class ContainerInteraction implements ItemInteraction {
                 return;
             }
         }
-        
+
         // Check for locked chests
         if(item.isLocked()) {
+            String specialItem = metaBlock.getStringProperty("$");
+            if(specialItem == null) {
+                return;
+            }
+
             Item keyToUse = LootManager.getKeyItemToUse(player, item);
             if(item.isLocked() && keyToUse.isAir()) {
                 player.notify("You need a key to unlock this " + item.getTitle() + "!");
                 return;
             }
+
             player.showDialog(new Dialog()
                 .setTitle("Opening " + item.getTitle())
                 .addSection(new DialogSection().setText("Would you like to open this " + item.getTitle() + " using a " + keyToUse.getTitle() + "?"))
@@ -111,7 +117,7 @@ public class ContainerInteraction implements ItemInteraction {
         if(specialItem != null) {
             if(specialItem.equals("?")) {
                 Loot loot = metaBlock.hasProperty("l") ? new Loot(Item.get(metaBlock.getStringProperty("l")), metaBlock.getIntProperty("q"))
-                        : GameServer.getInstance().getLootManager().getRandomLoot(player, item.getLootCategories());
+                        : GameServer.getInstance().getLootManager().getRandomLoot(player, lootCategories);
                 int experience = metaBlock.getIntProperty("xp");
                 
                 if(loot != null) {
@@ -153,9 +159,9 @@ public class ContainerInteraction implements ItemInteraction {
                     // TODO how should we handle this...?
                 }
             }
-        }
 
-        if(!keyToUse.isAir()) player.getInventory().removeItem(keyToUse, true);
+            if(!keyToUse.isAir()) player.getInventory().removeItem(keyToUse, true);
+        }
         
         // Update container mod
         if(!plenty && !metaBlock.hasProperty("$")) {
