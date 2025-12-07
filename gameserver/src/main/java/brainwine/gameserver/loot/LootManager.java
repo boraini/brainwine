@@ -20,6 +20,7 @@ import org.apache.logging.log4j.Logger;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import brainwine.gameserver.item.Item;
+import brainwine.gameserver.item.ItemRegistry;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.player.Skill;
 import brainwine.gameserver.resource.ResourceFinder;
@@ -105,5 +106,44 @@ public class LootManager {
         }
         
         return loot;
+    }
+
+    public static Item getKeyItemToUse(Player player, Item lockbox) {
+        if(!lockbox.isLocked()) return Item.AIR;
+
+        if(lockbox.getSelectiveLockedLoot() != null) {
+            for(String keyId : lockbox.getSelectiveLockedLoot().keySet()) {
+                Item key = ItemRegistry.getItem(keyId);
+                if(!key.isAir() && player.getInventory().hasItem(key)) {
+                    return key;
+                }
+            }
+
+            if(player.isGodMode() && !lockbox.getSelectiveLockedLoot().isEmpty()) {
+                return ItemRegistry.getItem(lockbox.getSelectiveLockedLoot().keySet().iterator().next());
+            }
+        }
+
+        Item defaultKey = ItemRegistry.getItem("comsumables/lockboxkey");
+
+        if(player.isGodMode() || player.getInventory().hasItem(defaultKey)) {
+            return defaultKey;
+        }
+
+        return Item.AIR;
+    }
+
+    public static String[] getLootCategoriesForKey(Item lockbox, Item key) {
+        if(!lockbox.isLocked() && lockbox.getSelectiveLockedLoot() == null) return lockbox.getLootCategories();
+
+        if(key.isAir()) return new String[0];
+
+        if(lockbox.getSelectiveLockedLoot() != null) {
+            return lockbox.getSelectiveLockedLoot().getOrDefault(key.getId(), new String[0]);
+        }
+
+        if(!key.isAir()) return lockbox.getLootCategories();
+
+        return new String[0];
     }
 }
