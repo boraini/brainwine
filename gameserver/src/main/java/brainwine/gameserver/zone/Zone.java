@@ -200,9 +200,11 @@ public class Zone {
     public void tick(float deltaTime) {
         long now = System.currentTimeMillis();
         weatherManager.tick(deltaTime);
-        entityManager.tick(deltaTime);
+        if(metaBlocksLoaded) {
+            entityManager.tick(deltaTime);
+            steamManager.tick(deltaTime);
+        }
         liquidManager.tick(deltaTime);
-        steamManager.tick(deltaTime);
         dynamicsManager.tick(deltaTime);
         simulate(deltaTime);
 
