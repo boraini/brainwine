@@ -2104,6 +2104,13 @@ public class Zone {
         metaBlocksLoaded = true;
     }
 
+    public void unloadMetaBlocks() {
+        for(int index : new ArrayList<>(metaBlocks.keySet())) {
+            unindexMetaBlock(index);
+        }
+        metaBlocksLoaded = false;
+    }
+
     public boolean areMetaBlocksLoaded() {
         return metaBlocksLoaded;
     }
@@ -2332,6 +2339,10 @@ public class Zone {
 
     public boolean isTicking() {
         return !frozen;
+    }
+
+    public long getLastStatusUpdate() {
+        return lastStatusUpdate;
     }
 
     /**

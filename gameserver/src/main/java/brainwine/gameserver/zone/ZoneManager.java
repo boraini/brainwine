@@ -62,6 +62,7 @@ public class ZoneManager {
     private long lastZoneGenerationTime = System.currentTimeMillis() - (long)(GENERATION_INTERVAL_ZERO_PLAYERS_SECONDS * 1000);
     private boolean generatingZone = false;
     private Set<String> unexploredZones = new HashSet<>();
+    private Set<Zone> zonesWithMetaBlocksLoaded = new HashSet<>();
     private Biome lastGeneratedBiome = Biome.PLAIN;
 
     public ZoneManager() {
@@ -250,10 +251,18 @@ public class ZoneManager {
         if(metaBlocksFile.exists()) {
             zone.setMetaBlocks(JsonHelper.readList(metaBlocksFile, MetaBlock.class));
         }
+        zonesWithMetaBlocksLoaded.add(zone);
+    }
+
+    public void unloadZoneMetaBlocks(Zone zone) {
+        zone.unloadMetaBlocks();
+        zonesWithMetaBlocksLoaded.remove(zone);
     }
     
     public void saveZones() {
+        final long now = System.currentTimeMillis();
         zones.values().stream().filter(Zone::isModified).forEach(this::saveZone);
+        new ArrayList<>(zonesWithMetaBlocksLoaded).stream().filter(z -> now > z.getLastStatusUpdate() + 1800000).forEach(this::unloadZoneMetaBlocks);
     }
     
     public void saveZone(Zone zone) {
@@ -296,6 +305,10 @@ public class ZoneManager {
 
         if(zone.hasEntryCode()) {
             entryCodes.put(zone.getEntryCode(), zone);
+        }
+
+        if(zone.areMetaBlocksLoaded()) {
+            zonesWithMetaBlocksLoaded.add(zone);
         }
     }
 
