@@ -1125,6 +1125,8 @@ public class Zone {
     }
     
     private void indexDungeons() {
+        dungeons.clear();
+        dungeonTypes.clear();
         List<MetaBlock> guardBlocks = getMetaBlocks(m ->
                 m.getItem().hasUse(ItemUseType.GUARD)
                 || m.getItem().hasId("mechanical/spawner-brain")
@@ -1517,7 +1519,7 @@ public class Zone {
                 indexMetaBlock(getBlockIndex(x, y), metaBlock);
             }
         }
-        
+
         indexDungeons();
     }
     
