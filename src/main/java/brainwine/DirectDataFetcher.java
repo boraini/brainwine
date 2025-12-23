@@ -107,6 +107,7 @@ public class DirectDataFetcher implements DataFetcher {
     private static PlayerInfoSummary createPlayerInfoSummary(Player player, PlayerInfoQuery query) {
         PlayerInfoSummary info = new PlayerInfoSummary(
                 player.getName(),
+                player.getIcon(),
                 player.getLevel(),
                 player.getLevelFromExperience(player.getExperience()),
                 player.isAdmin(),
@@ -138,7 +139,7 @@ public class DirectDataFetcher implements DataFetcher {
 
     private static PlayerInfo createPlayerInfo(Player player) {
         Map<String, String> appearance = new HashMap<>();
-        for(Map.Entry<String, Object> entry : player.getAppearance().entrySet()) {
+        for(Map.Entry<String, Object> entry : player.getCustomizedAppearance().entrySet()) {
             if(entry.getKey() == null || entry.getValue() == null) continue;
             if(entry.getKey().contains("*")) {
                 appearance.put(entry.getKey(), Objects.toString(entry.getValue()));
@@ -178,6 +179,7 @@ public class DirectDataFetcher implements DataFetcher {
 
         return new PlayerInfo(
                 player.getName(),
+                player.getIcon(),
                 player.getLevel(),
                 player.getSkills().values().stream().collect(Collectors.summingInt(x -> x - 1)),
                 player.isAdmin(),

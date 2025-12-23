@@ -5,6 +5,7 @@ import java.util.Map;
 
 public class PlayerInfoSummary {
     private String name = "Unknown Player";
+    private String icon;
     private int level;
     private int skillLevel;
     private boolean admin;
@@ -15,8 +16,9 @@ public class PlayerInfoSummary {
     private int itemsCrafted;
     private Map<String, Object> statistics;
 
-    public PlayerInfoSummary(String name, int level, int skillLevel, boolean admin, int deaths, int itemsMined, int itemsScavenged, int itemsPlaced, int itemsCrafted) {
+    public PlayerInfoSummary(String name, String icon, int level, int skillLevel, boolean admin, int deaths, int itemsMined, int itemsScavenged, int itemsPlaced, int itemsCrafted) {
         this.name = name;
+        this.icon = icon;
         this.level = level;
         this.skillLevel = skillLevel;
         this.admin = admin;
@@ -30,6 +32,10 @@ public class PlayerInfoSummary {
 
     public String getName() {
         return name;
+    }
+
+    public String getIcon() {
+        return icon;
     }
 
     public int getLevel() {
