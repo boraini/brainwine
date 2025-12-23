@@ -7,6 +7,7 @@ public class PlayerInfoSummary {
     private String name = "Unknown Player";
     private int level;
     private int skillLevel;
+    private boolean admin;
     private int deaths;
     private int itemsMined;
     private int itemsScavenged;
@@ -14,10 +15,11 @@ public class PlayerInfoSummary {
     private int itemsCrafted;
     private Map<String, Object> statistics;
 
-    public PlayerInfoSummary(String name, int level, int skillLevel, int deaths, int itemsMined, int itemsScavenged, int itemsPlaced, int itemsCrafted) {
+    public PlayerInfoSummary(String name, int level, int skillLevel, boolean admin, int deaths, int itemsMined, int itemsScavenged, int itemsPlaced, int itemsCrafted) {
         this.name = name;
         this.level = level;
         this.skillLevel = skillLevel;
+        this.admin = admin;
         this.deaths = deaths;
         this.itemsMined = itemsMined;
         this.itemsScavenged = itemsScavenged;
@@ -36,6 +38,10 @@ public class PlayerInfoSummary {
 
     public int getSkillLevel() {
         return skillLevel;
+    }
+
+    public boolean isAdmin() {
+        return admin;
     }
 
     public int getDeaths() {

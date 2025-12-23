@@ -14,6 +14,7 @@ public class PlayerInfo extends PlayerInfoSummary {
                       String name,
                       int level,
                       int skillLevel,
+                      boolean admin,
                       int deaths,
                       int itemsMined,
                       int itemsScavenged,
@@ -24,7 +25,7 @@ public class PlayerInfo extends PlayerInfoSummary {
                       Map<String, String> appearance,
                       Map<String, Object> statistics
     ) {
-        super(name, level, skillLevel, deaths, itemsMined, itemsScavenged, itemsPlaced, itemsCrafted);
+        super(name, level, skillLevel, admin, deaths, itemsMined, itemsScavenged, itemsPlaced, itemsCrafted);
         this.apiToken = apiToken;
         this.orders = orders;
         this.appearance = appearance;

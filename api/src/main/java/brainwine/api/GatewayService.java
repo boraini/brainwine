@@ -140,6 +140,10 @@ public class GatewayService {
             players.removeIf(player -> player.getLevel() > maxLevel);
         });
 
+        handleQueryParam(ctx, "admin", Boolean.class, admin -> {
+            players.removeIf(player -> player.isAdmin() != admin);
+        });
+
         handleQueryParam(ctx, "sort", String.class, sort -> {
             if(sort.startsWith("statistics.")) {
                 String key = sort.substring(sort.indexOf(".") + 1);
