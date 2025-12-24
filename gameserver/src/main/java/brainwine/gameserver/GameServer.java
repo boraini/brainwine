@@ -21,6 +21,7 @@ import brainwine.gameserver.zone.ZoneActivityManager;
 import brainwine.gameserver.achievement.AchievementManager;
 import brainwine.gameserver.command.CommandExecutor;
 import brainwine.gameserver.command.CommandManager;
+import brainwine.gameserver.dailyreward.DailyRewardManager;
 import brainwine.gameserver.entity.EntityRegistry;
 import brainwine.gameserver.loot.LootManager;
 import brainwine.gameserver.minigame.Pandora;
@@ -48,6 +49,7 @@ public class GameServer implements CommandExecutor {
     private final ZoneActivityManager zoneActivityManager;
     private final PlayerManager playerManager;
     private final IpBans ipBans;
+    private final DailyRewardManager dailyRewardManager;
     private final ProfanityManager profanityManager;
     private final Server server;
     private Pusher pusher;
@@ -61,6 +63,7 @@ public class GameServer implements CommandExecutor {
         long startTime = System.currentTimeMillis();
         logger.info(SERVER_MARKER, "Starting GameServer ...");
         ipBans = new IpBans();
+        dailyRewardManager = new DailyRewardManager();
         profanityManager = new ProfanityManager();
         CommandManager.init();
         GameConfiguration.init();
@@ -115,6 +118,7 @@ public class GameServer implements CommandExecutor {
             zoneManager.saveZones();
             playerManager.savePlayers();
             ipBans.saveIpBans();
+            dailyRewardManager.saveDailyRewards();
             AndroidShopPerIpHistory.getInstance().save();
             ScrapMarket.getInstance().saveJson();
             lastSave = System.currentTimeMillis();
@@ -202,6 +206,10 @@ public class GameServer implements CommandExecutor {
 
     public IpBans getIpBans() {
         return ipBans;
+    }
+
+    public DailyRewardManager getDailyRewardManager() {
+        return dailyRewardManager;
     }
 
     public ProfanityManager getProfanityManager() {
