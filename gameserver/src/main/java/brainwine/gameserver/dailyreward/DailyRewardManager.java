@@ -35,11 +35,14 @@ public class DailyRewardManager {
         logger.info("Loading daily rewards...");
 
         try {
-            rewards.addAll(JsonHelper.readValue(new File(FILE_NAME), new TypeReference<List<DailyReward>>() {}));
-            for(DailyReward reward : rewards) {
-                OffsetDateTime now = OffsetDateTime.now();
-                if(now.isBefore(reward.getEndsAt())) {
-                    activeRewards.add(reward);
+            File file = new File(FILE_NAME);
+            if(file.exists()) {
+                rewards.addAll(JsonHelper.readValue(file, new TypeReference<List<DailyReward>>() {}));
+                for(DailyReward reward : rewards) {
+                    OffsetDateTime now = OffsetDateTime.now();
+                    if(now.isBefore(reward.getEndsAt())) {
+                        activeRewards.add(reward);
+                    }
                 }
             }
         } catch (Exception e) {
@@ -52,19 +55,19 @@ public class DailyRewardManager {
 
     public void saveDailyRewards() {
         try {
-            JsonHelper.writeValue(new File(FILE_NAME), products);
+            JsonHelper.writeValue(new File(FILE_NAME), rewards);
         } catch(Exception e) {
             logger.error("Failed to write {}", FILE_NAME, e);
         }
     }
 
-    public void rewardPlayers(Zone zone) {
-        // Maybe not scan for expired daily rewards each timee
+    public void rewardPlayer(Player player) {
+        // Maybe not scan for expired daily rewards each time
         boolean needsFiltering = false;
 
         final OffsetDateTime now = OffsetDateTime.now();
-        Collection<Player> players = zone.getPlayers();
-        for(int i = 0; i < activeRewards.length; i++) {
+        for(int i = 0; i < activeRewards.size(); i++) {
+            DailyReward reward = activeRewards.get(i);
             if(now.isBefore(reward.getBeginsAt())) {
                 continue;
             }
@@ -72,11 +75,10 @@ public class DailyRewardManager {
             // Reward should still be given if the player has reached the XP goal between ticks
             if(now.isAfter(reward.getEndsAt())) {
                 needsFiltering = true;
+                continue;
             }
 
-            for(Player player : players) {
-                reward.reward(player);
-            }
+            reward.reward(player);
         }
 
         if(needsFiltering) {
@@ -91,6 +93,7 @@ public class DailyRewardManager {
                 reward.addPlayerExperience(player, amount);
             }
         }
+        rewardPlayer(player);
     }
 
     public void addReward(DailyReward reward) {

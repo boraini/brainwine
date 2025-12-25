@@ -640,6 +640,7 @@ public class Player extends Entity implements CommandExecutor {
         PlayerQuests.deleteUnknownQuestProgress(this);
         PlayerQuests.sendInitialPlayerQuestMessages(this);
         QuestEvents.handleEnterZone(this, zone);
+        GameServer.getInstance().getDailyRewardManager().addPlayerExperience(this, 0);
         recentZones.remove(zone.getDocumentId()); // Remove first in case the zone has already been visited recently
         recentZones.add(0, zone.getDocumentId()); // Add at top so we don't have to reverse the list for the zone searcher
         
@@ -1421,6 +1422,9 @@ public class Player extends Entity implements CommandExecutor {
     }
     
     public void setExperience(int experience, String message) {
+        if(experience > this.experience) {
+            GameServer.getInstance().getDailyRewardManager().addPlayerExperience(this, experience - this.experience);
+        }
         int maxExperience = getExperienceForLevel(getMaxLevel());
         if(experience > maxExperience) {
             experience = maxExperience;

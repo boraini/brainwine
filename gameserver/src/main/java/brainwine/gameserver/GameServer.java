@@ -63,7 +63,6 @@ public class GameServer implements CommandExecutor {
         long startTime = System.currentTimeMillis();
         logger.info(SERVER_MARKER, "Starting GameServer ...");
         ipBans = new IpBans();
-        dailyRewardManager = new DailyRewardManager();
         profanityManager = new ProfanityManager();
         CommandManager.init();
         GameConfiguration.init();
@@ -74,6 +73,7 @@ public class GameServer implements CommandExecutor {
         GrowthManager.loadGrowthData();
         Pandora.loadConfig();
         Quests.loadQuests();
+        dailyRewardManager = new DailyRewardManager();
         AndroidShop.getInstance().loadShopData();
         AndroidShopPerIpHistory.getInstance().load();
         Fake.loadFake();
@@ -164,6 +164,7 @@ public class GameServer implements CommandExecutor {
         logger.info(SERVER_MARKER, "Saving player data ...");
         playerManager.savePlayers();
         ipBans.saveIpBans();
+        dailyRewardManager.saveDailyRewards();
         AndroidShopPerIpHistory.getInstance().save();
         ScrapMarket.getInstance().saveJson();
     }
