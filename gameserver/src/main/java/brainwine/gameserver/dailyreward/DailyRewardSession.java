@@ -156,7 +156,11 @@ public class DailyRewardSession {
                         return;
                     }
 
-                    dailyRewardManager.removeReward(view.get(i));
+                    DailyReward toBeRemoved = view.get(i);
+                    // Prevent ConcurrentModificationException
+                    view = null;
+                    dailyRewardManager.removeReward(toBeRemoved);
+                    this.state = State.REWARDS;
                     this.showNextDialog();
                 });
                 break;
@@ -175,7 +179,11 @@ public class DailyRewardSession {
         if(!reward.getItems().isEmpty()) {
             DialogSection itemsSection = new DialogSection().setTitle("Items");
             for(Map.Entry<Item, Integer> item : reward.getItems().entrySet()) {
-                itemsSection.addItem(new DialogListItem().setItem(item.getKey().getCode()).setText(v3 ? item.getKey().getFancyTitle() : item.getKey().getTitle() + " x " + item.getValue()));
+                DialogListItem dialogListItem = new DialogListItem().setItem(item.getKey().getCode()).setText(v3 ? item.getKey().getFancyTitle() : item.getKey().getTitle() + " x " + item.getValue());
+                if(v3) {
+                    dialogListItem.setSupportRichText(true);
+                }
+                itemsSection.addItem(dialogListItem);
             }
             result.add(itemsSection);
         }

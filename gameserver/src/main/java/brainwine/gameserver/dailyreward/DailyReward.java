@@ -45,13 +45,15 @@ public class DailyReward {
     }
 
     public void rewardFreely(Player player) {
-        for(Map.Entry<Item, Integer> item : items.entrySet())
+        for(Map.Entry<Item, Integer> item : items.entrySet()) {
             player.getInventory().addItem(item.getKey(), item.getValue(), true);
+            showRewardDialog(player);
+        }
         if(lootCategories.length > 0) {
             Loot loot = GameServer.getInstance().getLootManager().getRandomLoot(player, lootCategories);
             if (loot != null) {
                 player.awardLoot(loot);
-                showRewardDialog(player);
+                
             }
         }
     }
