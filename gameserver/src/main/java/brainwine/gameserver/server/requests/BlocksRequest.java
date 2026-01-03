@@ -19,13 +19,17 @@ import brainwine.gameserver.zone.Zone;
 public class BlocksRequest extends PlayerRequest {
 
     public int[] chunkIndexes;
-    
+
+    private int getMaxActiveChunkCount(Player player) {
+        double side = MathUtils.lerp(5.5, 8.5, player.getNormalizedSkill(Skill.PERCEPTION));
+        return (int) (side * side);
+    }
+
     @Override
     public void process(Player player) {
         Zone zone = player.getZone();
-        
-        // TODO threshold should probably be based on chunk size & perception level
-        if(!player.isGodMode() && player.getActiveChunkCount() > 70) {
+
+        if(!player.isGodMode() && player.getActiveChunkCount() > getMaxActiveChunkCount(player)) {
             return;
         }
         
