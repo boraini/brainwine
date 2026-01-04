@@ -1,11 +1,14 @@
 package brainwine.gameserver.item.interactions;
 
+import brainwine.gameserver.dialog.Dialog;
+import brainwine.gameserver.dialog.DialogSection;
 import brainwine.gameserver.entity.Entity;
 import brainwine.gameserver.item.Item;
 import brainwine.gameserver.item.ItemRegistry;
 import brainwine.gameserver.item.ItemUseType;
 import brainwine.gameserver.item.Layer;
 import brainwine.gameserver.item.usetypeconfig.BatteryConfig;
+import brainwine.gameserver.item.usetypeconfig.SteamSourceConfig;
 import brainwine.gameserver.player.Inventory;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.util.MapHelper;
@@ -22,6 +25,19 @@ public class BatteryInteraction implements ItemInteraction {
 
         Inventory inventory = player.getInventory();
         Item battery = ItemRegistry.getItem("accessories/battery");
+        Item fusionCore = ItemRegistry.getItem("accessories/core-fusion");
+
+        SteamSourceConfig steamSourceConfig = item.getStructuredUse(ItemUseType.STEAM_SOURCE);
+        if(steamSourceConfig != null && !Item.AIR.hasId(steamSourceConfig.getPermanentlyOnVariantId()) && fusionCore.equals(player.getHeldItem())) {
+            player.showDialog(new Dialog().setActions("yesno").setTitle("Installing " + fusionCore.getTitle()).addSection(new DialogSection().setText("Are you sure that you want to permanently turn on this generator using a " + item.getTitle() + "? You won't be able to recover the core.")), ans -> {
+                if(ans.length > 0 && "Yes".equals(ans[0])) {
+                    if(!player.getInventory().hasItem(fusionCore)) return;
+                    zone.updateBlock(x, y, Layer.FRONT, ItemRegistry.getItem(steamSourceConfig.getPermanentlyOnVariantId()));
+                    inventory.removeItem(fusionCore, true);
+                }
+            });
+            return;
+        }
 
         // Check if player has the required items
         if(!inventory.hasItem(battery)) {

@@ -17,6 +17,9 @@ public class SteamSourceConfig extends ItemUseTypeConfig {
     @JsonProperty("on variant")
     String onVariantId = Item.AIR.getId();
 
+    @JsonProperty("perma on variant")
+    String permanentlyOnVariantId = Item.AIR.getId();
+
     @JsonProperty("outlets")
     List<Outlet> outlets;
 
@@ -35,6 +38,10 @@ public class SteamSourceConfig extends ItemUseTypeConfig {
 
     public String getOnVariantId() {
         return onVariantId;
+    }
+
+    public String getPermanentlyOnVariantId() {
+        return permanentlyOnVariantId;
     }
 
     public List<Outlet> getOutlets() {
