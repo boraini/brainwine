@@ -29,7 +29,7 @@ public class BatteryInteraction implements ItemInteraction {
 
         SteamSourceConfig steamSourceConfig = item.getStructuredUse(ItemUseType.STEAM_SOURCE);
         if(steamSourceConfig != null && !Item.AIR.hasId(steamSourceConfig.getPermanentlyOnVariantId()) && fusionCore.equals(player.getHeldItem())) {
-            player.showDialog(new Dialog().setActions("yesno").setTitle("Installing " + fusionCore.getTitle()).addSection(new DialogSection().setText("Are you sure that you want to permanently turn on this generator using a " + item.getTitle() + "? You won't be able to recover the core.")), ans -> {
+            player.showDialog(new Dialog().setActions("yesno").setTitle("Installing " + fusionCore.getTitle()).addSection(new DialogSection().setText("Are you sure that you want to permanently turn on this " + item.getTitle() + " using a " + fusionCore.getTitle() + "? You won't be able to recover the core.")), ans -> {
                 if(ans.length > 0 && "Yes".equals(ans[0])) {
                     if(!player.getInventory().hasItem(fusionCore)) return;
                     zone.updateBlock(x, y, Layer.FRONT, ItemRegistry.getItem(steamSourceConfig.getPermanentlyOnVariantId()));
