@@ -120,7 +120,7 @@ public class Zone {
     private final List<Timer<Integer>> blockTimers = new ArrayList<>();
     private final Map<String, Integer> dungeons = new HashMap<>();
     private final Map<String, DungeonType> dungeonTypes = new HashMap<>();
-    private final Map<Integer, MetaBlock> metaBlocks = new HashMap<>();
+    private Map<Integer, MetaBlock> metaBlocks = new HashMap<>();
     private final Map<Integer, MetaBlock> globalMetaBlocks = new HashMap<>();
     private final Map<Integer, MetaBlock> fieldBlocks = new HashMap<>();
     private final Map<Integer, MetaBlock> damageFieldBlocks = new HashMap<>();
@@ -2110,6 +2110,7 @@ public class Zone {
         for(int index : new ArrayList<>(metaBlocks.keySet())) {
             unindexMetaBlock(index);
         }
+        metaBlocks = new HashMap<>();
         metaBlocksLoaded = false;
     }
 

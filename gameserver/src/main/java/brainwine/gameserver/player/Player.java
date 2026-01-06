@@ -148,7 +148,7 @@ public class Player extends Entity implements CommandExecutor {
     private String familyName = null;
     private Map<String, OffsetDateTime> actionHistory = new HashMap<>();
     private final Map<String, Object> settings = new HashMap<>();
-    private final Set<Integer> activeChunks = new HashSet<>();
+    private Set<Integer> activeChunks = new HashSet<>();
     private final Map<Integer, Consumer<Object[]>> dialogs = new HashMap<>();
     private final List<Timer<String>> timers = new ArrayList<>();
     private final List<Entity> trackedEntities = new ArrayList<>();
@@ -677,9 +677,9 @@ public class Player extends Entity implements CommandExecutor {
         if(isTrading()) {
             tradeSession.cancel(this);
         }
-        
+
         dialogs.clear();
-        activeChunks.clear();
+        activeChunks = new HashSet<>();
         
         for(Entity entity : trackedEntities) {
             entity.removeTracker(this);
