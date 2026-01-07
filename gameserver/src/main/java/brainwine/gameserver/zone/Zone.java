@@ -128,6 +128,7 @@ public class Zone {
     private final Map<Integer, Minigame> minigames = new HashMap<>();
     private final Map<String, OffsetDateTime> actionHistory = new HashMap<>();
     private long lastStatusUpdate = System.currentTimeMillis();
+    private OffsetDateTime lastActiveDate;
     private int ticksElapsed;
     private boolean modified;
     private boolean frozen = false;
@@ -166,6 +167,7 @@ public class Zone {
         holographConfiguration = config.getHolographConfiguration().setZone(this);
         entityManager.updateSpawnRates();
         setRules(config.getRules());
+        lastActiveDate = config.getLastActiveDate();
     }
     
     public Zone(String documentId, String name, Biome biome, int width, int height) {
@@ -190,6 +192,7 @@ public class Zone {
         entityManager.updateSpawnRates();
         Arrays.fill(surface, height);
         Arrays.fill(sunlight, height);
+        lastActiveDate = OffsetDateTime.now();
     }
     
     @JsonCreator
@@ -2112,6 +2115,7 @@ public class Zone {
         }
         metaBlocks = new HashMap<>();
         metaBlocksLoaded = false;
+        lastActiveDate = OffsetDateTime.now();
     }
 
     public boolean areMetaBlocksLoaded() {
@@ -2346,6 +2350,14 @@ public class Zone {
 
     public long getLastStatusUpdate() {
         return lastStatusUpdate;
+    }
+
+    public void setLastActiveDate(OffsetDateTime lastActiveDate) {
+        this.lastActiveDate = lastActiveDate;
+    }
+
+    public OffsetDateTime getLastActiveDate() {
+        return lastActiveDate;
     }
 
     /**

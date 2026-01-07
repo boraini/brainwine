@@ -236,8 +236,7 @@ public class ZoneManager {
             if(charactersFile.exists()) {
                 zone.spawnPersistentNpcs(JsonHelper.readList(charactersFile, NpcData.class));
             }
-            
-            zone.simulate(ChronoUnit.SECONDS.between(config.getLastActiveDate(), OffsetDateTime.now()));
+
             addZone(zone);
         } catch (Exception e) {
             logger.error(SERVER_MARKER, "Zone load failure. id: {}", id, e);
@@ -252,6 +251,8 @@ public class ZoneManager {
             zone.setMetaBlocks(JsonHelper.readList(metaBlocksFile, MetaBlock.class));
         }
         zonesWithMetaBlocksLoaded.add(zone);
+        float dt = (System.currentTimeMillis() - zone.getLastActiveDate().toInstant().toEpochMilli()) / 1000.0f;
+        if(dt > 0f) zone.simulate(dt);
     }
 
     public void unloadZoneMetaBlocks(Zone zone) {
@@ -268,6 +269,8 @@ public class ZoneManager {
     public void saveZone(Zone zone) {
         File file = zone.getDirectory();
         file.mkdirs();
+
+        if(zone.areMetaBlocksLoaded()) zone.setLastActiveDate(OffsetDateTime.now());
         
         try {
             // Serialize everything before writing to disk to minimize risk of data corruption if something goes wrong

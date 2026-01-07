@@ -66,7 +66,7 @@ public class ZoneConfigFile {
     private OffsetDateTime creationDate = OffsetDateTime.now();
     
     @JsonSetter(nulls = Nulls.SKIP)
-    private OffsetDateTime lastActiveDate = OffsetDateTime.now();
+    private OffsetDateTime lastActiveDate;
 
     @JsonSetter(nulls = Nulls.SKIP)
     private MassSpawnerConfiguration massSpawnerConfiguration = new MassSpawnerConfiguration();
@@ -119,6 +119,7 @@ public class ZoneConfigFile {
         this.weatherMachineConfiguration = zone.getWeatherMachineConfiguration();
         this.holographConfiguration = zone.getHolographConfiguration();
         this.rules = zone.getRules();
+        this.lastActiveDate = zone.getLastActiveDate();
     }
 
     public String getName() {
