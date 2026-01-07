@@ -21,7 +21,7 @@ public class BlocksRequest extends PlayerRequest {
     public int[] chunkIndexes;
 
     private int getMaxActiveChunkCount(Player player) {
-        double side = MathUtils.lerp(4.2, 8.2, player.getNormalizedSkill(Skill.PERCEPTION));
+        double side = MathUtils.lerp(5.8, 8.9, player.getNormalizedSkill(Skill.PERCEPTION));
         return (int) (side * side);
     }
 
