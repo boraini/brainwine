@@ -16,14 +16,14 @@ public class EvokerInvasion extends Invasion {
         if(difficulty > 3) {
             return new WeightedMap<>(MapHelper.map(
                     String.class, Double.class,
-                    "brains/small", 15.0,
-                    "brains/medium", 2.0,
-                    "brains/medium-dire", 1.0
+                    "brains/small-minion", 15.0,
+                    "brains/medium-minion", 2.0,
+                    "brains/medium-dire-minion", 1.0
             ));
         } else {
             return new WeightedMap<>(MapHelper.map(
                     String.class, Double.class,
-                    "brains/small", 15.0
+                    "brains/small-minion", 15.0
             ));
         }
     }
