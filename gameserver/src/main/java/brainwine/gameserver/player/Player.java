@@ -168,6 +168,7 @@ public class Player extends Entity implements CommandExecutor {
     private int teleportY;
     private boolean stealth;
     private boolean godMode;
+    private boolean invisible;
     private boolean customSpawn;
     private boolean changingZones;
     private long lastBreathMessage;
@@ -592,7 +593,9 @@ public class Player extends Entity implements CommandExecutor {
         sendMessage(new BlockMetaMessage(zone.getGlobalMetaBlocks()));
         
         // Send peer data
-        Collection<Player> peers = zone.getPlayers();
+        Collection<Player> peers = zone.getPlayers().stream()
+                .filter(p -> !p.isInvisible())
+                .collect(Collectors.toList());
         sendMessage(new EntityStatusMessage(peers, EntityStatus.ENTERING));
         sendMessage(new EntityPositionMessage(peers));
         sendMessage(new EntityItemUseMessage(peers));
@@ -913,6 +916,14 @@ public class Player extends Entity implements CommandExecutor {
     
     public boolean isGodMode() {
         return admin && godMode;
+    }
+
+    public void setInvisible(boolean invisible) {
+        this.invisible = invisible;
+    }
+
+    public boolean isInvisible() {
+        return invisible;
     }
     
     /**
@@ -2003,6 +2014,11 @@ public class Player extends Entity implements CommandExecutor {
         
         // Exclude self
         entitiesInRange.remove(this);
+
+        // Filter out invisible players (unless this player is also invisible)
+        if(!isInvisible()) {
+            entitiesInRange.removeIf(entity -> entity instanceof Player && ((Player) entity).isInvisible());
+        }
         
         // Get entities that have entered the player's view
         List<Entity> enteredEntities = entitiesInRange.stream()
