@@ -13,6 +13,8 @@ import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
 
+import brainwine.gameserver.item.Item;
+import brainwine.gameserver.item.ItemRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -61,7 +63,7 @@ public class Pandora extends Minigame {
         try {
             config.clear();
             config.putAll(JsonHelper.readValue(ResourceFinder.getResourceUrl("pandora.json"), new TypeReference<Map<Integer, List<Map<String, Integer>>>>(){}));
-            
+
             // Make sure there are spawns for round 1
             if(!config.containsKey(1)) {
                 throw new IllegalArgumentException("No round 1 spawns configured");
@@ -284,11 +286,14 @@ public class Pandora extends Minigame {
         int position = 0;
         
         // Give out rewards
+        Item pandoraOpen = ItemRegistry.getItem(PANDORA_OPEN_ID);
+        String[] rewardLootCategories = pandoraOpen.getLootCategories().length > 0 ? pandoraOpen.getLootCategories() : REWARD_LOOT_CATEGORIES;
         for(Participant participant : leaderboard) {
             if(participant.isParticipating()) {
                 int luck = (int)(Math.max(1, baseLuck - position * 4) * luckMultiplier);
                 Player player = participant.getPlayer();
-                Loot loot = GameServer.getInstance().getLootManager().getRandomLoot(luck, zone.getBiome(), player.getInventory().getWardrobe(), REWARD_LOOT_CATEGORIES);
+
+                Loot loot = GameServer.getInstance().getLootManager().getRandomLoot(luck, zone.getBiome(), player.getInventory().getWardrobe(), rewardLootCategories);
                 
                 if(loot != null) {
                     player.awardLoot(loot, String.format("You won %s place!", ordinalizeNumber(position + 1)));
