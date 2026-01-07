@@ -392,16 +392,16 @@ public class EntityManager {
                 newlyLoaded = true;
             } else {
                 List<String> guards = MapHelper.getList(metaBlock.getMetadata(), "!");
+                int currentWave = metaBlock.getIntProperty("w");
                 if(guards == null) {
-                    guards = new ArrayList<>();
                     newlyLoaded = true;
-                }
-
-                int currentWave = metaBlock.hasProperty("!") ? metaBlock.getIntProperty("w") : 0;
-                if(!guards.isEmpty()) {
                     wave = currentWave;
                 } else {
-                    wave = currentWave - 1;
+                    if(!guards.isEmpty()) {
+                        wave = currentWave;
+                    } else {
+                        wave = currentWave - 1;
+                    }
                 }
 
                 if(currentWave != wave) {
