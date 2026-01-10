@@ -19,6 +19,8 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import brainwine.gameserver.androidshop.AndroidShopHistory;
+import brainwine.gameserver.mail.MailBox;
+import brainwine.gameserver.mail.PlayerMissive;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -147,6 +149,7 @@ public class Player extends Entity implements CommandExecutor {
     private AndroidShopHistory androidShopHistory = new AndroidShopHistory();
     private String familyName = null;
     private Map<String, OffsetDateTime> actionHistory = new HashMap<>();
+    private MailBox mailBox = new MailBox();
     private final Map<String, Object> settings = new HashMap<>();
     private Set<Integer> activeChunks = new HashSet<>();
     private final Map<Integer, Consumer<Object[]>> dialogs = new HashMap<>();
@@ -224,6 +227,7 @@ public class Player extends Entity implements CommandExecutor {
         this.androidShopHistory = config.getAndroidShopHistory();
         this.familyName = config.getFamilyName();
         this.actionHistory = config.getActionHistory();
+        this.mailBox = config.getMailBox();
         health = getMaxHealth();
         inventory.setPlayer(this);
         statistics.setPlayer(this);
@@ -644,6 +648,7 @@ public class Player extends Entity implements CommandExecutor {
         PlayerQuests.sendInitialPlayerQuestMessages(this);
         QuestEvents.handleEnterZone(this, zone);
         GameServer.getInstance().getDailyRewardManager().addPlayerExperience(this, 0);
+        PlayerMissive.sendInitialMissiveMessages(this);
         recentZones.remove(zone.getDocumentId()); // Remove first in case the zone has already been visited recently
         recentZones.add(0, zone.getDocumentId()); // Add at top so we don't have to reverse the list for the zone searcher
         
@@ -1974,6 +1979,10 @@ public class Player extends Entity implements CommandExecutor {
 
     public Map<String, OffsetDateTime> getActionHistory() {
         return Collections.unmodifiableMap(actionHistory);
+    }
+
+    public MailBox getMailBox() {
+        return mailBox;
     }
     
     public Inventory getInventory() {

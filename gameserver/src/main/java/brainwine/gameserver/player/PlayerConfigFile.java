@@ -5,6 +5,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import brainwine.gameserver.androidshop.AndroidShopHistory;
+import brainwine.gameserver.mail.MailBox;
 import brainwine.gameserver.quest.Quest;
 import brainwine.gameserver.util.ValueWithExpiry;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -54,6 +55,7 @@ public class PlayerConfigFile {
     private AndroidShopHistory androidShopHistory = new AndroidShopHistory();
     private String familyName = null;
     private Map<String, OffsetDateTime> actionHistory = new HashMap<>();
+    private MailBox mailBox = new MailBox();
     
     public PlayerConfigFile(Player player) {
         this.name = player.getName();
@@ -90,6 +92,7 @@ public class PlayerConfigFile {
         this.androidShopHistory = player.getAndroidShopHistory();
         this.familyName = player.getFamilyName();
         this.actionHistory = player.getActionHistory();
+        this.mailBox = player.getMailBox();
     }
 
     private static int transferSkill(Map<String, Integer> skills, String from, String to, int max) {
@@ -300,5 +303,9 @@ public class PlayerConfigFile {
 
     public Map<String, OffsetDateTime> getActionHistory() {
         return actionHistory;
+    }
+
+    public MailBox getMailBox() {
+        return mailBox;
     }
 }
