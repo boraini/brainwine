@@ -8,12 +8,12 @@ import java.time.OffsetDateTime;
 
 @MessageInfo(id = 55)
 public class MissiveMessage extends Message {
-    private static String id;
-    private static String type;
-    private static OffsetDateTime date;
-    String sender;
-    String message;
-    boolean read;
+    private String id;
+    private String type;
+    private OffsetDateTime date;
+    private String sender;
+    private String message;
+    private boolean read;
 
     public MissiveMessage(Mail mail) {
         id = mail.getId();
@@ -24,15 +24,15 @@ public class MissiveMessage extends Message {
         read = mail.isRead();
     }
 
-    public static String getId() {
+    public String getId() {
         return id;
     }
 
-    public static String getType() {
+    public String getType() {
         return type;
     }
 
-    public static OffsetDateTime getDate() {
+    public OffsetDateTime getDate() {
         return date;
     }
 

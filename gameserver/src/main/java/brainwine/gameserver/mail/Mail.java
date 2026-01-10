@@ -93,17 +93,5 @@ public class Mail {
             message.substring(0, TRUNCATION_SIZE - 3) + "..." : message;
         return String.format("%s: %s", subject != null ? subject : "(No Subject)", content);
     }
-
-    public Map<String, Object> toMissive() {
-        Player senderPlayer = GameServer.getInstance().getPlayerManager().getPlayerById(sender);
-        return MapHelper.map(String.class, Object.class,
-                "player_id", recipient,
-                "creator_id", sender,
-                "creator_name", senderPlayer != null ? senderPlayer.getName() : "Unknown",
-                "type", "pm",
-                "message", message,
-                "created_at", sentTime.toString(),
-                "read", read
-        );
-    }
+    
 }
