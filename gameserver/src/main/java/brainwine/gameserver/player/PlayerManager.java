@@ -116,6 +116,10 @@ public class PlayerManager {
         player.addAuthToken(BCrypt.hashpw(authToken, BCrypt.gensalt()));
         return authToken;
     }
+
+    public boolean checkPassword(Player player, String password) {
+        return BCrypt.checkpw(password, player.getPassword());
+    }
     
     public String login(String name, String password) {
         Player player = getPlayer(name);
@@ -124,7 +128,7 @@ public class PlayerManager {
             return null;
         }
         
-        if(!BCrypt.checkpw(password, player.getPassword())) {
+        if(!checkPassword(player, password)) {
            return null; 
         }
         

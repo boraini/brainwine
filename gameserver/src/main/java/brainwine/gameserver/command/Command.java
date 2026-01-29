@@ -2,6 +2,9 @@ package brainwine.gameserver.command;
 
 import static brainwine.gameserver.player.NotificationType.SYSTEM;
 
+import brainwine.gameserver.player.Player;
+import org.apache.logging.log4j.message.ParameterizedMessage;
+
 public abstract class Command {
     
     public abstract void execute(CommandExecutor executor, String[] args);
@@ -38,6 +41,10 @@ public abstract class Command {
     
     protected final void sendUsageMessage(CommandExecutor executor) {
         executor.notify(String.format("Usage: %s", getUsage(executor)), SYSTEM);
+    }
+
+    protected String getLogMessage(Player executor, String commandName, String[] args) {
+        return new ParameterizedMessage("{} used command '/{}'", executor.getName(), commandName + (args.length == 0 ? "" : " " + String.join(" ", args))).getFormattedMessage();
     }
 
 }

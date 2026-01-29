@@ -84,8 +84,7 @@ public class CommandManager {
         }
         
         if(executor instanceof Player) {
-            Player player = (Player)executor;
-            logger.info(SERVER_MARKER, "{} used command '/{}'", player.getName(), commandName + (args.length == 0 ? "" : " " + String.join(" ", args)));
+            logger.info(SERVER_MARKER, command.getLogMessage((Player)executor, commandName, args));
         }
 
         if(command.useSmartArguments()) {
