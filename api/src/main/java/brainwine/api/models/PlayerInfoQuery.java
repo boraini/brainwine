@@ -6,8 +6,14 @@ import java.util.Map;
 import java.util.Set;
 
 public class PlayerInfoQuery {
+    boolean includeBanned = false;
     Map<String, Integer> orderLevel = new HashMap<>();
     Set<String> statistics = new HashSet<>();
+
+    public PlayerInfoQuery setIncludeBanned(boolean includeBanned) {
+        this.includeBanned = includeBanned;
+        return this;
+    }
 
     public PlayerInfoQuery setOrderLevel(String orderKey, int value) {
         orderLevel.put(orderKey, value);
@@ -17,6 +23,10 @@ public class PlayerInfoQuery {
     public PlayerInfoQuery addStatistic(String key) {
         statistics.add(key);
         return this;
+    }
+
+    public boolean isIncludeBanned() {
+        return includeBanned;
     }
 
     public Map<String, Integer> getOrderLevel() {

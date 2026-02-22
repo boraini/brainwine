@@ -106,6 +106,10 @@ public class GatewayService {
             }
         }
 
+        handleQueryParam(ctx, "includeBanned", Boolean.class, value -> {
+            query.setIncludeBanned(value);
+        });
+
         handleQueryParam(ctx, "statistics", String.class, csv -> {
             for(String key : csv.split(",")) {
                 // Statistics are always alphanumeric, with underscores in between

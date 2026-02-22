@@ -97,6 +97,7 @@ public class DirectDataFetcher implements DataFetcher {
     public Collection<PlayerInfoSummary> fetchPlayerInfo(PlayerInfoQuery query) {
         return playerManager.getPlayers().stream()
                 .filter(Objects::nonNull)
+                .filter(player -> query.isIncludeBanned() || player.getCurrentBan() == null)
                 .filter(player -> query.getOrderLevel().keySet().stream().allMatch(
                         orderKey -> Objects.equals(player.getOrders().getOrDefault(orderKey, 0), query.getOrderLevel().get(orderKey))
                 ))
