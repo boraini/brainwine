@@ -1,6 +1,5 @@
 package brainwine.gameserver.item.interactions;
 
-import brainwine.gameserver.command.CommandAccessLevel;
 import brainwine.gameserver.dialog.DialogHelper;
 import brainwine.gameserver.entity.Entity;
 import brainwine.gameserver.item.Item;
@@ -36,21 +35,7 @@ public class WorldMachineInteraction implements ItemInteraction {
         player.showDialog(DialogHelper.getDialog("world_machines." + itemUse + ".menu"), ans -> {
             if(ans.length == 0 || !(ans[0] instanceof String)) return;
 
-            WorldMachineConfiguration machine = null;
-            switch((String) itemUse) {
-                case "spawner":
-                    machine = zone.getMassSpawnerConfiguration();
-                    break;
-                case "teleport":
-                    machine = zone.getMassTeleporterConfiguration();
-                    break;
-                case "weather":
-                    machine = zone.getWeatherMachineConfiguration();
-                    break;
-                case "holograph":
-                    machine = zone.getHolographConfiguration();
-                    break;
-            }
+            WorldMachineConfiguration machine = WorldMachineConfiguration.getWorldMachineConfiguration(zone, item);
             if(machine == null) return;
 
             switch ((String) ans[0]) {

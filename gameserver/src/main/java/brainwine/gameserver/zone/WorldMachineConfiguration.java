@@ -6,6 +6,7 @@ import brainwine.gameserver.dialog.DialogHelper;
 import brainwine.gameserver.dialog.DialogSection;
 import brainwine.gameserver.dialog.input.DialogTextIndexInput;
 import brainwine.gameserver.item.Item;
+import brainwine.gameserver.item.ItemUseType;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.util.MapHelper;
 import brainwine.shared.JsonHelper;
@@ -45,6 +46,14 @@ public abstract class WorldMachineConfiguration {
     public <T extends WorldMachineConfiguration> T setZone(Zone zone) {
         this.zone = zone;
         return (T)this;
+    }
+
+    public void setMachineX(int machineX) {
+        this.machineX = machineX;
+    }
+
+    public void setMachineY(int machineY) {
+        this.machineY = machineY;
     }
 
     public int getMachineX() {
@@ -202,6 +211,21 @@ public abstract class WorldMachineConfiguration {
         }
 
         throw new IllegalArgumentException();
+    }
+
+    public static WorldMachineConfiguration getWorldMachineConfiguration(Zone zone, Item item) {
+        Object use = item.getUse(ItemUseType.WORLD_MACHINE);
+        if(use instanceof String) switch((String)use) {
+            case "spawner":
+                return zone.getMassSpawnerConfiguration();
+            case "teleport":
+                return zone.getMassTeleporterConfiguration();
+            case "weather":
+                return zone.getWeatherMachineConfiguration();
+            case "holograph":
+                return zone.getHolographConfiguration();
+        }
+        return null;
     }
 
 }

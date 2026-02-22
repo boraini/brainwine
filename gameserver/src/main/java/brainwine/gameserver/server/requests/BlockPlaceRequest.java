@@ -13,6 +13,7 @@ import brainwine.gameserver.item.ItemRegistry;
 import brainwine.gameserver.item.ItemUseType;
 import brainwine.gameserver.item.Layer;
 import brainwine.gameserver.item.ModType;
+import brainwine.gameserver.item.interactions.WorldMachineInteraction;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.player.Skill;
 import brainwine.gameserver.quest.QuestEvents;
@@ -24,6 +25,7 @@ import brainwine.gameserver.util.MathUtils;
 import brainwine.gameserver.util.Pair;
 import brainwine.gameserver.zone.Block;
 import brainwine.gameserver.zone.MetaBlock;
+import brainwine.gameserver.zone.WorldMachineConfiguration;
 import brainwine.gameserver.zone.Zone;
 
 @RequestInfo(id = 12)
@@ -234,6 +236,12 @@ public class BlockPlaceRequest extends PlayerRequest {
             processBurial(zone, player);
         } else if(item.getGroup() == ItemGroup.CAGE) {
             processTrapping(zone, player);
+        }
+
+        WorldMachineConfiguration machine = WorldMachineConfiguration.getWorldMachineConfiguration(zone, item);
+        if(machine != null) {
+            machine.setMachineX(x);
+            machine.setMachineY(y);
         }
     }
     

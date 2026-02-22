@@ -32,7 +32,7 @@ public class HolographConfiguration extends WorldMachineConfiguration {
     @JsonIgnore
     @Override
     public boolean isEnabled() {
-        return isEnabled("machines/holograph");
+        return isEnabled("machines/holo");
     }
 
     @Override
@@ -134,8 +134,10 @@ public class HolographConfiguration extends WorldMachineConfiguration {
     }
 
     public void tick(float deltaTime) {
-        if(turnedOn && tickCounter == 0 && !isEnabled()) {
-            turnOffMachine(zone);
+        if(turnedOn) {
+            if (tickCounter == 0 && !isEnabled()) {
+                turnOffMachine(zone);
+            }
         }
 
         if(timeout != 0 && System.currentTimeMillis() > timeout + outfitChangeTime && turnedOn) {
