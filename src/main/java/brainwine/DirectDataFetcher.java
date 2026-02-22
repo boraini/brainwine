@@ -118,10 +118,24 @@ public class DirectDataFetcher implements DataFetcher {
                 player.getStatistics().getTotalItemsCrafted()
         );
 
-        if(!query.getStatistics().isEmpty()) {
+        Map<String, Object> selectedStats = info.getStatistics();
+
+        for(String statistic : query.getStatistics()) {
+            // Derived statistics
+            switch(statistic) {
+                case "shillings_spent":
+                    selectedStats.put("shillings_spent", player.getStatistics().getShillingsSpentInAndroidShop() + player.getStatistics().getShillingsSpentInScrapMarket());
+                    break;
+                case "shillings_received":
+                    selectedStats.put("shillings_received", player.getStatistics().getShillingsReceivedInAndroidShop() + player.getStatistics().getShillingsReceivedInScrapMarket());
+                    break;
+            }
+        }
+
+        if(query.getStatistics().stream().anyMatch(includedStats::contains)) {
             try {
                 Map<String, Object> stats = JsonHelper.readValue(player.getStatistics(), new TypeReference<Map<String, Object>>() {});
-                Map<String, Object> selectedStats = new HashMap<>();
+
                 for(String statistic : query.getStatistics()) {
                     if(includedStats.contains(statistic)) {
                         Object value = stats.get(statistic);
@@ -130,7 +144,6 @@ public class DirectDataFetcher implements DataFetcher {
                         }
                     }
                 }
-                info.setStatistics(selectedStats);
             } catch(JsonProcessingException ignored) {}
         }
 
