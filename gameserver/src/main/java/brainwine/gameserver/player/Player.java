@@ -351,8 +351,15 @@ public class Player extends Entity implements CommandExecutor {
     
     @Override
     public float getMaxHealth() {
-        int stamina = Math.min(10, getTotalSkillLevel(Skill.STAMINA));
-        return DEFAULT_HEALTH + (stamina < 10 ? (stamina - 1) * 0.5F : 5);
+        int START_FIRST_FORMULA_AT = 1;
+        int START_SECOND_FORMULA_AT = 10;
+        int END_SECOND_FORMULA_AT = 13;
+        int stamina = Math.min(END_SECOND_FORMULA_AT, getTotalSkillLevel(Skill.STAMINA));
+        
+        if(stamina < START_FIRST_FORMULA_AT) {
+            return (float)MathUtils.lerp(5.0, 10.0, (double)(stamina - START_FIRST_FORMULA_AT) / (START_SECOND_FORMULA_AT - START_FIRST_FORMULA_AT));
+        }
+        return (float)MathUtils.lerp(10.0, 15.0, (double)(stamina - START_SECOND_FORMULA_AT) / (END_SECOND_FORMULA_AT - START_SECOND_FORMULA_AT));
     }
     
     @Override
