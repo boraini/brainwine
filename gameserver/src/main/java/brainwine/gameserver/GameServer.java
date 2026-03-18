@@ -10,6 +10,7 @@ import brainwine.gameserver.androidshop.AndroidShopPerIpHistory;
 import brainwine.gameserver.scrapmarket.ScrapMarket;
 import brainwine.gameserver.anticheat.AnticheatManager;
 import brainwine.gameserver.chat.ProfanityManager;
+import brainwine.gameserver.scrapmarket.SpecialRequestRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -76,6 +77,7 @@ public class GameServer implements CommandExecutor {
         dailyRewardManager = new DailyRewardManager();
         AndroidShop.getInstance().loadShopData();
         AndroidShopPerIpHistory.getInstance().load();
+        SpecialRequestRegistry.getInstance().loadTrades();
         Fake.loadFake();
         AnticheatManager.loadConfig();
         ipBans.loadIpBans();

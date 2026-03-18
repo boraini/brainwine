@@ -3,8 +3,6 @@ package brainwine.gameserver.entity.npc.job.jobs;
 import brainwine.gameserver.GameConfiguration;
 import brainwine.gameserver.androidshop.AndroidShop;
 import brainwine.gameserver.androidshop.AndroidShopSession;
-import brainwine.gameserver.scrapmarket.ScrapMarket;
-import brainwine.gameserver.scrapmarket.ScrapMarketOfferSession;
 import brainwine.gameserver.dialog.Dialog;
 import brainwine.gameserver.dialog.DialogHelper;
 import brainwine.gameserver.dialog.DialogListItem;
@@ -17,7 +15,11 @@ import brainwine.gameserver.item.ItemRegistry;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.player.Skill;
 import brainwine.gameserver.player.TradeSession;
+import brainwine.gameserver.scrapmarket.ScrapMarket;
+import brainwine.gameserver.scrapmarket.ScrapMarketOfferSession;
 import brainwine.gameserver.scrapmarket.ScrapMarketSession;
+import brainwine.gameserver.scrapmarket.SpecialRequestRegistry;
+import brainwine.gameserver.scrapmarket.SpecialRequestSession;
 import brainwine.gameserver.util.MapHelper;
 
 import java.util.ArrayList;
@@ -39,6 +41,13 @@ public class Trader extends DialoguerJob {
                     .setText(MapHelper.getString(GameConfiguration.getBaseConfig(), "dialogs.android.sell"))
                     .setChoice("sell")
         ));
+
+        // Add special requests option if trades are available
+        if(!SpecialRequestRegistry.getInstance().getTrades().isEmpty()) {
+            sections.add(new DialogSection()
+                    .setText("I'm looking to trade some items. Interested?")
+                    .setChoice("special_request"));
+        }
 
         if(player.getTotalSkillLevel(Skill.BARTER) >= ScrapMarket.MIN_BARTER_LEVEL) {
             sections.add(new DialogSection()
@@ -67,6 +76,10 @@ public class Trader extends DialoguerJob {
 
         if (ans.length >= 1 && "buy".equals(ans[0])) {
             new AndroidShopSession(AndroidShop.getInstance(), me, player).showNextDialog();
+        }
+
+        if (ans.length >= 1 && "special_request".equals(ans[0])) {
+            new SpecialRequestSession(me, player).showNextDialog();
         }
 
         if (ans.length >= 1 && "scrap_market".equals(ans[0])) {
