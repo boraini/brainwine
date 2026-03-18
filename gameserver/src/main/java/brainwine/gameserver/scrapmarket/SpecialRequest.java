@@ -1,6 +1,7 @@
 package brainwine.gameserver.scrapmarket;
 
 import brainwine.gameserver.item.Item;
+import brainwine.gameserver.item.ItemRegistry;
 import brainwine.gameserver.player.Player;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
