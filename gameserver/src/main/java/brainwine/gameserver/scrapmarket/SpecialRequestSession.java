@@ -31,7 +31,7 @@ public class SpecialRequestSession {
     }
 
     public void showNextDialog() {
-        if (currentRequest.isEmpty()) {
+        if (!currentRequest.isPresent()) {
             showBarterTradesDialog();
             return;
         }
@@ -89,7 +89,7 @@ public class SpecialRequestSession {
      * Show confirmation dialog for a specific trade
      */
     public void showTradeConfirmation() {
-        if (currentRequest.isEmpty()) {
+        if (!currentRequest.isPresent()) {
             player.notify("You haven't picked a request yet.");
             return;
         }
