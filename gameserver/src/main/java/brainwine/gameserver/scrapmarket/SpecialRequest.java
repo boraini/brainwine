@@ -3,7 +3,9 @@ package brainwine.gameserver.scrapmarket;
 import brainwine.gameserver.item.Item;
 import brainwine.gameserver.player.Player;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -15,16 +17,10 @@ public class SpecialRequest {
     
     @JsonProperty("description")
     private String description;
-    
-    @JsonProperty("required_items")
-    private Map<String, Integer> requiredItemIds;
-    
-    @JsonProperty("reward_items")
-    private Map<String, Integer> rewardItemIds;
-    
-    // Cached Item objects
-    private Map<Item, Integer> requiredItems;
-    private Map<Item, Integer> rewardItems;
+
+    private Map<Item, Integer> requiredItems = new HashMap<>();
+
+    private Map<Item, Integer> rewardItems = new HashMap<>();
     
     /**
      * Check if the player has all required items for this trade
@@ -59,6 +55,30 @@ public class SpecialRequest {
     
     public String getDescription() {
         return description;
+    }
+
+    @JsonSetter("required_items")
+    public void setRequiredItems(Map<String, Integer> requiredItems) {
+        this.requiredItems.clear();
+        for(Map.Entry<String, Integer> entry : requiredItems.entrySet()) {
+            Item item = ItemRegistry.getItem(entry.getKey());
+
+            if (!item.isAir()) {
+                this.requiredItems.put(item, entry.getValue());
+            }
+        }
+    }
+
+    @JsonSetter("reward_items")
+    public void setRewardItems(Map<String, Integer> rewardItems) {
+        this.rewardItems.clear();
+        for(Map.Entry<String, Integer> entry : rewardItems.entrySet()) {
+            Item item = ItemRegistry.getItem(entry.getKey());
+
+            if (!item.isAir()) {
+                this.rewardItems.put(item, entry.getValue());
+            }
+        }
     }
     
     public Map<Item, Integer> getRequiredItems() {
