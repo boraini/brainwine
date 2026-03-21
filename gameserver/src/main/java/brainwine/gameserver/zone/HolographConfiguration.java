@@ -164,9 +164,9 @@ public class HolographConfiguration extends WorldMachineConfiguration {
     public void setOutfitFrom(Player player, Zone zone, float availablePower) {
         Map<String, Object> appearancePower = MapHelper.getMap(GameConfiguration.getBaseConfig(), "dialogs.world_machines.holograph.appearance", new HashMap<>());
         outfitOverrides.clear();
-        Map<String, Object> outfit = player.getAppearance();
+        Map<String, Object> outfit = player.getVisibleAppearance();
         for(AppearanceSlot slot : AppearanceSlot.values()) {
-            if(expectInteger(appearancePower.getOrDefault(slot.getCategory(), 0)) < availablePower) {
+            if(expectInteger(appearancePower.getOrDefault(slot.getCategory(), 0)) <= availablePower) {
                 outfitOverrides.put(slot.getId(), outfit.get(slot.getId()));
             }
         }
