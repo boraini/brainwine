@@ -16,10 +16,12 @@ import brainwine.api.models.PlayerInfoSummary;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import brainwine.api.config.SslConfig;
 import brainwine.api.models.PlayersRequest;
 import brainwine.api.models.ServerConnectInfo;
 import brainwine.api.models.SessionsRequest;
 
+import brainwine.api.util.JettyUtils;
 import brainwine.shared.JsonHelper;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
@@ -37,8 +39,15 @@ public class GatewayService {
     public GatewayService(Api api, int port) {
         this.api = api;
         this.dataFetcher = api.getDataFetcher();
-        logger.info(SERVER_MARKER, "Starting GatewayService @ port {} ...", port);
-        gateway = Javalin.create(config -> config.jsonMapper(new JavalinJackson(JsonHelper.MAPPER)))
+        logger.info(SERVER_MARKER, "Starting GatewayService @ port {}  ...", port);
+        SslConfig ssl = api.getSslConfig();
+        gateway = Javalin.create(config -> {
+            config.jsonMapper(new JavalinJackson(JsonHelper.MAPPER));
+
+            if(ssl.isSslEnabled()) {
+                config.server(() -> JettyUtils.createJettyServerWithSsl(port, ssl.getKeyStorePath(), ssl.getKeyStorePassword()));
+            }
+        })
             .exception(Exception.class, this::handleException)
             .get("/clients", this::handleNewsRequest)
             .get("/players", this::handlePlayerSearch)
@@ -194,7 +203,7 @@ public class GatewayService {
         int toIndex = page * playerSearchPageSize;
         ctx.json(players.subList(fromIndex < 0 ? 0 : fromIndex > players.size() ? players.size() : fromIndex, toIndex > players.size() ? players.size() : toIndex));
     }
-    
+
     /**
      * Handler function for registering a new account.
      */

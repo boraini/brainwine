@@ -296,12 +296,15 @@ public class Player extends Entity implements CommandExecutor {
         
         // Process timers
         timers.removeIf(Timer::process);
-        
+
         // Update tracked entities
         if(now - lastTrackedEntityUpdate >= TRACKED_ENTITY_UPDATE_INTERVAL) {
             updateTrackedEntities();
-            sendMessage(new EntityPositionMessage(trackedEntities));
             lastTrackedEntityUpdate = now;
+
+            if(!trackedEntities.isEmpty()) {
+                sendMessage(new EntityPositionMessage(trackedEntities));
+            }
         }
 
         DailyQuests.tryIssueDailyQuest(this);
@@ -1772,6 +1775,9 @@ public class Player extends Entity implements CommandExecutor {
                 }
             }
         }
+
+        appearance.put("to*", "ffff55"); // Top overlay color
+        appearance.put("fg*", "ffff55"); // Facial gear overlay color
 
         return appearance;
     }

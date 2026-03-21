@@ -114,6 +114,12 @@ public class ShopManager {
             return false;
         }
         
+        // Run product-specific validation
+        if(!product.validate(player)) {
+            player.sendMessage(new StatMessage(PlayerStat.CROWNS, player.getCrowns()));
+            return false;
+        }
+        
         player.setCrowns(player.getCrowns() - product.getCost());
         product.purchase(player);
         player.getStatistics().trackCrownsSpent(product.getCost());
