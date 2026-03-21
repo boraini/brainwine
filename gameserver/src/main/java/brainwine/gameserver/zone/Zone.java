@@ -250,7 +250,7 @@ public class Zone {
         if(!getPlayers().isEmpty()) {
             if(now >= lastStatusUpdate + 4000) {
                 for(Player player : getPlayers()) {
-                    sendMessage(new ZoneStatusMessage(getStatusConfig(player)));
+                    player.sendMessage(new ZoneStatusMessage(getStatusConfig(player)));
                 }
                 
                 lastStatusUpdate = now;
@@ -1908,14 +1908,14 @@ public class Zone {
         
         this.sunlight[x] = sunlight;
     }
-    
+
     public int[] getSunlight(int x, int length) {
         int[] sunlight = new int[length];
-        
-        if(x >= 0 && x + length < width) {
+
+        if(x >= 0 && x + length <= width) {
             System.arraycopy(this.sunlight, x, sunlight, 0, length);
         }
-        
+
         return sunlight;
     }
     

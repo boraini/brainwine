@@ -81,7 +81,7 @@ public class TargetTeleportInteraction implements ItemInteraction {
         List<MetaBlock> protectors = targetZone.getMetaBlocks(
                 m -> m.hasOwner()
                                && m.getItem().getId().startsWith("mechanical/dish"));
-        
+
         // Check area protection
         if(!player.isGodMode() && targetZone.isBlockProtectedByField(targetX, targetY, player, false, protectors)) {
             Player owner = metaBlock.getOwner();
