@@ -558,6 +558,10 @@ public class TradeSession {
         }
 
         public static DialogSection createQuantitySelector(int maxQuantity, int unit) {
+            return createQuantitySelector("quantity", maxQuantity, unit, false);
+        }
+
+        public static DialogSection createQuantitySelector(String key, int maxQuantity, int unit, boolean allowZero) {
             // Get quantity options that are available to the player
             List<String> quantityOptions = ITEM_QUANTITY_OPTIONS.stream()
                     .filter(quantity -> Integer.parseInt(quantity) * unit <= maxQuantity)
