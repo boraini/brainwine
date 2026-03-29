@@ -136,9 +136,10 @@ public class GroupDungeon extends Minigame {
                     notifyParticipants(String.format("Wave %d is starting!", currentWave + 1));
                 }
                 MetaBlock speakerToRemove = Fake.pickFromList(speakers);
+                Item speakerItem = speakerToRemove.getItem();
                 speakers.remove(speakerToRemove);
                 zone.updateBlock(speakerToRemove.getX(), speakerToRemove.getY(), Layer.FRONT, Item.AIR);
-                zone.spawnEffect(speakerToRemove.getX(), speakerToRemove.getY(), "bomb-large", 2);
+                zone.spawnEffect(speakerToRemove.getX() + speakerItem.getBlockWidth() / 2.0f - 0.5f, speakerToRemove.getY() - speakerItem.getBlockHeight() / 2.0f + 0.5f, "bomb-electric", 1);
                 enemiesLeftInWave = getTotalEnemiesInWave(currentWave + 1);
                 lastSpawnedAt = System.currentTimeMillis();
                 enemyInterval = (int)(2000 + Math.random() * 8000);
@@ -247,7 +248,7 @@ public class GroupDungeon extends Minigame {
                         zone.notifyPlayers(String.format("%s increased the group dungeon's potency level to %s!", player.getName(), potencyLevel), NotificationType.PEER_ACCOMPLISHMENT);
                     } catch (Exception e) {
                         player.notify("Error while parsing your input.");
-                        e.printStackTrace();
+                        logger.error("Error while handling potency bump dialog answers", e);
                     }
                 });
             }
@@ -348,6 +349,10 @@ public class GroupDungeon extends Minigame {
 
         // Broadcast leader's score
         zone.notifyPlayers(String.format("Dungeon has been raided! %s showed mastery with %s!", currentLeader.getPlayer().getName(), describeScore(currentLeader.getScore())));
+
+        // Explode the siren
+        zone.updateBlock(x, y, Layer.FRONT, Item.AIR);
+        zone.spawnEffect(x + sirenOpen.getBlockWidth() / 2.0f - 0.5f, y - sirenOpen.getBlockHeight() / 2.0f + 0.5f, "bomb-electric", 2);
     }
 
     protected int getCurrentWave() {
