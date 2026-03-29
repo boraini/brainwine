@@ -58,6 +58,18 @@ public class MinigameInteraction implements ItemInteraction {
             player.notify("Sorry, custom minigames are not supported yet.");
             return;
         }
+
+        String startCondition = MapHelper.getString(configMap, "start_condition");
+        if(startCondition != null) {
+            switch(startCondition) {
+                case "dungeon-raided":
+                case "dungeon-is-raided":
+                    if(metaBlock != null && zone.isDungeonIntact(metaBlock.getStringProperty("@"))) {
+                        player.notify("You must destroy all the enemy protectors first.");
+                        return;
+                    }
+            }
+        }
         
         Map<String, Object> startDialog = MapHelper.getMap(configMap, "start_dialog");
         
