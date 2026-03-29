@@ -76,13 +76,16 @@ public class GroupDungeon extends Minigame {
     public void tick(float deltaTime) {
         super.tick(deltaTime);
         long now = System.currentTimeMillis();
+        final int currentWave = getCurrentWave();
 
         if(!raidStarted) {
             if(now >= startedAt + config.getGracePeriod()) {
                 raidStarted = true;
-                enemiesLeftInWave = getTotalEnemiesInWave(getCurrentWave());
+                enemiesLeftInWave = getTotalEnemiesInWave(currentWave);
                 setDoorsOpen(false);
-                for(Player player: zone.getPlayers()) {
+                lastSpawnedAt = System.currentTimeMillis();
+                enemyInterval = (int) (500 + Math.random() * 2000);
+                for(Player player : zone.getPlayers()) {
                     if(participants.containsKey(player)) {
                         player.notify("Oh no, the doors are shut! Now your only way out is to end these pesky brains.");
                     } else {
@@ -94,10 +97,9 @@ public class GroupDungeon extends Minigame {
         }
 
         if(enemiesLeftInWave > 0 && now > enemyInterval + lastSpawnedAt) {
-            enemyInterval = (int)(500 + Math.random() * 2000);
-            lastSpawnedAt = System.currentTimeMillis();
             // If there are still enemies left to spawn this wave, and it is time to spawn another one
-            int currentWave = getCurrentWave();
+            lastSpawnedAt = System.currentTimeMillis();
+            enemyInterval = (int)(500 + Math.random() * 2000);
             // Pick the enemy table that is only as hard as the current wave or easier
             WeightedMap<String> currentEnemyTable = config.getEnemies().get(config.getEnemies().keySet().stream().filter(wave -> currentWave >= wave).max(Integer::compareTo).orElse(1));
             MetaBlock speaker = Fake.pickFromList(speakers);
@@ -122,7 +124,7 @@ public class GroupDungeon extends Minigame {
                 }
             }
 
-            if(getCurrentWave() >= initialNumSpeakers) {
+            if(currentWave >= initialNumSpeakers + 1) {
                 // If all speakers have been destroyed, complete
                 complete();
                 return;
@@ -130,14 +132,14 @@ public class GroupDungeon extends Minigame {
 
             if(enemiesLeftInWave == 0) {
                 // If the wave is over, set up for the next wave
-                if(getCurrentWave() < initialNumSpeakers) {
-                    notifyParticipants(String.format("Wave %d is starting!", getCurrentWave()));
+                if(currentWave < initialNumSpeakers) {
+                    notifyParticipants(String.format("Wave %d is starting!", currentWave + 1));
                 }
                 MetaBlock speakerToRemove = Fake.pickFromList(speakers);
                 speakers.remove(speakerToRemove);
                 zone.updateBlock(speakerToRemove.getX(), speakerToRemove.getY(), Layer.FRONT, Item.AIR);
                 zone.spawnEffect(speakerToRemove.getX(), speakerToRemove.getY(), "bomb-large", 2);
-                enemiesLeftInWave = getTotalEnemiesInWave(getCurrentWave());
+                enemiesLeftInWave = getTotalEnemiesInWave(currentWave + 1);
                 lastSpawnedAt = System.currentTimeMillis();
                 enemyInterval = (int)(2000 + Math.random() * 8000);
             }
@@ -292,6 +294,7 @@ public class GroupDungeon extends Minigame {
 
     @Override
     protected void onFinish() {
+        setDoorsOpen(true);
         // Kill all spawned entities
         for(Npc entity : spawns) {
             entity.setMinigame(null);
@@ -306,8 +309,8 @@ public class GroupDungeon extends Minigame {
         int position = 0;
 
         // Give out rewards
-        Item pandoraOpen = ItemRegistry.getItem(sirenOpenId);
-        String[] rewardLootCategories = pandoraOpen.getLootCategories();
+        Item sirenOpen = ItemRegistry.getItem(sirenOpenId);
+        String[] rewardLootCategories = sirenOpen.getLootCategories();
         for(Participant participant : leaderboard) {
             if(participant.isParticipating()) {
                 int luck = (int)(Math.max(1, baseLuck - position * 4) * luckMultiplier);

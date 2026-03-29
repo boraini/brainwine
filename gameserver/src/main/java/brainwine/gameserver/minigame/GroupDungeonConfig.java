@@ -133,7 +133,8 @@ public class GroupDungeonConfig {
 
         @Override
         public boolean equals(Object o) {
-            if(!(o instanceof BlockState that)) return false;
+            if(!(o instanceof BlockState)) return false;
+            BlockState that = (BlockState)o;
             return mod == that.mod && Objects.equals(item, that.item);
         }
 
