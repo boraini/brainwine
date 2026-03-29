@@ -18,6 +18,8 @@ public class GroupDungeonConfig {
     private static final Logger logger = LogManager.getLogger();
 
     private long gracePeriod = 120000;
+    private int maxPlayerBumps = 4;
+    private int maxTotalBumps = 0;
     private List<DoorState> doors = Arrays.asList(
             new DoorState(
                     new BlockState("mechanical/door-beefy", 1, null),
@@ -37,6 +39,14 @@ public class GroupDungeonConfig {
 
     public long getGracePeriod() {
         return gracePeriod;
+    }
+
+    public int getMaxPlayerBumps() {
+        return maxPlayerBumps;
+    }
+
+    public int getMaxTotalBumps() {
+        return maxTotalBumps;
     }
 
     @JsonSetter

@@ -567,11 +567,14 @@ public class TradeSession {
                     .filter(quantity -> Integer.parseInt(quantity) * unit <= maxQuantity)
                     .map(quantity -> Integer.toString(Integer.parseInt(quantity) * unit))
                     .collect(Collectors.toList());
+            if(allowZero) {
+                quantityOptions.add(0, "0");
+            }
 
             return new DialogSection()
                     .setInput(new DialogSelectInput()
                             .setOptions(quantityOptions)
-                            .setKey("quantity"));
+                            .setKey(key != null ? key : "quantity"));
         }
 
         public static DialogSection createQuantitySelector(Player offerer, Item item) {

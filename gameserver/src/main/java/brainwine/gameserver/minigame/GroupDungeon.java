@@ -42,7 +42,7 @@ public class GroupDungeon extends Minigame {
     private static final String sirenOpenId = "mechanical/siren-open";
 
     int potencyLevel = 0;
-    Set<String> potencyBumps = new HashSet<>();
+    Map<String, Integer> potencyBumps = new HashMap<>();
     List<MetaBlock> speakers = new ArrayList<>();
     List<MetaBlock> doors = new ArrayList<>();
     int initialNumSpeakers = 0;
@@ -156,15 +156,31 @@ public class GroupDungeon extends Minigame {
 
         // Increase potency if the minigame hasn't started yet
         if(!raidStarted) {
-            if(!potencyBumps.contains(player.getDocumentId()) || player.isGodMode()) {
+            boolean totalBumpsLimited = config.getMaxTotalBumps() > 0;
+            int totalBumpsLeft = config.getMaxTotalBumps() - potencyLevel;
+            if(totalBumpsLimited && totalBumpsLeft <= 0) {
+                player.notify("Sorry, no more players can participate in this raid.");
+                return;
+            }
+            if(!potencyBumps.containsKey(player.getDocumentId()) || player.isGodMode()) {
+                potencyBumps.put(player.getDocumentId(), 1);
                 zone.notifyPlayers(String.format("%s increased the group dungeon's potency level to %s!", player.getName(), ++potencyLevel), NotificationType.PEER_ACCOMPLISHMENT);
             } else {
+                boolean playerBumpsLimited = config.getMaxPlayerBumps() > 0;
+                int playerBumpsLeft = config.getMaxPlayerBumps() - potencyBumps.getOrDefault(player.getDocumentId(), 0);
+                boolean bumpsLimited = totalBumpsLimited || playerBumpsLimited;
+                int bumpsLeft = totalBumpsLimited && playerBumpsLimited ? Math.min(totalBumpsLeft, playerBumpsLeft) : totalBumpsLimited ? totalBumpsLeft : playerBumpsLeft;
+                if(bumpsLimited && bumpsLeft <= 0) {
+                    player.notify("Sorry, you can't make this raid harder anymore. Maybe ask more players to join?");
+                    return;
+                }
+
                 Block blockInteractingWith = zone.getBlock(x, y);
                 Item interactingWith = blockInteractingWith != null ? blockInteractingWith.getFrontItem() : Item.AIR;
                 List<Item> whistles = new ArrayList<>();
                 try {
-                    if(interactingWith.getUse(ItemUseType.POTENCY_BUMP) instanceof Map) {
-                        ((Map<String, Integer>) interactingWith.getUse(ItemUseType.POTENCY_BUMP)).keySet().stream()
+                    if(interactingWith.getUse(ItemUseType.POTENCY_BUMP) instanceof List) {
+                        ((List<String>) interactingWith.getUse(ItemUseType.POTENCY_BUMP)).stream()
                                 .map(ItemRegistry::getItem)
                                 .filter(item -> !item.isAir())
                                 .forEach(whistles::add);
@@ -185,7 +201,9 @@ public class GroupDungeon extends Minigame {
                 dialog.addSection(new DialogSection().setText("You can increase this dungeon's chaos level even more using whistles."));
                 for(int i = 0; i < whistleCounts.size(); i++) {
                     if(whistleCounts.get(i) > 0) {
-                        dialog.addSection(TradeSession.Dialogs.createQuantitySelector(whistles.get(i).getId(), Math.min(5, whistleCounts.get(i)), 1, true).setTitle("Use how many " + whistles.get(i).getFancyTitle() + "? Increases level by " + whistles.get(i).getPower() + "."));
+                        Item whistle = whistles.get(i);
+                        int allowed = Math.max(1, bumpsLeft / (int)Math.round(whistle.getPower()));
+                        dialog.addSection(TradeSession.Dialogs.createQuantitySelector(whistle.getId(), allowed, 1, true).setTitle("Use how many " + whistle.getFancyTitle() + "? Increases level by " + whistle.getPower() + "."));
                     }
                 }
 
@@ -194,6 +212,8 @@ public class GroupDungeon extends Minigame {
                         return;
                     }
                     int ansI = 0;
+                    int bumps = 0;
+                    Map<Item, Integer> used = new HashMap<>();
                     try {
                         for(DialogSection section : dialog.getSections()) {
                             if(section.getInput() != null) {
@@ -211,20 +231,18 @@ public class GroupDungeon extends Minigame {
                                 Item item = ItemRegistry.getItem(itemId);
                                 if(!player.getInventory().hasItem(item, qty)) {
                                     player.notify("You don't have that many " + item.getFancyTitle() + " anymore.");
+                                    return;
                                 }
+                                bumps = Math.min(bumpsLeft, qty * (int)Math.round(item.getPower()));
+                                used.put(item, Math.max(0, Math.min(qty, (bumpsLeft - bumps) / (int)Math.round(item.getPower()))));
                             }
+                            if(bumps >= bumpsLeft) break;
                         }
                         // Validation complete, now remove the whistles and increase the potency level
-                        ansI = 0;
-                        for(DialogSection section : dialog.getSections()) {
-                            if(section.getInput() != null) {
-                                String itemId = section.getInput().getKey();
-                                String val = (String)ans[ansI++];
-                                int qty = Integer.parseInt(val);
-                                Item item = ItemRegistry.getItem(itemId);
-                                player.getInventory().removeItem(item, qty, true);
-                                potencyLevel += qty * item.getPower();
-                            }
+                        potencyLevel += bumps;
+                        potencyBumps.put(player.getDocumentId(), potencyBumps.getOrDefault(player.getDocumentId(), 0) + 1);
+                        for(Map.Entry<Item, Integer> usedItem : used.entrySet()) {
+                            player.getInventory().removeItem(usedItem.getKey(), usedItem.getValue(), true);
                         }
                         zone.notifyPlayers(String.format("%s increased the group dungeon's potency level to %s!", player.getName(), potencyLevel), NotificationType.PEER_ACCOMPLISHMENT);
                     } catch (Exception e) {
@@ -283,7 +301,7 @@ public class GroupDungeon extends Minigame {
         // Everything went well
         zone.spawnEffect(x, y, "match start", 1);
         zone.updateBlock(x, y, Layer.FRONT, sirenOpenId, 1);
-        potencyBumps.add(initiator.getDocumentId());
+        potencyBumps.put(initiator.getDocumentId(), 1);
         potencyLevel++;
 
         // Notify all players in the zone
