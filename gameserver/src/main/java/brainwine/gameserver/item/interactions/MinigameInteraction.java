@@ -5,6 +5,7 @@ import java.util.Map;
 import brainwine.gameserver.entity.Entity;
 import brainwine.gameserver.item.Item;
 import brainwine.gameserver.item.Layer;
+import brainwine.gameserver.minigame.GroupDungeon;
 import brainwine.gameserver.minigame.Minigame;
 import brainwine.gameserver.minigame.Pandora;
 import brainwine.gameserver.player.Player;
@@ -81,6 +82,9 @@ public class MinigameInteraction implements ItemInteraction {
         switch(type) {
         case "pandora":
             minigame = new Pandora(zone, player, x, y);
+            break;
+        case "group-dungeon":
+            minigame = new GroupDungeon(zone, player, x, y);
             break;
         default:
             player.notify(String.format("Sorry, minigame type '%s' is not supported.", type));

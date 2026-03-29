@@ -1,5 +1,6 @@
 package brainwine.gameserver.minigame;
 
+import brainwine.gameserver.Fake;
 import brainwine.gameserver.GameServer;
 import brainwine.gameserver.dialog.Dialog;
 import brainwine.gameserver.dialog.DialogSection;
@@ -8,75 +9,143 @@ import brainwine.gameserver.entity.EntityAttack;
 import brainwine.gameserver.entity.npc.Npc;
 import brainwine.gameserver.item.Item;
 import brainwine.gameserver.item.ItemRegistry;
+import brainwine.gameserver.item.ItemUseType;
 import brainwine.gameserver.item.Layer;
 import brainwine.gameserver.loot.Loot;
 import brainwine.gameserver.player.NotificationType;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.player.TradeSession;
+import brainwine.gameserver.resource.ResourceFinder;
+import brainwine.gameserver.util.WeightedMap;
 import brainwine.gameserver.zone.Block;
 import brainwine.gameserver.zone.MetaBlock;
 import brainwine.gameserver.zone.Zone;
+import brainwine.shared.JsonHelper;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class GroupDungeon extends Minigame {
-    GroupDungeonConfig config = new GroupDungeonConfig();
-    private final String sirenOpenId = "mechanical/siren-open";
-    private final String speakerId = "mechanical/speaker";
-    private final Set<String> doorIds = new HashSet<>(Arrays.asList("mechanical/door-beefy-closed-iron", "mechanical/door-beefy-closed-copper"));
-    private final List<Item> whistles = Arrays.asList(ItemRegistry.getItem("accessories/whistle-onyx"), ItemRegistry.getItem("accessories/whistle-diamond"), ItemRegistry.getItem("accessories/whistle-brass"));
+import static brainwine.shared.LogMarkers.SERVER_MARKER;
 
-    boolean started = false;
+public class GroupDungeon extends Minigame {
+    private static final Logger logger = LogManager.getLogger();
+    private static GroupDungeonConfig config = new GroupDungeonConfig();
+    private static Set<Item> allSpeakerItems = new HashSet<>(config.getAllSpeakerItems());
+    private static Set<Item> allDoorItems = new HashSet<>(config.getAllDoorItems());
+    private static final String sirenOpenId = "mechanical/siren-open";
+
     int potencyLevel = 0;
     Set<String> potencyBumps = new HashSet<>();
     List<MetaBlock> speakers = new ArrayList<>();
     List<MetaBlock> doors = new ArrayList<>();
     int initialNumSpeakers = 0;
+    int enemiesLeftInWave = 0;
+    int enemyInterval;
+    long lastSpawnedAt;
     private final List<Npc> spawns = new ArrayList<>();
+    boolean raidStarted = false;
+
+    public static void loadConfig() {
+        logger.info(SERVER_MARKER, "Loading group dungeon configuration ...");
+
+        try {
+            GroupDungeon.config = JsonHelper.readValue(ResourceFinder.getResourceUrl("group-dungeon.json"), GroupDungeonConfig.class);
+            GroupDungeon.allSpeakerItems = new HashSet<>(config.getAllSpeakerItems());
+            GroupDungeon.allDoorItems = new HashSet<>(config.getAllDoorItems());
+        } catch(Exception e) {
+            logger.error(SERVER_MARKER, "Failed to load group dungeon config", e);
+        }
+    }
+
+    public static GroupDungeonConfig getConfig() {
+        return config;
+    }
 
     public GroupDungeon(Zone zone, Player initiator, int x, int y) {
         super(zone, initiator, x, y);
-        MetaBlock siren = zone.getMetaBlock(x, y);
-        if(siren != null) {
-            String dungeonId = siren.getStringProperty("@");
-            if(dungeonId != null) {
-                // Index metablocks in this dungeon
-                for(MetaBlock mb : zone.getMetaBlocks()) {
-                    if(mb != siren && dungeonId.equals(mb.getStringProperty("@"))) {
-                        if(mb.getItem().hasId(speakerId)) {
-                            speakers.add(mb);
-                        } else if(doorIds.contains(mb.getItem().getId())) {
-                            doors.add(mb);
-                        }
-                    }
-                }
-                if(speakers.size() >= 3) {
-                    initialNumSpeakers = speakers.size();
-                    // Success
-                    return;
-                } else {
-                    initiator.notify("You can't raid this dungeon anymore because it has been tampered with.");
-                }
-            } else {
-                initiator.notify("Siren doesn't appear to be inside a dungeon.");
-            }
-        } else {
-            initiator.notify("Siren metadata not found");
-        }
-
-        // Failure
-        finish();
     }
 
     @Override
     public void tick(float deltaTime) {
         super.tick(deltaTime);
+        long now = System.currentTimeMillis();
 
+        if(!raidStarted) {
+            if(now >= startedAt + config.getGracePeriod()) {
+                raidStarted = true;
+                enemiesLeftInWave = getTotalEnemiesInWave(getCurrentWave());
+                setDoorsOpen(false);
+                for(Player player: zone.getPlayers()) {
+                    if(participants.containsKey(player)) {
+                        player.notify("Oh no, the doors are shut! Now your only way out is to end these pesky brains.");
+                    } else {
+                        player.notify(String.format("The group dungeon at %s has locked down. You can't help raid it anymore.", zone.getReadableCoordinates(x, y)));
+                    }
+                }
+            }
+            return;
+        }
+
+        if(enemiesLeftInWave > 0 && now > enemyInterval + lastSpawnedAt) {
+            enemyInterval = (int)(500 + Math.random() * 2000);
+            lastSpawnedAt = System.currentTimeMillis();
+            // If there are still enemies left to spawn this wave, and it is time to spawn another one
+            int currentWave = getCurrentWave();
+            // Pick the enemy table that is only as hard as the current wave or easier
+            WeightedMap<String> currentEnemyTable = config.getEnemies().get(config.getEnemies().keySet().stream().filter(wave -> currentWave >= wave).max(Integer::compareTo).orElse(1));
+            MetaBlock speaker = Fake.pickFromList(speakers);
+            String entityType = currentEnemyTable.next();
+            Npc npc = zone.spawnEntity(entityType, speaker.getX(), speaker.getY());
+            if(npc == null) {
+                logger.error("Couldn't spawn entity {}!", entityType);
+            } else {
+                npc.setMinigame(this);
+                spawns.add(npc);
+                enemiesLeftInWave--;
+            }
+        }
+
+        if(spawns.isEmpty()) {
+            // Remove stale speakers
+            for(int i = 0; i < speakers.size(); i++) {
+                MetaBlock current = zone.getMetaBlock(speakers.get(i).getX(), speakers.get(i).getY());
+                if(current == null || !allSpeakerItems.contains(current.getItem())) {
+                    speakers.remove(i);
+                    i--;
+                }
+            }
+
+            if(getCurrentWave() >= initialNumSpeakers) {
+                // If all speakers have been destroyed, complete
+                complete();
+                return;
+            }
+
+            if(enemiesLeftInWave == 0) {
+                // If the wave is over, set up for the next wave
+                if(getCurrentWave() < initialNumSpeakers) {
+                    notifyParticipants(String.format("Wave %d is starting!", getCurrentWave()));
+                }
+                MetaBlock speakerToRemove = Fake.pickFromList(speakers);
+                speakers.remove(speakerToRemove);
+                zone.updateBlock(speakerToRemove.getX(), speakerToRemove.getY(), Layer.FRONT, Item.AIR);
+                zone.spawnEffect(speakerToRemove.getX(), speakerToRemove.getY(), "bomb-large", 2);
+                enemiesLeftInWave = getTotalEnemiesInWave(getCurrentWave());
+                lastSpawnedAt = System.currentTimeMillis();
+                enemyInterval = (int)(2000 + Math.random() * 8000);
+            }
+        }
+    }
+
+    private int getTotalEnemiesInWave(int wave) {
+        return (int)(initialNumSpeakers + (potencyLevel * initialNumSpeakers * wave * wave) / 10.0);
     }
 
     @Override
@@ -84,10 +153,27 @@ public class GroupDungeon extends Minigame {
         addParticipant(player);
 
         // Increase potency if the minigame hasn't started yet
-        if(!hasStarted()) {
+        if(!raidStarted) {
             if(!potencyBumps.contains(player.getDocumentId()) || player.isGodMode()) {
                 zone.notifyPlayers(String.format("%s increased the group dungeon's potency level to %s!", player.getName(), ++potencyLevel), NotificationType.PEER_ACCOMPLISHMENT);
             } else {
+                Block blockInteractingWith = zone.getBlock(x, y);
+                Item interactingWith = blockInteractingWith != null ? blockInteractingWith.getFrontItem() : Item.AIR;
+                List<Item> whistles = new ArrayList<>();
+                try {
+                    if(interactingWith.getUse(ItemUseType.POTENCY_BUMP) instanceof Map) {
+                        ((Map<String, Integer>) interactingWith.getUse(ItemUseType.POTENCY_BUMP)).keySet().stream()
+                                .map(ItemRegistry::getItem)
+                                .filter(item -> !item.isAir())
+                                .forEach(whistles::add);
+                    }
+                } catch (Exception e) {
+                    logger.error("Error while listing the potency bump items", e);
+                }
+                if(whistles.isEmpty()) {
+                    player.notify("Don't know what items you can use to bump potency.", NotificationType.SYSTEM);
+                    return;
+                }
                 List<Integer> whistleCounts = whistles.stream().map(item -> player.getInventory().getQuantity(item)).collect(Collectors.toList());
                 if(!whistleCounts.stream().anyMatch(x -> x != 0)) {
                     player.notify("You need whistles to increase the chaos level more. Maybe invite more players to this dungeon instead.");
@@ -115,7 +201,7 @@ public class GroupDungeon extends Minigame {
                                     return;
                                 }
                                 Object val = ans[ansI++];
-                                if (!(val instanceof String)) {
+                                if(!(val instanceof String)) {
                                     player.notify("Bad input type.");
                                     return;
                                 }
@@ -150,6 +236,49 @@ public class GroupDungeon extends Minigame {
 
     @Override
     protected void onStart() {
+        // Validations that don't interact with the world.
+        if(config.getEnemies().isEmpty()) {
+            notifyParticipants("Don't know what to spawn! Ending the raid now.");
+            finish();
+            return;
+        }
+
+        // Validations that do interact with the world
+        MetaBlock siren = zone.getMetaBlock(x, y);
+        if(siren == null) {
+            initiator.notify("Siren metadata not found");
+            finish();
+            return;
+        }
+
+        String dungeonId = siren.getStringProperty("@");
+        if(dungeonId == null) {
+            initiator.notify("Siren doesn't appear to be inside a dungeon.");
+            finish();
+            return;
+        }
+
+        // Index meta-blocks in this dungeon
+        for(MetaBlock mb : zone.getMetaBlocks()) {
+            if(mb != siren && dungeonId.equals(mb.getStringProperty("@"))) {
+                if(allSpeakerItems.contains(mb.getItem())) {
+                    speakers.add(mb);
+                } else if(allDoorItems.contains(mb.getItem())) {
+                    doors.add(mb);
+                }
+            }
+        }
+
+        if(speakers.size() < 3) {
+            initiator.notify("You can't raid this dungeon anymore because it has been tampered with.");
+            finish();
+            return;
+        }
+
+        initialNumSpeakers = speakers.size();
+        zone.updateBlock(x, y, Layer.FRONT, ItemRegistry.getItem(sirenOpenId));
+
+        // Everything went well
         zone.spawnEffect(x, y, "match start", 1);
         zone.updateBlock(x, y, Layer.FRONT, sirenOpenId, 1);
         potencyBumps.add(initiator.getDocumentId());
@@ -157,7 +286,7 @@ public class GroupDungeon extends Minigame {
 
         // Notify all players in the zone
         for(Player player : zone.getPlayers()) {
-            player.notifyProfile(String.format("%s is raiding a Group Dungeon at %s", initiator.getName(), zone.getReadableCoordinates(x, y)), String.format("Tap on and/or use whistles on its siren in the next %d seconds to build chaos!", config.getStartPeriod() / 1000));
+            player.notifyProfile(String.format("%s is raiding a Group Dungeon at %s! Join them before the gates close.", initiator.getName(), zone.getReadableCoordinates(x, y)), String.format("Tap on and/or use whistles on its siren in the next %d seconds to build chaos!", config.getGracePeriod() / 1000));
         }
     }
 
@@ -197,26 +326,45 @@ public class GroupDungeon extends Minigame {
         }
 
         // Broadcast leader's score
-        zone.notifyPlayers(String.format("Pandora has been contained! %s showed mastery with %s!", currentLeader.getPlayer().getName(), describeScore(currentLeader.getScore())));
+        zone.notifyPlayers(String.format("Dungeon has been raided! %s showed mastery with %s!", currentLeader.getPlayer().getName(), describeScore(currentLeader.getScore())));
     }
 
-    protected boolean hasStarted() {
-        return System.currentTimeMillis() < startedAt + config.getStartPeriod();
-    }
-
-    protected int getCurrentRound() {
+    protected int getCurrentWave() {
         return initialNumSpeakers - speakers.size() + 1;
     }
 
     protected void setDoorsOpen(boolean open) {
-        for(MetaBlock door : doors) {
+        Map<GroupDungeonConfig.BlockState, GroupDungeonConfig.BlockState> toLookFor = new HashMap<>();
+        for(GroupDungeonConfig.DoorState doorState: config.getDoors()) {
+            if(open) {
+                // closed to open
+                toLookFor.put(doorState.getClosed(), doorState.getOpen());
+            } else {
+                // open to closed
+                toLookFor.put(doorState.getOpen(), doorState.getClosed());
+            }
+        }
+        for(int i = 0; i < doors.size(); i++) {
+            MetaBlock door = doors.get(i);
             Block block = zone.getBlock(door.getX(), door.getY());
             if(block != null) {
-                int wantedMod = open ? 1 : 0;
-                int currentMod = block.getFrontMod();
-                if(wantedMod != currentMod) {
-                    zone.updateBlockMod(door.getX(), door.getY(), Layer.FRONT, wantedMod);
-                    zone.spawnEffect(door.getX() + block.getFrontItem().getBlockWidth() / 2.0f, door.getY(), "steam", 4);
+                GroupDungeonConfig.BlockState wantedState = toLookFor.get(
+                        new GroupDungeonConfig.BlockState(
+                                block.getFrontItem(),
+                                block.getFrontMod(),
+                                door.getMetadata()
+                        )
+                );
+                if(wantedState != null) {
+                    int currentMod = block.getFrontMod();
+                    if(wantedState.getItem() != block.getFrontItem() || wantedState.getMod() != currentMod) {
+                        Map<String, Object> newMetadata = new HashMap<>(door.getMetadata());
+                        if(wantedState.getMetadata() != null) {
+                            newMetadata.putAll(wantedState.getMetadata());
+                        }
+                        zone.updateBlock(door.getX(), door.getY(), Layer.FRONT, wantedState.getItem(), wantedState.getMod(), null, newMetadata);
+                        zone.spawnEffect(door.getX() + block.getFrontItem().getBlockWidth() / 2.0f - 0.5f, door.getY(), "steam", 4);
+                    }
                 }
             }
         }

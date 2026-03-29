@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import brainwine.gameserver.androidshop.AndroidShop;
 import brainwine.gameserver.androidshop.AndroidShopPerIpHistory;
+import brainwine.gameserver.minigame.GroupDungeon;
 import brainwine.gameserver.scrapmarket.ScrapMarket;
 import brainwine.gameserver.anticheat.AnticheatManager;
 import brainwine.gameserver.chat.ProfanityManager;
@@ -73,6 +74,7 @@ public class GameServer implements CommandExecutor {
         EntityManager.loadEntitySpawns();
         GrowthManager.loadGrowthData();
         Pandora.loadConfig();
+        GroupDungeon.loadConfig();
         Quests.loadQuests();
         dailyRewardManager = new DailyRewardManager();
         AndroidShop.getInstance().loadShopData();
