@@ -1078,6 +1078,9 @@ public class Zone {
 
                     if(dungeonId != null && (frontItem.getUse(ItemUseType.MINIGAME) instanceof Map && "group-dungeon".equals(((Map<?, ?>)frontItem.getUse(ItemUseType.MINIGAME)).get("type")) || allGroupDungeonItems.contains(frontItem))) {
                         metadata.put("@", dungeonId);
+
+                        // Record prefab bounds, used for entity spawning if dungeon speakers aren't configured
+                        metadata.put("pre", MapHelper.map(String.class, Object.class, "l", x, "t", y, "r", Math.min(getWidth(), x + prefab.getWidth()), "b", Math.min(getHeight(), y + prefab.getHeight()), "m", mirrored));
                     }
 
                     if(dungeonId != null && frontItem.hasId("mechanical/spawner-brain")) {

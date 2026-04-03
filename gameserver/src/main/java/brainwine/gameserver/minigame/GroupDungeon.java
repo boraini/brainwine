@@ -16,6 +16,7 @@ import brainwine.gameserver.player.NotificationType;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.player.TradeSession;
 import brainwine.gameserver.resource.ResourceFinder;
+import brainwine.gameserver.util.MapHelper;
 import brainwine.gameserver.util.WeightedMap;
 import brainwine.gameserver.zone.Block;
 import brainwine.gameserver.zone.MetaBlock;
@@ -45,12 +46,17 @@ public class GroupDungeon extends Minigame {
     Map<String, Integer> potencyBumps = new HashMap<>();
     List<MetaBlock> speakers = new ArrayList<>();
     List<MetaBlock> doors = new ArrayList<>();
-    int initialNumSpeakers = 0;
+    int totalWaves;
+    int currentWave;
     int enemiesLeftInWave = 0;
     int enemyInterval;
     long lastSpawnedAt;
     private final List<Npc> spawns = new ArrayList<>();
     boolean raidStarted = false;
+    int prefabLeft;
+    int prefabRight;
+    int prefabTop;
+    int prefabBottom;
 
     public static void loadConfig() {
         logger.info(SERVER_MARKER, "Loading group dungeon configuration ...");
@@ -76,11 +82,11 @@ public class GroupDungeon extends Minigame {
     public void tick(float deltaTime) {
         super.tick(deltaTime);
         long now = System.currentTimeMillis();
-        final int currentWave = getCurrentWave();
 
         if(!raidStarted) {
             if(now >= startedAt + config.getGracePeriod()) {
                 raidStarted = true;
+                this.currentWave++;
                 enemiesLeftInWave = getTotalEnemiesInWave(currentWave);
                 setDoorsOpen(false);
                 lastSpawnedAt = System.currentTimeMillis();
@@ -96,15 +102,36 @@ public class GroupDungeon extends Minigame {
             return;
         }
 
+        final int currentWave = this.currentWave;
+
         if(enemiesLeftInWave > 0 && now > enemyInterval + lastSpawnedAt) {
             // If there are still enemies left to spawn this wave, and it is time to spawn another one
             lastSpawnedAt = System.currentTimeMillis();
             enemyInterval = (int)(500 + Math.random() * 2000);
             // Pick the enemy table that is only as hard as the current wave or easier
             WeightedMap<String> currentEnemyTable = config.getEnemies().get(config.getEnemies().keySet().stream().filter(wave -> currentWave >= wave).max(Integer::compareTo).orElse(1));
-            MetaBlock speaker = Fake.pickFromList(speakers);
+            MetaBlock speaker = !speakers.isEmpty() ? Fake.pickFromList(speakers) : null;
             String entityType = currentEnemyTable.next();
-            Npc npc = zone.spawnEntity(entityType, speaker.getX(), speaker.getY());
+
+            Npc npc = null;
+            if(speaker != null) {
+                npc = zone.spawnEntity(entityType, speaker.getX(), speaker.getY());
+            } else {
+                // Make multiple attempts to spawn a raid enemy
+                for(int attempt = 0; attempt < 20; attempt++) {
+                    int x = prefabLeft + (int)Math.floor(Math.random() * (prefabRight - prefabLeft));
+                    int y = prefabTop + (int)Math.floor(Math.random() * (prefabBottom - prefabTop));
+
+                    if(!zone.isBlockSolid(x, y)) {
+                        npc = zone.spawnEntity(entityType, x, y);
+                        break;
+                    }
+                }
+
+                if(npc == null) {
+                    npc = zone.spawnEntity(entityType, this.x, this.y);
+                }
+            }
             if(npc == null) {
                 logger.error("Couldn't spawn entity {}!", entityType);
             } else {
@@ -124,7 +151,7 @@ public class GroupDungeon extends Minigame {
                 }
             }
 
-            if(currentWave >= initialNumSpeakers + 1) {
+            if(currentWave >= totalWaves) {
                 // If all speakers have been destroyed, complete
                 complete();
                 return;
@@ -132,14 +159,17 @@ public class GroupDungeon extends Minigame {
 
             if(enemiesLeftInWave == 0) {
                 // If the wave is over, set up for the next wave
-                if(currentWave < initialNumSpeakers) {
+                if(currentWave < totalWaves) {
                     notifyParticipants(String.format("Wave %d is starting!", currentWave + 1));
                 }
-                MetaBlock speakerToRemove = Fake.pickFromList(speakers);
-                Item speakerItem = speakerToRemove.getItem();
-                speakers.remove(speakerToRemove);
-                zone.updateBlock(speakerToRemove.getX(), speakerToRemove.getY(), Layer.FRONT, Item.AIR);
-                zone.spawnEffect(speakerToRemove.getX() + speakerItem.getBlockWidth() / 2.0f - 0.5f, speakerToRemove.getY() - speakerItem.getBlockHeight() / 2.0f + 0.5f, "bomb-electric", 1);
+                if(!speakers.isEmpty()) {
+                    MetaBlock speakerToRemove = Fake.pickFromList(speakers);
+                    Item speakerItem = speakerToRemove.getItem();
+                    speakers.remove(speakerToRemove);
+                    zone.updateBlock(speakerToRemove.getX(), speakerToRemove.getY(), Layer.FRONT, Item.AIR);
+                    zone.spawnEffect(speakerToRemove.getX() + speakerItem.getBlockWidth() / 2.0f - 0.5f, speakerToRemove.getY() - speakerItem.getBlockHeight() / 2.0f + 0.5f, "bomb-electric", 1);
+                }
+                this.currentWave++;
                 enemiesLeftInWave = getTotalEnemiesInWave(currentWave + 1);
                 lastSpawnedAt = System.currentTimeMillis();
                 enemyInterval = (int)(2000 + Math.random() * 8000);
@@ -148,7 +178,7 @@ public class GroupDungeon extends Minigame {
     }
 
     private int getTotalEnemiesInWave(int wave) {
-        return (int)(initialNumSpeakers + (potencyLevel * initialNumSpeakers * wave * wave) / 10.0);
+        return (int)(totalWaves + (potencyLevel * totalWaves * wave * wave) / 10.0);
     }
 
     @Override
@@ -279,6 +309,16 @@ public class GroupDungeon extends Minigame {
             return;
         }
 
+        // Read prefab size from the siren's meta-block
+        Object maybePrefab = siren.getProperty("pre");
+        if(maybePrefab instanceof Map<?, ?>) {
+            Map<String, Object> prefab = (Map<String, Object>)maybePrefab;
+            prefabTop = MapHelper.getInt(prefab, "t");
+            prefabBottom = MapHelper.getInt(prefab, "b");
+            prefabLeft = MapHelper.getInt(prefab, "l");
+            prefabRight = MapHelper.getInt(prefab, "r");
+        }
+
         // Index meta-blocks in this dungeon
         for(MetaBlock mb : zone.getMetaBlocks()) {
             if(mb != siren && dungeonId.equals(mb.getStringProperty("@"))) {
@@ -290,13 +330,20 @@ public class GroupDungeon extends Minigame {
             }
         }
 
-        if(speakers.size() < 3) {
-            initiator.notify("You can't raid this dungeon anymore because it has been tampered with.");
-            finish();
-            return;
+        // Compute the total number of waves needed
+        if(allSpeakerItems.isEmpty()) {
+            // Assume roughly each 5 by 5 square is a speaker
+            totalWaves = Math.max(3, Math.abs(prefabRight - prefabLeft) * Math.abs(prefabBottom - prefabTop) / 100);
+        } else {
+            if(speakers.size() < 3) {
+                initiator.notify("You can't raid this dungeon anymore because it has been tampered with.");
+                finish();
+                return;
+            }
+
+            totalWaves = speakers.size();
         }
 
-        initialNumSpeakers = speakers.size();
         zone.updateBlock(x, y, Layer.FRONT, ItemRegistry.getItem(sirenOpenId));
 
         // Everything went well
@@ -353,10 +400,6 @@ public class GroupDungeon extends Minigame {
         // Explode the siren
         zone.updateBlock(x, y, Layer.FRONT, Item.AIR);
         zone.spawnEffect(x + sirenOpen.getBlockWidth() / 2.0f - 0.5f, y - sirenOpen.getBlockHeight() / 2.0f + 0.5f, "bomb-electric", 2);
-    }
-
-    protected int getCurrentWave() {
-        return initialNumSpeakers - speakers.size() + 1;
     }
 
     protected void setDoorsOpen(boolean open) {
