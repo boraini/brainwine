@@ -8,10 +8,7 @@ import brainwine.gameserver.item.Item;
 import brainwine.gameserver.item.ItemUseType;
 import brainwine.gameserver.item.Layer;
 import brainwine.gameserver.player.Player;
-import brainwine.gameserver.zone.Biome;
-import brainwine.gameserver.zone.MetaBlock;
-import brainwine.gameserver.zone.Zone;
-import brainwine.gameserver.zone.ZoneRules;
+import brainwine.gameserver.zone.*;
 import brainwine.gameserver.zone.gen.ZoneGenerator;
 
 import java.time.temporal.ChronoUnit;
@@ -26,10 +23,15 @@ public class UnlockWorldInteraction implements ItemInteraction {
             return;
 
         Player player = (Player) entity;
-        if(!player.isGodMode() && zone.getOwner() != null && !player.getDocumentId().equals(zone.getOwner())
-                && !zone.isMember(player)) {
-            player.notify(
-                    "Sorry, you may only use this in public worlds or world that you are the owner or a member of.");
+
+        if(!player.isGodMode()) {
+            Block block = zone.getBlock(x, y);
+            if(block != null) {
+                if(player.getBlockHash() != block.getOwnerHash()) {
+                    player.notify("Sorry, you may only use " + (player.isV3() ? item.getFancyTitle() : item.getTitle()) + "s of your own.");
+                    return;
+                }
+            }
         }
 
         if(!player.isGodMode() && (item.usesSteam() || item.hasUse(ItemUseType.EXTENDED_STEAMABLE))) {
@@ -74,7 +76,9 @@ public class UnlockWorldInteraction implements ItemInteraction {
                 zone.setProtected(true);
                 zone.setRules(ZoneRules.getPrivateDefaults());
                 GameServer.getInstance().getZoneManager().addZone(zone);
-                player.notify(String.format("Your zone '%s' is ready for exploration!", zone.getName()));
+
+                // Send player to the newly created zone
+                player.changeZone(zone);
             }
         });
     }
