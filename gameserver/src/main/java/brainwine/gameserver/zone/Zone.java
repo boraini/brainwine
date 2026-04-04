@@ -22,6 +22,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import brainwine.gameserver.minigame.GroupDungeon;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
@@ -965,6 +966,9 @@ public class Zone {
             }
         });
 
+        Set<Item> allGroupDungeonItems = new HashSet<>();
+        allGroupDungeonItems.addAll(GroupDungeon.getConfig().getAllDoorItems());
+        allGroupDungeonItems.addAll(GroupDungeon.getConfig().getAllSpeakerItems());
         boolean[] ruinMask = new boolean[width];
         for(int j = 0; j < height; j++) {
             for(int i = 0; i < width; i++) {
@@ -1070,6 +1074,13 @@ public class Zone {
                         }
 
                         entityManager.updateRevenantDish(x, y, true);
+                    }
+
+                    if(dungeonId != null && (frontItem.getUse(ItemUseType.MINIGAME) instanceof Map && "group-dungeon".equals(((Map<?, ?>)frontItem.getUse(ItemUseType.MINIGAME)).get("type")) || allGroupDungeonItems.contains(frontItem))) {
+                        metadata.put("@", dungeonId);
+
+                        // Record prefab bounds, used for entity spawning if dungeon speakers aren't configured
+                        metadata.put("pre", MapHelper.map(String.class, Object.class, "l", x, "t", y, "r", Math.min(getWidth(), x + prefab.getWidth()), "b", Math.min(getHeight(), y + prefab.getHeight()), "m", mirrored));
                     }
 
                     if(dungeonId != null && frontItem.hasId("mechanical/spawner-brain")) {

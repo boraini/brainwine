@@ -69,6 +69,7 @@ public enum ItemUseType {
     PET,
     PILE(new PileInteraction()),
     PLENTY,
+    POTENCY_BUMP,
     PROTECTED,
     PUBLIC,
     REVENANT_DISH,

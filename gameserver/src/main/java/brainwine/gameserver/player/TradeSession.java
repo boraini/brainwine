@@ -558,16 +558,23 @@ public class TradeSession {
         }
 
         public static DialogSection createQuantitySelector(int maxQuantity, int unit) {
+            return createQuantitySelector("quantity", maxQuantity, unit, false);
+        }
+
+        public static DialogSection createQuantitySelector(String key, int maxQuantity, int unit, boolean allowZero) {
             // Get quantity options that are available to the player
             List<String> quantityOptions = ITEM_QUANTITY_OPTIONS.stream()
                     .filter(quantity -> Integer.parseInt(quantity) * unit <= maxQuantity)
                     .map(quantity -> Integer.toString(Integer.parseInt(quantity) * unit))
                     .collect(Collectors.toList());
+            if(allowZero) {
+                quantityOptions.add(0, "0");
+            }
 
             return new DialogSection()
                     .setInput(new DialogSelectInput()
                             .setOptions(quantityOptions)
-                            .setKey("quantity"));
+                            .setKey(key != null ? key : "quantity"));
         }
 
         public static DialogSection createQuantitySelector(Player offerer, Item item) {
