@@ -39,7 +39,7 @@ public class UnlockWorldInteraction implements ItemInteraction {
             }
         }
         if(!player.isGodMode() && player.isActionOnCooldown(actionKey, 5L, ChronoUnit.DAYS)) {
-            player.notify("You can only use an " + item.getTitle() + " every 5 minutes.");
+            player.notify("You can only use an " + item.getTitle() + " every 5 days.");
             return;
         }
 
