@@ -1,6 +1,5 @@
 package brainwine.gameserver.item;
 
-import brainwine.gameserver.item.usetypeconfig.*;
 import brainwine.shared.JsonHelper;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
@@ -29,9 +28,15 @@ import brainwine.gameserver.item.interactions.SwitchInteraction;
 import brainwine.gameserver.item.interactions.TargetTeleportInteraction;
 import brainwine.gameserver.item.interactions.TeleportInteraction;
 import brainwine.gameserver.item.interactions.TransmitInteraction;
+import brainwine.gameserver.item.interactions.UnlockWorldInteraction;
 import brainwine.gameserver.item.interactions.WarmthInteraction;
 import brainwine.gameserver.item.interactions.WorldMachineInteraction;
 import brainwine.gameserver.item.interactions.XpSignInteraction;
+import brainwine.gameserver.item.usetypeconfig.BatteryConfig;
+import brainwine.gameserver.item.usetypeconfig.ExtendedSteamableConfig;
+import brainwine.gameserver.item.usetypeconfig.ItemUseTypeConfig;
+import brainwine.gameserver.item.usetypeconfig.Properties;
+import brainwine.gameserver.item.usetypeconfig.SteamSourceConfig;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 /**
@@ -89,6 +94,7 @@ public enum ItemUseType {
     TRIGGER,
     TRANSMIT(new TransmitInteraction()),
     TRANSMITTED,
+    UNLOCK_WORLD(new UnlockWorldInteraction()),
     WARMTH(new WarmthInteraction()),
     WORLD_MACHINE(new WorldMachineInteraction()),
     XP_SIGN(new XpSignInteraction()),
