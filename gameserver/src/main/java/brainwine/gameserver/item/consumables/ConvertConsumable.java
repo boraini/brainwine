@@ -29,7 +29,7 @@ public class ConvertConsumable implements Consumable {
         
         // Don't do anything if the player has no items that can be converted
         if(convertables.isEmpty()) {
-            player.notify("You do not have any upgradeable items.");
+            player.notify(item.getId().contains("upgrade") ? "You do not have any upgradeable items." : "You do not have any items that can be broken down.");
             player.sendMessage(new InventoryMessage(inventory.getClientConfig(item)));
             return;
         }
@@ -39,7 +39,7 @@ public class ConvertConsumable implements Consumable {
         
         // Create upgrade dialog
         Dialog dialog = new Dialog().addSection(new DialogSection()
-                .setTitle("Which item would you like to upgrade?")
+                .setTitle(item.getId().contains("upgrade") ? "Which item would you like to upgrade?" : "Which item would you like to break down?")
                 .setInput(new DialogSelectInput()
                         .setOptions(convertables.stream().map(Item::getTitle).collect(Collectors.toList()))
                         .setMaxColumns(3)
@@ -88,7 +88,7 @@ public class ConvertConsumable implements Consumable {
                 inventory.addItem(targetItemAndQty.getKey(), targetItemAndQty.getValue(), true);
             }
 
-            player.notify(String.format("%s upgraded to %s", itemToUpgrade.getTitle(), formatQuantities(targetItems)));
+            player.notify(String.format("Your %s is %s %s!", itemToUpgrade.getTitle(), item.getId().contains("upgrade") ? "upgraded to" : "broken down into", formatQuantities(targetItems)));
         });
     }
 
@@ -121,7 +121,7 @@ public class ConvertConsumable implements Consumable {
     }
 
     private void fail(Item item, Player player) {
-        player.notify("Oops! There was a problem with the upgrade.");
+        player.notify(item.getId().contains("upgrade") ? "Oops! There was a problem with the upgrade." : "Oops! There was a problem with the breaking down.");
         player.sendMessage(new InventoryMessage(player.getInventory().getClientConfig(item)));
     }
 }
