@@ -1,5 +1,6 @@
 package brainwine.gameserver.item.consumables;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -20,7 +21,7 @@ public class ConvertConsumable implements Consumable {
 
     @Override
     public void consume(Item item, Player player, Object details) {
-        Map<Item, Item> conversions = item.getConversions();
+        Map<Item, Map<Item, Integer>> conversions = item.getConversions();
         Inventory inventory = player.getInventory();
         
         // Find items in the player's inventory that can be upgraded
@@ -72,21 +73,53 @@ public class ConvertConsumable implements Consumable {
             }
             
             Item itemToUpgrade = ItemRegistry.getItem(key);
-            Item targetItem = conversions.get(itemToUpgrade);
+            Map<Item, Integer> targetItems = conversions.get(itemToUpgrade);
             
             // Fail if the player doesn't have the item they want to upgrade or there is no upgrade for it
-            if(!inventory.hasItem(itemToUpgrade) || targetItem == null) {
+            if(!inventory.hasItem(itemToUpgrade) || targetItems == null) {
                 fail(item, player);
                 return;
             }
             
             inventory.removeItem(item, true); // Remove the consumable
             inventory.removeItem(itemToUpgrade, true); // Remove the item that was upgraded
-            inventory.addItem(targetItem, true); // Add the item that the item upgraded to :)
-            player.notify(String.format("%s upgraded to %s!", itemToUpgrade.getTitle(), targetItem.getTitle()));
+            // Add the items that the item upgraded to :)
+            for(Map.Entry<Item, Integer> targetItemAndQty : targetItems.entrySet()) {
+                inventory.addItem(targetItemAndQty.getKey(), targetItemAndQty.getValue(), true);
+            }
+
+            player.notify(String.format("%s upgraded to %s", itemToUpgrade.getTitle(), formatQuantities(targetItems)));
         });
     }
-    
+
+    private static String formatQuantities(Map<Item, Integer> targetItems) {
+        String[] esEnding = "s|ch|sh|x|z".split("\\|");
+        String[] anStarting = "a|e|i|o|u".split("\\|");
+        StringBuilder message = new StringBuilder();
+        int i = 0;
+        for(Map.Entry<Item, Integer> targetItemAndQty : targetItems.entrySet()) {
+            if(targetItems.size() > 1 && i == targetItems.size() - 1) {
+                message.append(targetItems.size() > 2 ? ", and " : " and ");
+            } else if(i > 0) {
+                message.append(", ");
+            }
+            String itemTitle = targetItemAndQty.getKey().getTitle() != null ? targetItemAndQty.getKey().getTitle() : targetItemAndQty.getKey().getId();
+            String itemTitleLower = itemTitle.toLowerCase();
+            if(targetItemAndQty.getValue() != 1) {
+                message.append(targetItemAndQty.getValue());
+                message.append(" ");
+                message.append(itemTitle);
+                message.append(Arrays.stream(esEnding).anyMatch(itemTitleLower::endsWith) ? "es" : "s");
+            } else {
+                message.append(Arrays.stream(anStarting).anyMatch(itemTitleLower::startsWith) ? "an" : "a");
+                message.append(" ");
+                message.append(itemTitle);
+            }
+            i++;
+        }
+        return message.toString();
+    }
+
     private void fail(Item item, Player player) {
         player.notify("Oops! There was a problem with the upgrade.");
         player.sendMessage(new InventoryMessage(player.getInventory().getClientConfig(item)));

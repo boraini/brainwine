@@ -1,5 +1,6 @@
 package brainwine.gameserver.item;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -12,6 +13,8 @@ import brainwine.gameserver.GameServer;
 import brainwine.gameserver.command.CommandAccessLevel;
 import brainwine.gameserver.item.usetypeconfig.ItemUseTypeConfig;
 import brainwine.gameserver.player.NotificationType;
+import brainwine.gameserver.util.MapHelper;
+import brainwine.shared.JsonHelper;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -256,9 +259,8 @@ public class Item {
     private List<CraftingRequirement> craftingHelpers = new ArrayList<>();
 
     private Map<ItemUseType, ItemUseTypeConfig> useConfigs = new HashMap<>();
-    
-    @JsonProperty("convert")
-    private Map<LazyItemGetter, LazyItemGetter> conversions = new HashMap<>();
+
+    private Map<LazyItemGetter, Map<LazyItemGetter, Integer>> conversions = new HashMap<>();
 
     @JsonProperty("grind")
     private Map<LazyItemGetter, Integer> grind = new HashMap<>();
@@ -794,9 +796,40 @@ public class Item {
     public Map<ItemUseType, ItemUseTypeConfig> getUses() {
         return useConfigs;
     }
+
+    @JsonSetter("convert")
+    public void setConversions(Map<String, Object> conversionsConfig) throws IOException {
+        Map<LazyItemGetter, Map<LazyItemGetter, Integer>> result = new HashMap<>();
+        for(String sourceId : conversionsConfig.keySet()) {
+            if(conversionsConfig.get(sourceId) instanceof List) {
+                List<Object> items = (List)conversionsConfig.get(sourceId);
+                Map<LazyItemGetter, Integer> resultItem = new HashMap<>();
+                for(Object pairObj : items) {
+                    if(!(pairObj instanceof List)) {
+                        throw new IOException(JsonHelper.writeValueAsString(pairObj) + " must be a pair of item id and quantity.");
+                    }
+                    List<Object> pair = (List<Object>)pairObj;
+                    if(pair.size() != 2 || !(pair.get(0) instanceof String) || !(pair.get(1) instanceof Integer)) {
+                        throw new IOException(JsonHelper.writeValueAsString(pairObj) + " must be a pair of item id and quantity.");
+                    }
+                    resultItem.put(new LazyItemGetter((String)pair.get(0)), (Integer)pair.get(1));
+                }
+                result.put(new LazyItemGetter(sourceId), resultItem);
+                continue;
+            }
+
+            else if(conversionsConfig.get(sourceId) instanceof String) {
+                result.put(new LazyItemGetter(sourceId), MapHelper.map(new LazyItemGetter((String)conversionsConfig.get(sourceId)), 1));
+                continue;
+            }
+
+            throw new IllegalArgumentException("Illegal conversion config " + MapHelper.map(conversionsConfig, conversionsConfig.get(sourceId)));
+        }
+        conversions = result;
+    }
     
-    public Map<Item, Item> getConversions() {
-        return conversions.entrySet().stream().collect(Collectors.toMap(entry -> entry.getKey().get(), entry -> entry.getValue().get()));
+    public Map<Item, Map<Item, Integer>> getConversions() {
+        return conversions.entrySet().stream().collect(Collectors.toMap(entry -> entry.getKey().get(), entry -> entry.getValue().entrySet().stream().collect(Collectors.toMap(dstEntry -> dstEntry.getKey().get(), Map.Entry::getValue))));
     }
 
     public Map<Item, Integer> getGrind() {
