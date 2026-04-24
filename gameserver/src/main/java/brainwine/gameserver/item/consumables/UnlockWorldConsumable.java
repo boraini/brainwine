@@ -40,9 +40,17 @@ public class UnlockWorldConsumable implements Consumable {
             return;
         }
 
+        if(!player.isGodMode() && GameServer.getInstance().getZoneManager().getZones().stream()
+                .filter(z -> player.getDocumentId().equals(z.getOwner()))
+                .count() >= 30
+        ) {
+            fail(player, item, "Sorry, you own too many worlds. Use an Auctioneer's Gavel to sell one before generating another.");
+            return;
+        }
+
         player.recordActionTime(actionKey);
 
-        Biome biome = Biome.getRandomBiome();
+        Biome biome = item.getBiome() != null ? item.getBiome() : Biome.getRandomBiome();
         int width = biome == Biome.DEEP ? 1200 : 2000;
         int height = biome == Biome.DEEP ? 1000 : 600;
         int seed = (int)(Math.random() * Integer.MAX_VALUE);

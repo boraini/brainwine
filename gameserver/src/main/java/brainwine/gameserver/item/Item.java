@@ -14,6 +14,7 @@ import brainwine.gameserver.command.CommandAccessLevel;
 import brainwine.gameserver.item.usetypeconfig.ItemUseTypeConfig;
 import brainwine.gameserver.player.NotificationType;
 import brainwine.gameserver.util.MapHelper;
+import brainwine.gameserver.zone.Biome;
 import brainwine.shared.JsonHelper;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -86,6 +87,9 @@ public class Item {
     
     @JsonProperty("inventory type")
     private InventoryType inventoryType = InventoryType.NONE;
+
+    @JsonProperty("biome")
+    private Biome biome;
     
     @JsonProperty("appearance")
     private AppearanceSlot appearanceSlot;
@@ -452,6 +456,10 @@ public class Item {
     
     public InventoryType getInventoryType() {
         return inventoryType;
+    }
+
+    public Biome getBiome() {
+        return biome;
     }
     
     public boolean hasAppearanceSlot() {

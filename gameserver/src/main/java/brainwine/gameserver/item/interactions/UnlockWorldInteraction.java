@@ -40,6 +40,16 @@ public class UnlockWorldInteraction implements ItemInteraction {
                 return;
             }
         }
+
+        if(!player.isGodMode()
+                && GameServer.getInstance().getZoneManager().getZones().stream()
+                    .filter(z -> player.getDocumentId().equals(z.getOwner()))
+                    .count() >= 30
+        ) {
+            player.notify("Sorry, you own too many worlds. Use an Auctioneer's Gavel to sell one before generating another.");
+            return;
+        }
+
         if(!player.isGodMode() && player.isActionOnCooldown(actionKey, 5L, ChronoUnit.DAYS)) {
             player.notify("You can only use an " + item.getTitle() + " every 5 days.");
             return;

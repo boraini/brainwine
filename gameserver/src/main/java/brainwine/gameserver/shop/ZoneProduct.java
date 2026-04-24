@@ -63,6 +63,20 @@ public class ZoneProduct extends Product {
             });
         });
     }
+
+    @Override
+    public boolean validate(Player player) {
+        if(player.isGodMode()) return true;
+        if(GameServer.getInstance().getZoneManager().getZones().stream()
+                .filter(z -> player.getDocumentId().equals(z.getOwner()))
+                .count() >= 30
+        ) {
+            player.notify("Sorry, you own too many worlds. Use an Auctioneer's Gavel to sell one before generating another.");
+            return false;
+        }
+
+        return true;
+    }
     
     /**
      * Zone generator settings for the product.
