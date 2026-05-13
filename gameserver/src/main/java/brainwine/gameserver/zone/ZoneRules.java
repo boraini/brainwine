@@ -13,6 +13,8 @@ public class ZoneRules extends RuleRecord {
     private boolean hostileEntitySpawnsEnabled = false;
     @Rule(value="do-peaceful-entity-spawns", adminOnly=true)
     private boolean peacefulEntitySpawnsEnabled = false;
+    @Rule(value="can-get-exploration-reward", adminOnly = true)
+    private boolean canGetExplorationReward = false;
     @Rule(value="deleted", adminOnly = true)
     private boolean deleted = false;
 
@@ -21,6 +23,7 @@ public class ZoneRules extends RuleRecord {
 
         rules.autoCleanEnabled = false;
         rules.purgeable = false;
+        rules.canGetExplorationReward = true;
 
         return rules;
     }
@@ -39,6 +42,10 @@ public class ZoneRules extends RuleRecord {
 
     public boolean isPeacefulEntitySpawnsEnabled() {
         return peacefulEntitySpawnsEnabled;
+    }
+
+    public boolean isCanGetExplorationReward() {
+        return canGetExplorationReward;
     }
 
     public boolean isDeleted() {

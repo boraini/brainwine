@@ -1965,6 +1965,8 @@ public class Zone {
             return false;
         }
 
+        float currentOverallExplorationProgress = getOverallExplorationProgress();
+
         if(explorer != null && AnticheatManager.getConfig().getExploration().shouldTrackStats(this, x, y)) {
             explorer.getStatistics().trackAreaExplored();
         }
@@ -1973,6 +1975,21 @@ public class Zone {
         if(isChunkUndergroundXY(x, y)) {
             undergroundChunksExploredCount++;
         }
+
+        // Reward players who have explored the whole XL world
+        final int MEDIUM_LARGE_THRESHOLD = 2000 * 1000;
+        if(currentOverallExplorationProgress < 0.99 && getOverallExplorationProgress() >= 0.99 && explorer != null && getRules().isCanGetExplorationReward() && getWidth() * getHeight() >= MEDIUM_LARGE_THRESHOLD) {
+            Item reward = ItemRegistry.getItem("signs/obelisk-" + biome.getId());
+
+            if(!reward.isAir()) {
+                explorer.notify("You receive "
+                        + (reward.getTitle().toLowerCase().matches("^[aeiou]") ? "an" : "a")
+                        + " "
+                        + (explorer.isV3() ? reward.getFancyTitle() : reward.getTitle())
+                        + " for exploring this world fully!");
+            }
+        }
+
         sendMessage(new ZoneExploredMessage(chunkIndex, getExplorationProgress()));
         return chunksExplored[chunkIndex] = true;
     }
