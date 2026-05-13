@@ -1979,7 +1979,7 @@ public class Zone {
         // Reward players who have explored the whole XL world
         final int MEDIUM_LARGE_THRESHOLD = 2000 * 1000;
         if(currentOverallExplorationProgress < 0.99 && getOverallExplorationProgress() >= 0.99 && explorer != null && getRules().isCanGetExplorationReward() && getWidth() * getHeight() >= MEDIUM_LARGE_THRESHOLD) {
-            Item reward = ItemRegistry.getItem("signs/obelisk-" + biome.getId());
+            Item reward = ItemRegistry.getItem("furniture/obelisk-" + biome.getId());
 
             if(!reward.isAir()) {
                 explorer.notify("You receive "
