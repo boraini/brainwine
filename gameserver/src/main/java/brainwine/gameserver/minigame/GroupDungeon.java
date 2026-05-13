@@ -1,6 +1,5 @@
 package brainwine.gameserver.minigame;
 
-import brainwine.gameserver.Fake;
 import brainwine.gameserver.GameServer;
 import brainwine.gameserver.dialog.Dialog;
 import brainwine.gameserver.dialog.DialogSection;
@@ -16,8 +15,7 @@ import brainwine.gameserver.player.NotificationType;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.player.TradeSession;
 import brainwine.gameserver.resource.ResourceFinder;
-import brainwine.gameserver.util.MapHelper;
-import brainwine.gameserver.util.WeightedMap;
+import brainwine.gameserver.util.MathUtils;
 import brainwine.gameserver.zone.Block;
 import brainwine.gameserver.zone.MetaBlock;
 import brainwine.gameserver.zone.Zone;
@@ -26,10 +24,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -38,32 +38,26 @@ import static brainwine.shared.LogMarkers.SERVER_MARKER;
 public class GroupDungeon extends Minigame {
     private static final Logger logger = LogManager.getLogger();
     private static GroupDungeonConfig config = new GroupDungeonConfig();
-    private static Set<Item> allSpeakerItems = new HashSet<>(config.getAllSpeakerItems());
     private static Set<Item> allDoorItems = new HashSet<>(config.getAllDoorItems());
     private static final String sirenOpenId = "mechanical/siren-open";
+    public static final double MAX_ENEMY_DISTANCE = 50.0; // Maximum distance wave enemies can wander before they're teleported back
 
-    int potencyLevel = 0;
-    Map<String, Integer> potencyBumps = new HashMap<>();
-    List<MetaBlock> speakers = new ArrayList<>();
-    List<MetaBlock> doors = new ArrayList<>();
-    int totalWaves;
-    int currentWave;
-    int enemiesLeftInWave = 0;
-    int enemyInterval;
-    long lastSpawnedAt;
+    private int potencyLevel = 0;
+    private Map<String, Integer> potencyBumps = new HashMap<>();
+    private List<MetaBlock> doors = new ArrayList<>();
+    private int totalWaves;
+    private int currentWave;
+    private final Map<String, Integer> roundSpawns = new HashMap<>();
     private final List<Npc> spawns = new ArrayList<>();
-    boolean raidStarted = false;
-    int prefabLeft;
-    int prefabRight;
-    int prefabTop;
-    int prefabBottom;
+    private final Random random = new Random();
+    private boolean raidStarted = false;
+    private long nextActionAt;
 
     public static void loadConfig() {
         logger.info(SERVER_MARKER, "Loading group dungeon configuration ...");
 
         try {
             GroupDungeon.config = JsonHelper.readValue(ResourceFinder.getResourceUrl("group-dungeon.json"), GroupDungeonConfig.class);
-            GroupDungeon.allSpeakerItems = new HashSet<>(config.getAllSpeakerItems());
             GroupDungeon.allDoorItems = new HashSet<>(config.getAllDoorItems());
         } catch(Exception e) {
             logger.error(SERVER_MARKER, "Failed to load group dungeon config", e);
@@ -83,14 +77,18 @@ public class GroupDungeon extends Minigame {
         super.tick(deltaTime);
         long now = System.currentTimeMillis();
 
+        // End minigame if block state is invalid
+        if(!zone.isChunkLoaded(x, y) || !zone.getBlock(x, y).getFrontItem().hasId(sirenOpenId)) {
+            finish();
+            return;
+        }
+
         if(!raidStarted) {
             if(now >= startedAt + config.getGracePeriod()) {
                 raidStarted = true;
-                this.currentWave++;
-                enemiesLeftInWave = getTotalEnemiesInWave(currentWave);
                 setDoorsOpen(false);
-                lastSpawnedAt = System.currentTimeMillis();
-                enemyInterval = (int) (500 + Math.random() * 2000);
+                nextRound();
+                zone.spawnEffect(x, y, "karma sound", 1);
                 for(Player player : zone.getPlayers()) {
                     if(participants.containsKey(player)) {
                         player.notify("Oh no, the doors are shut! Now your only way out is to end these pesky brains.");
@@ -102,83 +100,76 @@ public class GroupDungeon extends Minigame {
             return;
         }
 
-        final int currentWave = this.currentWave;
-
-        if(enemiesLeftInWave > 0 && now > enemyInterval + lastSpawnedAt) {
-            // If there are still enemies left to spawn this wave, and it is time to spawn another one
-            lastSpawnedAt = System.currentTimeMillis();
-            enemyInterval = (int)(500 + Math.random() * 2000);
-            // Pick the enemy table that is only as hard as the current wave or easier
-            WeightedMap<String> currentEnemyTable = config.getEnemies().get(config.getEnemies().keySet().stream().filter(wave -> currentWave >= wave).max(Integer::compareTo).orElse(1));
-            MetaBlock speaker = !speakers.isEmpty() ? Fake.pickFromList(speakers) : null;
-            String entityType = currentEnemyTable.next();
-
-            Npc npc = null;
-            if(speaker != null) {
-                npc = zone.spawnEntity(entityType, speaker.getX(), speaker.getY());
-            } else {
-                // Make multiple attempts to spawn a raid enemy
-                for(int attempt = 0; attempt < 20; attempt++) {
-                    int x = prefabLeft + (int)Math.floor(Math.random() * (prefabRight - prefabLeft));
-                    int y = prefabTop + (int)Math.floor(Math.random() * (prefabBottom - prefabTop));
-
-                    if(!zone.isBlockSolid(x, y)) {
-                        npc = zone.spawnEntity(entityType, x, y);
-                        break;
-                    }
-                }
-
-                if(npc == null) {
-                    npc = zone.spawnEntity(entityType, this.x, this.y);
-                }
-            }
-            if(npc == null) {
-                logger.error("Couldn't spawn entity {}!", entityType);
-            } else {
-                npc.setMinigame(this);
-                spawns.add(npc);
-                enemiesLeftInWave--;
-            }
-        }
-
-        if(spawns.isEmpty()) {
-            // Remove stale speakers
-            for(int i = 0; i < speakers.size(); i++) {
-                MetaBlock current = zone.getMetaBlock(speakers.get(i).getX(), speakers.get(i).getY());
-                if(current == null || !allSpeakerItems.contains(current.getItem())) {
-                    speakers.remove(i);
-                    i--;
-                }
-            }
-
-            if(currentWave >= totalWaves) {
-                // If all speakers have been destroyed, complete
-                complete();
-                return;
-            }
-
-            if(enemiesLeftInWave == 0) {
-                // If the wave is over, set up for the next wave
-                if(currentWave < totalWaves) {
-                    notifyParticipants(String.format("Wave %d is starting!", currentWave + 1));
-                }
-                if(!speakers.isEmpty()) {
-                    MetaBlock speakerToRemove = Fake.pickFromList(speakers);
-                    Item speakerItem = speakerToRemove.getItem();
-                    speakers.remove(speakerToRemove);
-                    zone.updateBlock(speakerToRemove.getX(), speakerToRemove.getY(), Layer.FRONT, Item.AIR);
-                    zone.spawnEffect(speakerToRemove.getX() + speakerItem.getBlockWidth() / 2.0f - 0.5f, speakerToRemove.getY() - speakerItem.getBlockHeight() / 2.0f + 0.5f, "bomb-electric", 1);
-                }
-                this.currentWave++;
-                enemiesLeftInWave = getTotalEnemiesInWave(currentWave + 1);
-                lastSpawnedAt = System.currentTimeMillis();
-                enemyInterval = (int)(2000 + Math.random() * 8000);
-            }
+        // Perform an action if it is time
+        if(now >= nextActionAt) {
+            nextAction();
+            nextActionAt = (long)(now + (0.5 + currentWave * 0.05) * 1000); // Spawns become less frequent as the difficulty increases
         }
     }
 
-    private int getTotalEnemiesInWave(int wave) {
-        return (int)(totalWaves + (potencyLevel * totalWaves * wave * wave) / 10.0);
+    private void nextAction() {
+        // Move on to the next round if all enemies have been killed
+        if(spawns.isEmpty() && roundSpawns.isEmpty()) {
+            nextRound();
+            return;
+        }
+
+        addParticipantsInRange();
+
+        // Spawn a random enemy if there are any remaining
+        if(!roundSpawns.isEmpty()) {
+            String entity = roundSpawns.keySet().stream().skip(random.nextInt(roundSpawns.size())).findAny().get();
+            // Make multiple attempts to spawn the entity in an empty location
+            for (int attempt = 0; attempt < 20; attempt++) {
+                double angle = 2 * Math.PI * random.nextDouble();
+                double parallelogram = random.nextDouble() + random.nextDouble();
+                double radius = config.getSpawnRadius() * (parallelogram > 1.0 ? 2.0 - parallelogram : parallelogram);
+                int spawnX = MathUtils.clamp((int) Math.round(x + radius * Math.cos(angle)), 0, zone.getWidth());
+                int spawnY = MathUtils.clamp((int) Math.round(y + radius * Math.sin(angle)), 0, zone.getHeight());
+                if(!zone.isBlockSolid(spawnX, spawnY)) {
+                    roundSpawns.compute(entity, (key, value) -> value <= 1 ? null : value - 1);
+                    Npc npc = zone.spawnEntity(entity, spawnX, spawnY, true);
+                    npc.setMinigame(this);
+                    spawns.add(npc);
+                    break;
+                }
+            }
+        }
+
+        // Teleport all out-of-range enemies back to the box
+        spawns.stream().filter(entity -> !entity.inRange(x, y, MAX_ENEMY_DISTANCE)).forEach(entity -> {
+            entity.spawnEffect("bomb-teleport", 4);
+            entity.setPosition(x + random.nextInt(2), y - random.nextInt(3));
+            entity.spawnEffect("bomb-teleport", 4);
+        });
+    }
+
+    private void nextRound() {
+        addParticipantsInRange();
+
+        // Finish if the final round has been cleared
+        if(currentWave >= totalWaves) {
+            complete();
+            return;
+        }
+
+        // Increment round and fetch spawn data
+        currentWave++;
+        int key = config.getEnemies().keySet().stream().filter(x -> currentWave >= x).max(Integer::compareTo).orElse(1);
+        List<Map<String, Integer>> configs = config.getEnemies().getOrDefault(key, Collections.emptyList());
+        roundSpawns.clear();
+        roundSpawns.putAll(configs.get(random.nextInt(configs.size()))); // Select a random wave of enemies
+
+        // Randomly increase the number of spawns this round depending on the potency level
+        int spawnBumps = potencyLevel / (currentWave < 10 ? 2 : 3);
+
+        for(int i = 0; i < spawnBumps; i++) {
+            Map.Entry<String, Integer> spawn = roundSpawns.entrySet().stream().skip(random.nextInt(roundSpawns.size())).findFirst().get();
+            roundSpawns.put(spawn.getKey(), spawn.getValue() + 1);
+        }
+
+        // Notify all players in the zone that the next round is starting
+        zone.notifyPlayers(String.format("Group dungeon wave %s of %s is beginning!", currentWave, totalWaves));
     }
 
     @Override
@@ -225,11 +216,11 @@ public class GroupDungeon extends Minigame {
                 }
                 List<Integer> whistleCounts = whistles.stream().map(item -> player.getInventory().getQuantity(item)).collect(Collectors.toList());
                 if(!whistleCounts.stream().anyMatch(x -> x != 0)) {
-                    player.notify("You need whistles to increase the chaos level more. Maybe invite more players to this dungeon instead.");
+                    player.notify("You need whistles to increase the potency level more. Maybe invite more players to this dungeon instead.");
                     return;
                 }
-                Dialog dialog = new Dialog().setTitle("Group Dungeon Chaos Level");
-                dialog.addSection(new DialogSection().setText("You can increase this dungeon's chaos level even more using whistles."));
+                Dialog dialog = new Dialog().setTitle("Group Dungeon Potency Level");
+                dialog.addSection(new DialogSection().setText("You can increase this dungeon's potency level even more using whistles."));
                 for(int i = 0; i < whistleCounts.size(); i++) {
                     if(whistleCounts.get(i) > 0) {
                         Item whistle = whistles.get(i);
@@ -309,52 +300,28 @@ public class GroupDungeon extends Minigame {
             return;
         }
 
-        // Read prefab size from the siren's meta-block
-        Object maybePrefab = siren.getProperty("pre");
-        if(maybePrefab instanceof Map<?, ?>) {
-            Map<String, Object> prefab = (Map<String, Object>)maybePrefab;
-            prefabTop = MapHelper.getInt(prefab, "t");
-            prefabBottom = MapHelper.getInt(prefab, "b");
-            prefabLeft = MapHelper.getInt(prefab, "l");
-            prefabRight = MapHelper.getInt(prefab, "r");
-        }
-
         // Index meta-blocks in this dungeon
         for(MetaBlock mb : zone.getMetaBlocks()) {
             if(mb != siren && dungeonId.equals(mb.getStringProperty("@"))) {
-                if(allSpeakerItems.contains(mb.getItem())) {
-                    speakers.add(mb);
-                } else if(allDoorItems.contains(mb.getItem())) {
+                if(allDoorItems.contains(mb.getItem())) {
                     doors.add(mb);
                 }
             }
         }
 
         // Compute the total number of waves needed
-        if(allSpeakerItems.isEmpty()) {
-            // Assume roughly each 5 by 5 square is a speaker
-            totalWaves = Math.max(3, Math.abs(prefabRight - prefabLeft) * Math.abs(prefabBottom - prefabTop) / 100);
-        } else {
-            if(speakers.size() < 3) {
-                initiator.notify("You can't raid this dungeon anymore because it has been tampered with.");
-                finish();
-                return;
-            }
-
-            totalWaves = speakers.size();
-        }
+        totalWaves = config.getEnemies().size();
 
         zone.updateBlock(x, y, Layer.FRONT, ItemRegistry.getItem(sirenOpenId));
 
         // Everything went well
-        zone.spawnEffect(x, y, "match start", 1);
         zone.updateBlock(x, y, Layer.FRONT, sirenOpenId, 1);
         potencyBumps.put(initiator.getDocumentId(), 1);
         potencyLevel++;
 
         // Notify all players in the zone
         for(Player player : zone.getPlayers()) {
-            player.notifyProfile(String.format("%s is raiding a Group Dungeon at %s! Join them before the gates close.", initiator.getName(), zone.getReadableCoordinates(x, y)), String.format("Tap on and/or use whistles on its siren in the next %d seconds to build chaos!", config.getGracePeriod() / 1000));
+            player.notifyProfile(String.format("%s is raiding a Group Dungeon at %s! Join them before the gates close.", initiator.getName(), zone.getReadableCoordinates(x, y)), String.format("Tap on and/or use whistles on its siren in the next %d seconds to increase the dungeon's potency!", config.getGracePeriod() / 1000));
         }
     }
 

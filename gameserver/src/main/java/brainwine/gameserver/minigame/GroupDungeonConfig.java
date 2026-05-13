@@ -4,12 +4,12 @@ import brainwine.gameserver.entity.EntityRegistry;
 import brainwine.gameserver.item.Item;
 import brainwine.gameserver.item.ItemRegistry;
 import brainwine.gameserver.util.MapHelper;
-import brainwine.gameserver.util.WeightedMap;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -24,6 +24,7 @@ public class GroupDungeonConfig {
     private long gracePeriod = 120000;
     private int maxPlayerBumps = 4;
     private int maxTotalBumps = 0;
+    private double spawnRadius = 10.0;
     private List<DoorState> doors = Arrays.asList(
             new DoorState(
                     new BlockState("mechanical/door-beefy", 1, null),
@@ -34,11 +35,11 @@ public class GroupDungeonConfig {
             new BlockState("mechanical/speaker", 0, null)
     );
 
-    private Map<Integer, WeightedMap<String>> enemies = MapHelper.map(1, new WeightedMap<>(MapHelper.map(
-            String.class, Double.class,
-            "brains/small-minion", 15.0,
-            "brains/medium-minion", 2.0,
-            "brains/medium-dire-minion", 1.0
+    private Map<Integer, List<Map<String, Integer>>> enemies = MapHelper.map(1, Arrays.asList(MapHelper.map(
+            String.class, Integer.class,
+            "brains/small-minion", 5,
+            "brains/medium-minion", 2,
+            "brains/medium-dire-minion", 1
     )));
 
     public long getGracePeriod() {
@@ -53,25 +54,33 @@ public class GroupDungeonConfig {
         return maxTotalBumps;
     }
 
+    public double getSpawnRadius() {
+        return spawnRadius;
+    }
+
     @JsonSetter
-    public void setEnemies(Map<Integer, Map<String, Double>> enemies) {
+    public void setEnemies(Map<Integer, List<Map<String, Integer>>> enemies) {
         if(enemies.isEmpty()) {
             throw new IllegalArgumentException("No enemy tables for the group dungeon are configured.");
         }
 
-        Map<Integer, WeightedMap<String>> newEnemies = new HashMap<>();
+        Map<Integer, List<Map<String, Integer>>> newEnemies = new HashMap<>();
 
-        for(Map.Entry<Integer, Map<String, Double>> waveEntry : enemies.entrySet()) {
+        for(Map.Entry<Integer, List<Map<String, Integer>>> waveEntry : enemies.entrySet()) {
             if(waveEntry.getKey() <= 0) continue;
-            Map<String, Double> original = enemies.get(waveEntry.getKey());
-            Map<String, Double> filtered = original.entrySet().stream()
-                    .filter(ent -> EntityRegistry.getEntityConfig(ent.getKey()) != null
-                            && ent.getValue() != null && ent.getValue() > 0.0
-                    ).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-            if(filtered.isEmpty()) {
-                throw new IllegalArgumentException(String.format("None of the entity IDs in the enemy table for the group dungeon wave %d are valid.", waveEntry.getKey()));
+            List<Map<String, Integer>> originalConfigs = enemies.get(waveEntry.getKey());
+            if(originalConfigs.isEmpty()) {
+                throw new IllegalArgumentException(String.format("No possibilities are specified for the group dungeon wave %d.", waveEntry.getKey()));
             }
-            newEnemies.put(waveEntry.getKey(), new WeightedMap<String>(filtered));
+            List<Map<String, Integer>> configs = new ArrayList<>();
+            for(Map<String, Integer> original : enemies.get(waveEntry.getKey())) {
+                Map<String, Integer> filtered = original.entrySet().stream().filter(ent -> EntityRegistry.getEntityConfig(ent.getKey()) != null && ent.getValue() != null && ent.getValue() > 0.0).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                if(filtered.isEmpty()) {
+                    throw new IllegalArgumentException(String.format("None of the entity IDs in the enemy table for the group dungeon wave %d are valid.", waveEntry.getKey()));
+                }
+                configs.add(filtered);
+            }
+            newEnemies.put(waveEntry.getKey(), configs);
         }
 
         if(!newEnemies.isEmpty()) {
@@ -86,16 +95,12 @@ public class GroupDungeonConfig {
         }
     }
 
-    public Map<Integer, WeightedMap<String>> getEnemies() {
+    public Map<Integer, List<Map<String, Integer>>> getEnemies() {
         return enemies;
     }
 
     public List<DoorState> getDoors() {
         return doors;
-    }
-
-    public List<BlockState> getSpeakers() {
-        return speakers;
     }
 
     @JsonIgnore
