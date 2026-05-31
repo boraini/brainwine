@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -146,7 +147,8 @@ public class Player extends Entity implements CommandExecutor {
     private Map<String, QuestProgress> questProgresses = new HashMap<>();
     private ValueWithExpiry<List<Quest>> dailyQuest = ValueWithExpiry.getExpired();
     private Map<String, Quest> androidQuests = new HashMap<>();
-    private AndroidShopHistory androidShopHistory = new AndroidShopHistory();
+    private AndroidShopHistory androidShopBuyHistory = new AndroidShopHistory();
+    private AndroidShopHistory androidShopSellHistory = new AndroidShopHistory();
     private String familyName = null;
     private Map<String, OffsetDateTime> actionHistory = new HashMap<>();
     private MailBox mailBox = new MailBox();
@@ -190,6 +192,8 @@ public class Player extends Entity implements CommandExecutor {
     private Zone nextZone;
     private boolean inTutorial = false;
     private Connection connection;
+    // Client is challenged to provide one when they connect.
+    private String hardwareUid = UUID.randomUUID().toString();
 
     protected Player(String documentId, PlayerConfigFile config) {
         super(config.getCurrentZone());
@@ -224,7 +228,8 @@ public class Player extends Entity implements CommandExecutor {
         this.questProgresses = config.getQuestProgresses();
         this.dailyQuest = config.getDailyQuest();
         this.androidQuests = config.getAndroidQuests();
-        this.androidShopHistory = config.getAndroidShopHistory();
+        this.androidShopBuyHistory = config.getAndroidShopBuyHistory();
+        this.androidShopSellHistory = config.getAndroidShopSellHistory();
         this.familyName = config.getFamilyName();
         this.actionHistory = config.getActionHistory();
         this.mailBox = config.getMailBox();
@@ -708,6 +713,7 @@ public class Player extends Entity implements CommandExecutor {
         GameServer.getInstance().getPlayerManager().onPlayerDisconnect(this);
         connection.setPlayer(null);
         connection = null;
+        hardwareUid = null;
     }
     
     /**
@@ -1843,8 +1849,12 @@ public class Player extends Entity implements CommandExecutor {
         this.dailyQuest = dailyQuest;
     }
 
-    public AndroidShopHistory getAndroidShopHistory() {
-        return androidShopHistory;
+    public AndroidShopHistory getAndroidShopBuyHistory() {
+        return androidShopBuyHistory;
+    }
+
+    public AndroidShopHistory getAndroidShopSellHistory() {
+        return androidShopSellHistory;
     }
 
     public String getFamilyName() {
@@ -2119,6 +2129,14 @@ public class Player extends Entity implements CommandExecutor {
     
     public Connection getConnection() {
         return connection;
+    }
+
+    public void setHardwareUid(String hardwareUid) {
+        this.hardwareUid = hardwareUid;
+    }
+
+    public String getHardwareUid() {
+        return hardwareUid;
     }
     
     public boolean isOnline() {

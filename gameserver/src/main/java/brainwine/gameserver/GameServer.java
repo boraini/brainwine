@@ -78,7 +78,8 @@ public class GameServer implements CommandExecutor {
         Quests.loadQuests();
         dailyRewardManager = new DailyRewardManager();
         AndroidShop.getInstance().loadShopData();
-        AndroidShopPerIpHistory.getInstance().load();
+        AndroidShopPerIpHistory.getPurchaseInstance().load();
+        AndroidShopPerIpHistory.getSaleInstance().load();
         SpecialRequestRegistry.getInstance().loadTrades();
         Fake.loadFake();
         AnticheatManager.loadConfig();
@@ -123,7 +124,8 @@ public class GameServer implements CommandExecutor {
             playerManager.savePlayers();
             ipBans.saveIpBans();
             dailyRewardManager.saveDailyRewards();
-            AndroidShopPerIpHistory.getInstance().save();
+            AndroidShopPerIpHistory.getPurchaseInstance().save();
+            AndroidShopPerIpHistory.getSaleInstance().save();
             ScrapMarket.getInstance().saveJson();
             lastSave = System.currentTimeMillis();
         }
@@ -169,7 +171,8 @@ public class GameServer implements CommandExecutor {
         playerManager.savePlayers();
         ipBans.saveIpBans();
         dailyRewardManager.saveDailyRewards();
-        AndroidShopPerIpHistory.getInstance().save();
+        AndroidShopPerIpHistory.getPurchaseInstance().save();
+        AndroidShopPerIpHistory.getSaleInstance().save();
         ScrapMarket.getInstance().saveJson();
     }
     

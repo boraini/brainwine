@@ -2,7 +2,9 @@ package brainwine.gameserver.entity.npc.job.jobs;
 
 import brainwine.gameserver.GameConfiguration;
 import brainwine.gameserver.androidshop.AndroidShop;
+import brainwine.gameserver.androidshop.AndroidShopPerIpHistory;
 import brainwine.gameserver.androidshop.AndroidShopSession;
+import brainwine.gameserver.anticheat.IpAddressVsHardwareId;
 import brainwine.gameserver.dialog.Dialog;
 import brainwine.gameserver.dialog.DialogHelper;
 import brainwine.gameserver.dialog.DialogListItem;
@@ -22,6 +24,7 @@ import brainwine.gameserver.scrapmarket.SpecialRequestRegistry;
 import brainwine.gameserver.scrapmarket.SpecialRequestSession;
 import brainwine.gameserver.util.MapHelper;
 
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -130,13 +133,37 @@ public class Trader extends DialoguerJob {
 
     @Override
     public void acceptItem(Npc me, Player player, Item item) {
+        player.getAndroidShopSellHistory().removeOldPurchases();
+        AndroidShopPerIpHistory.getSaleInstance().removeOldPurchases(player);
         String itemTitle = getItemTitle(item);
         String itemTitlePlural = itemTitle + (itemTitle.toLowerCase().endsWith("s") ? "es" : "s");
-        int playerHas = player.getInventory().getQuantity(item);
         int barterSkill = player.getTotalSkillLevel(Skill.BARTER);
         int maxPrice = AndroidShop.getInstance().getAdjustments().getMaxPrice(player);
+        int allowedDaily = item.getBarterPerDay();
+        int playerHasTotal = player.getInventory().getQuantity(item);
+        int playerHas = playerHasTotal;
+
+        if(allowedDaily > 0) {
+            int possible = Math.min(allowedDaily, playerHasTotal);
+            int soFar = player.getAndroidShopSellHistory().getPurchases(item);
+            soFar = Math.max(soFar, AndroidShopPerIpHistory.getSaleInstance().getPurchases(player, item));
+
+            playerHas = possible - soFar;
+        }
+
+        if(player.isActionOnCooldown(IpAddressVsHardwareId.violationActionKey, IpAddressVsHardwareId.MIN_VIOLATIONS_INTERVAL, ChronoUnit.MILLIS)) {
+            playerHas = 0;
+        }
 
         Consumer<Object[]> scrapMarketOnlyHandler = ans -> acceptItemHandleScrapMarket(me, player, item, ans);
+
+        if(playerHas == 0) {
+            player.showDialog(acceptItemLinkToScrapMarket(DialogHelper
+                    .messageDialog("Daily Limit Reached", "Sorry, but I won't buy any more of your " + item.getTitle() + " today. Come back tomorrow.")
+                    .setType(DialogType.ANDROID)
+            ), scrapMarketOnlyHandler);
+            return;
+        }
 
         if(item.getShillingsPrice() > maxPrice) {
             player.showDialog(acceptItemLinkToScrapMarket(DialogHelper
@@ -242,6 +269,8 @@ public class Trader extends DialoguerJob {
                     for(Map.Entry<Item, Integer> entry : offer.entrySet()) {
                         player.getInventory().removeItem(entry.getKey(), entry.getValue(), true);
                         totalQuantity += entry.getValue();
+                        player.getAndroidShopSellHistory().recordPurchase(entry.getKey(), entry.getValue());
+                        AndroidShopPerIpHistory.getSaleInstance().recordPurchase(player, entry.getKey(), entry.getValue());
                     }
                     player.getInventory().addItem(shillings, finalPayback, true);
                     player.getStatistics().trackAndroidShopSale(totalQuantity, finalPayback);

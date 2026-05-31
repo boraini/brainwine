@@ -287,6 +287,9 @@ public class Item {
     @JsonProperty("shillings_price")
     private int shillingsPrice = -1;
 
+    @JsonProperty("barter_per_day")
+    private int barterPerDay = 0;
+
     @JsonProperty("barter_level")
     private int barterLevel = 1;
 
@@ -870,6 +873,10 @@ public class Item {
 
     public int getShillingsPrice() {
         return shillingsPrice;
+    }
+
+    public int getBarterPerDay() {
+        return barterPerDay;
     }
 
     public int getBarterLevel() {

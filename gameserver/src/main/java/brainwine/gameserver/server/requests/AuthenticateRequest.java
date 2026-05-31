@@ -2,8 +2,11 @@ package brainwine.gameserver.server.requests;
 
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
 
 import brainwine.gameserver.GameServer;
+import brainwine.gameserver.anticheat.AnticheatManager;
 import brainwine.gameserver.player.NotificationType;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.player.PlayerManager;
@@ -57,6 +60,16 @@ public class AuthenticateRequest extends Request {
             Cidr foundCidr = connection.getIpAddress();
             IpBans.Item foundIpBan = server.getIpBans().findMatchingIpBan(foundCidr);
 
+            String hardwareId = UUID.randomUUID().toString();
+            if(details instanceof Map<?,?>) {
+                Object found = ((Map<?,?>)details).get("hwId");
+                if(found instanceof String && ((String)found).length() == 36) {
+                    hardwareId = (String)found;
+                }
+            }
+
+            String hardwareUid = hardwareId;
+
             server.queueSynchronousTask(() -> {
                 Player player = playerManager.getPlayer(name);
                 if(player.getBlockedUntil() > System.currentTimeMillis()) {
@@ -109,8 +122,10 @@ public class AuthenticateRequest extends Request {
                         return;
                     }
                 }
-                
+
                 player.setConnection(connection);
+                player.setHardwareUid(hardwareUid);
+                AnticheatManager.getIpAddressVsHardwareId().handleConnection(player);
                 player.setClientVersion(version);
                 zone.addEntity(player);
                 playerManager.onPlayerConnect(player);

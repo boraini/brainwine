@@ -1,5 +1,6 @@
 package brainwine.gameserver.androidshop;
 
+import brainwine.gameserver.anticheat.IpAddressVsHardwareId;
 import brainwine.gameserver.dialog.Dialog;
 import brainwine.gameserver.dialog.DialogHelper;
 import brainwine.gameserver.dialog.DialogListItem;
@@ -14,6 +15,7 @@ import brainwine.gameserver.shop.ShopSection;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -40,11 +42,8 @@ public class AndroidShopSession {
         this.me = me;
         this.player = player;
         this.onOutcome = onOutcome;
-        player.getAndroidShopHistory().removeOldPurchases();
-        AndroidShopHistory ipHistory = AndroidShopPerIpHistory.getInstance().getHistory(player);
-        if(ipHistory != null) {
-            ipHistory.removeOldPurchases();
-        }
+        player.getAndroidShopBuyHistory().removeOldPurchases();
+        AndroidShopPerIpHistory.getPurchaseInstance().removeOldPurchases(player);
     }
 
     private enum CanBuy {
@@ -73,9 +72,8 @@ public class AndroidShopSession {
         int maxPrice = shop.getAdjustments().getMaxPrice(player);
         int adjustedPrice = getAdjustedPrice(product);
         int account = player.getInventory().getQuantity(ItemRegistry.getItem("accessories/shillings"));
-        int purchasedPlayer = player.getAndroidShopHistory().getPurchases(product.getItem());
-        AndroidShopHistory ipHistory = AndroidShopPerIpHistory.getInstance().getHistory(player);
-        int purchasedIp = ipHistory != null ? ipHistory.getPurchases(product.getItem()) : 0;
+        int purchasedPlayer = player.getAndroidShopBuyHistory().getPurchases(product.getItem());
+        int purchasedIp = AndroidShopPerIpHistory.getPurchaseInstance().getPurchases(player, product.getItem());
         int purchased = Math.max(purchasedPlayer, purchasedIp);
 
         if (adjustedPrice > maxPrice) {
@@ -242,7 +240,7 @@ public class AndroidShopSession {
 
         if(canBuy == CanBuy.OK) {
             int allowedByPrice = player.getInventory().getQuantity(ItemRegistry.getItem("accessories/shillings")) / getAdjustedPrice(product);
-            int purchased = player.getAndroidShopHistory().getPurchases(product.getItem());
+            int purchased = player.getAndroidShopBuyHistory().getPurchases(product.getItem());
             int maxQuantity = Math.min(allowedByPrice, product.getMaxQuantityPerDay() - purchased);
             dialog.addSection(TradeSession.Dialogs.createQuantitySelector(maxQuantity).setTitle("How many are you buying?"));
         } else {
@@ -295,11 +293,15 @@ public class AndroidShopSession {
             if(ans.length == 0 || !"cancel".equals(ans[0])) {
                 CanBuy canBuy = canBuy(product, quantity);
                 if(canBuy == CanBuy.OK) {
+                    if(player.isActionOnCooldown(IpAddressVsHardwareId.violationActionKey, IpAddressVsHardwareId.MIN_VIOLATIONS_INTERVAL, ChronoUnit.MILLIS)) {
+                        player.notify("Sorry, an error occurred. Please try again later");
+                        return;
+                    }
                     int currentTotalPrice = quantity * getAdjustedPrice(product);
                     player.getInventory().removeItem(shillings, currentTotalPrice, true);
                     product.purchase(player, quantity);
-                    player.getAndroidShopHistory().recordPurchase(product.getItem(), quantity);
-                    AndroidShopPerIpHistory.getInstance().recordPurchase(player, product.getItem(), quantity);
+                    player.getAndroidShopBuyHistory().recordPurchase(product.getItem(), quantity);
+                    AndroidShopPerIpHistory.getPurchaseInstance().recordPurchase(player, product.getItem(), quantity);
                     player.getStatistics().trackAndroidShopPurchase(quantity, currentTotalPrice);
                     if(me != null) me.emote("Good trade!");
                     end(true);

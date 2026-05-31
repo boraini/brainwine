@@ -39,6 +39,10 @@ public class AndroidShopHistory {
 
     public void recordPurchase(Item item, int quantity) {
         OffsetDateTime now = OffsetDateTime.now();
+        recordPurchase(item, quantity, now);
+    }
+
+    public void recordPurchase(Item item, int quantity, OffsetDateTime now) {
         purchases.add(new Purchase(now, item, quantity));
         summary.merge(item, quantity, Integer::sum);
     }
@@ -61,6 +65,18 @@ public class AndroidShopHistory {
             this.date = date;
             this.item = item;
             this.quantity = quantity;
+        }
+
+        public OffsetDateTime getDate() {
+            return date;
+        }
+
+        public Item getItem() {
+            return item;
+        }
+
+        public int getQuantity() {
+            return quantity;
         }
     }
 }

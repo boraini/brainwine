@@ -1,22 +1,29 @@
 package brainwine.gameserver.player;
 
 import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import brainwine.gameserver.androidshop.AndroidShopHistory;
 import brainwine.gameserver.mail.MailBox;
 import brainwine.gameserver.quest.Quest;
 import brainwine.gameserver.util.ValueWithExpiry;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSetter;
-import com.fasterxml.jackson.annotation.Nulls;
 
 import brainwine.gameserver.achievement.Achievement;
 import brainwine.gameserver.item.Item;
 import brainwine.gameserver.quest.QuestProgress;
 import brainwine.gameserver.zone.Zone;
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PlayerConfigFile {
@@ -52,7 +59,8 @@ public class PlayerConfigFile {
     private Map<String, QuestProgress> questProgresses = new HashMap<>();
     private ValueWithExpiry<List<Quest>> dailyQuest = ValueWithExpiry.getExpired();
     private Map<String, Quest> androidQuests = new HashMap<>();
-    private AndroidShopHistory androidShopHistory = new AndroidShopHistory();
+    private AndroidShopHistory androidShopBuyHistory = new AndroidShopHistory();
+    private AndroidShopHistory androidShopSellHistory = new AndroidShopHistory();
     private String familyName = null;
     private Map<String, OffsetDateTime> actionHistory = new HashMap<>();
     private MailBox mailBox = new MailBox();
@@ -89,7 +97,8 @@ public class PlayerConfigFile {
         this.questProgresses = player.getQuestProgresses();
         this.dailyQuest = player.getDailyQuest();
         this.androidQuests = player.getAndroidQuests();
-        this.androidShopHistory = player.getAndroidShopHistory();
+        this.androidShopBuyHistory = player.getAndroidShopBuyHistory();
+        this.androidShopSellHistory = player.getAndroidShopSellHistory();
         this.familyName = player.getFamilyName();
         this.actionHistory = player.getActionHistory();
         this.mailBox = player.getMailBox();
@@ -293,8 +302,13 @@ public class PlayerConfigFile {
         return androidQuests;
     }
 
-    public AndroidShopHistory getAndroidShopHistory() {
-        return androidShopHistory;
+    @JsonAlias("android_shop_history")
+    public AndroidShopHistory getAndroidShopBuyHistory() {
+        return androidShopBuyHistory;
+    }
+
+    public AndroidShopHistory getAndroidShopSellHistory() {
+        return androidShopSellHistory;
     }
 
     public String getFamilyName() {

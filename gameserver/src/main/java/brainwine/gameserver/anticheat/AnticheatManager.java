@@ -15,6 +15,8 @@ public class AnticheatManager {
     private static AnticheatConfig config = new AnticheatConfig();
     private static final Logger logger = LogManager.getLogger();
 
+    private static IpAddressVsHardwareId ipAddressVsHardwareId = new IpAddressVsHardwareId();
+
     public static void loadConfig() {
         logger.info(SERVER_MARKER, "Loading anti-cheat ...");
 
@@ -28,5 +30,8 @@ public class AnticheatManager {
 
     public static AnticheatConfig getConfig() {
         return config;
+    }
+    public static IpAddressVsHardwareId getIpAddressVsHardwareId() {
+        return ipAddressVsHardwareId;
     }
 }
