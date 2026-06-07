@@ -183,18 +183,21 @@ public class PortalService {
             }
         });
 
-        // TODO this modifies the objects returned from the direct data fetcher directly
-        Validator<Boolean> param = ctx.queryParamAsClass("metablocks", Boolean.class);
-        Boolean value = param.getOrDefault(null);
-        if(value != null && value.equals(true)) {
-            zones.forEach(z -> z.setMetablocks(dataFetcher.getZoneMetaBlocks(z.getDocumentId())));
-        }
-
         // Page
         int page = ctx.queryParamAsClass("page", Integer.class).getOrDefault(1);
         int fromIndex = (page - 1) * zoneSearchPageSize;
         int toIndex = page * zoneSearchPageSize;
-        ctx.json(zones.subList(fromIndex < 0 ? 0 : fromIndex > zones.size() ? zones.size() : fromIndex, toIndex > zones.size() ? zones.size() : toIndex));
+
+        List<ZoneInfo> zonesPage = zones.subList(fromIndex < 0 ? 0 : fromIndex > zones.size() ? zones.size() : fromIndex, toIndex > zones.size() ? zones.size() : toIndex);
+
+        // TODO this modifies the objects returned from the direct data fetcher directly
+        Validator<Boolean> param = ctx.queryParamAsClass("metablocks", Boolean.class);
+        Boolean value = param.getOrDefault(null);
+        if(value != null && value.equals(true)) {
+            zonesPage.forEach(z -> z.setMetablocks(dataFetcher.getZoneMetaBlocks(z.getDocumentId())));
+        }
+
+        ctx.json(zonesPage);
     }
 
     private void handleWsConfig(WsConfig config) {

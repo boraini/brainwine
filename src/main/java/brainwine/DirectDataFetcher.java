@@ -16,6 +16,7 @@ import brainwine.api.models.PlayerInfo;
 import brainwine.api.models.PlayerInfoQuery;
 import brainwine.api.models.PlayerInfoSummary;
 import brainwine.api.models.ZoneInfo;
+import brainwine.gameserver.GameServer;
 import brainwine.gameserver.item.Item;
 import brainwine.gameserver.item.ItemGroup;
 import brainwine.gameserver.item.ItemRegistry;
@@ -280,13 +281,25 @@ public class DirectDataFetcher implements DataFetcher {
     public List<Map<String, Object>> getZoneMetaBlocks(String documentId) {
         Zone zone = zoneManager.getZone(documentId);
         if(zone == null) return null;
-        return zone.getGlobalMetaBlocks().stream()
+        boolean wereMetaBlocksLoaded = zone.areMetaBlocksLoaded();
+        if(!wereMetaBlocksLoaded) {
+            try {
+                zone.tryToLoadMetaBlocks();
+            } catch(Exception e) {
+                e.printStackTrace();
+            }
+        }
+        List<Map<String, Object>> result = zone.getGlobalMetaBlocks().stream()
                 .filter(b -> b.getItem().hasUse(ItemUseType.ZONE_TELEPORT)
                         || b.getItem().hasUse(ItemUseType.TELEPORT)
                         || b.getItem().getId().contains("sign")
                 )
                 .map(DirectDataFetcher::createMetaBlockData)
                 .collect(Collectors.toList());
+        if(!wereMetaBlocksLoaded) {
+            GameServer.getInstance().getZoneManager().unloadZoneMetaBlocks(zone);
+        }
+        return result;
     }
 
     private static final Set<String> includedMetablockKeys = Stream.of( "n", "t1", "t2", "t3", "vc" ).collect(Collectors.toCollection(HashSet::new));
