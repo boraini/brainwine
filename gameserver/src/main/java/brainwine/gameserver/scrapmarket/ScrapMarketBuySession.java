@@ -10,6 +10,7 @@ import brainwine.gameserver.entity.npc.Npc;
 import brainwine.gameserver.item.Item;
 import brainwine.gameserver.item.ItemRegistry;
 import brainwine.gameserver.player.Player;
+import brainwine.gameserver.player.PlayerManager;
 import brainwine.gameserver.player.TradeSession;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -106,7 +107,18 @@ public class ScrapMarketBuySession {
         Dialog dialog = new Dialog().setType(DialogType.ANDROID).setTitle("Scrap Market");
 
         for(String tab : shop.getProductsByInventoryTab().keySet()) {
-            if(player.isGodMode() || shop.getProductsByInventoryTab().get(tab).stream().anyMatch(p -> !player.getDocumentId().equals(p.getSellerId()))) {
+            boolean show = true;
+            if(!player.isGodMode()) {
+                show = false;
+                for(ScrapMarketProduct product : shop.getProductsByInventoryTab().get(tab)) {
+                    if(player.getDocumentId().equals(product.getSellerId())) continue;
+                    Player seller = GameServer.getInstance().getPlayerManager().getPlayerById(product.getSellerId());
+                    if(seller == null || seller.isBanned()) continue;
+                    show = true;
+                    break;
+                }
+            }
+            if(show) {
                 dialog.addSection(new DialogSection().setChoice(tab).setText(StringUtils.capitalize(tab)));
             }
         }
@@ -150,8 +162,10 @@ public class ScrapMarketBuySession {
         for(ScrapMarketProduct product : products) {
             if(!player.isGodMode() && player.getDocumentId().equals(product.getSellerId())) continue;
 
-            int adjustedCost = getAdjustedPrice(product);
             Player seller = GameServer.getInstance().getPlayerManager().getPlayerById(product.getSellerId());
+            if(seller == null || seller.isBanned()) continue;
+
+            int adjustedCost = getAdjustedPrice(product);
             Item item = ItemRegistry.getItem(product.getItemId());
 
             CanBuy canBuy = canBuy(product);
