@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 import brainwine.gameserver.anticheat.AfkEntitySpawn;
 import brainwine.gameserver.anticheat.AnticheatManager;
 import brainwine.gameserver.item.ItemUseType;
+import brainwine.gameserver.item.usetypeconfig.GuardWavesConfig;
 import brainwine.gameserver.player.NotificationType;
 import brainwine.gameserver.quest.QuestEvents;
 import brainwine.gameserver.server.messages.EventMessage;
@@ -292,7 +293,7 @@ public class EntityManager {
         int index = zone.getBlockIndex(x, y);
         
         // Check for guardian entity
-        if(item.getGuardLevel() > 0 || item.hasUse(ItemUseType.REVENANT_DISH)) {
+        if(item.getGuardLevel() > 0 || item.hasUse(ItemUseType.GUARD_WAVES)) {
             MetaBlock metaBlock = zone.getMetaBlock(x, y);
             
             if(metaBlock != null) {
@@ -337,7 +338,7 @@ public class EntityManager {
     public void checkGuardians() {
         Map<Integer, Map<String, Integer>> needs = new HashMap<>();
         // TODO maybe also include enemy protectors
-        List<MetaBlock> dishes = zone.getMetaBlocksWithUse(ItemUseType.REVENANT_DISH);
+        List<MetaBlock> dishes = zone.getMetaBlocksWithUse(ItemUseType.GUARD_WAVES);
 
         // Add the needed guard counts to each dish's hash map
         for(MetaBlock dish : dishes) {
@@ -382,13 +383,16 @@ public class EntityManager {
         }
     }
 
-    public void updateRevenantDish(int x, int y, boolean newlyLoaded) {
+    public void updateGuardWaves(int x, int y, boolean newlyLoaded) {
         MetaBlock metaBlock = zone.getMetaBlock(x, y);
-        if(metaBlock != null && metaBlock.getItem().hasUse(ItemUseType.REVENANT_DISH)) {
+        GuardWavesConfig config = metaBlock.getItem().getStructuredUse(ItemUseType.GUARD_WAVES);
+        // Fall back to default
+        if(config == null) config = new GuardWavesConfig();
+        if(metaBlock != null && metaBlock.getItem().hasUse(ItemUseType.GUARD_WAVES)) {
             int wave;
             if(!metaBlock.hasProperty("w") || !metaBlock.hasProperty("!")) {
-                wave = 3;
-                startRevenantDishWave(x, y, 3);
+                wave = config.getGuards().keySet().stream().max(Integer::compare).get() - 1;
+                startGuardWave(x, y, wave);
                 newlyLoaded = true;
             } else {
                 List<String> guards = MapHelper.getList(metaBlock.getMetadata(), "!");
@@ -405,38 +409,36 @@ public class EntityManager {
                 }
 
                 if(currentWave != wave) {
-                    startRevenantDishWave(x, y, wave);
+                    startGuardWave(x, y, wave);
                     newlyLoaded = true;
                 }
             }
 
             if(newlyLoaded) trySpawnBlockEntity(x, y);
 
-            if(wave <= 0) {
-                zone.updateBlock(x, y, Layer.FRONT, Item.AIR);
-                zone.spawnEffect(x, y, "bomb-electric", 5);
+            if(config.isExplode()) {
+                if(wave <= 0) {
+                    zone.updateBlock(x, y, Layer.FRONT, Item.AIR);
+                    zone.spawnEffect(x, y, "bomb-electric", 5);
+                }
+            } else if(config.getChange() != null) {
+                zone.updateBlock(x, y, Layer.FRONT, config.getChange());
             }
         }
     }
 
-    public void startRevenantDishWave(int x, int y, int wave) {
-        String type;
-        int count;
-        // Waves start from 3, go down to 1, and reach 0 which is when the infernal protector is destroyed.
-        if(wave == 3) {
-            type = "revenant";
-            count = 5;
-        } else if(wave == 2) {
-            type = "dire-revenant";
-            count = 3;
-        } else if(wave == 1) {
-            type = "revenant-lord";
-            count = 1;
-        } else {
-            type = "terrapus/adult";
-            count = 0;
-        }
-
+    public void startGuardWave(int x, int y, int wave) {
+        // Might be null
+        Block block = zone.getBlockSafe(x, y);
+        // Get the waves defined for the front item
+        GuardWavesConfig config = block != null ? block.getFrontItem().getStructuredUse(ItemUseType.GUARD_WAVES) : null;
+        // Fall back to default
+        if(config == null) config = new GuardWavesConfig();
+        int totalWaves = config.getGuards().keySet().stream().max(Integer::compare).get() - 1;
+        // Waves start from totalWaves, go down to 1, and reach 0 which is when the infernal protector is destroyed.
+        Map.Entry<String, Integer> entry = config.getGuardsForWave(totalWaves - wave + 1).entrySet().stream().findFirst().get();
+        String type = entry.getKey();
+        int count = entry.getValue();
         List<String> guards = new ArrayList<>();
         for(int i = 0; i < count; i++) {
             guards.add(type);

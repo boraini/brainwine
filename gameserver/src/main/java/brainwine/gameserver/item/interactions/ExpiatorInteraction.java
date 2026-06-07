@@ -40,7 +40,7 @@ public class ExpiatorInteraction extends EcologicalMachineInteraction {
         // This allows the server operator to choose what infernal protectors do.
         Item hellDish = ItemRegistry.getItem("hell/dish");
         List<MetaBlock> protectors;
-        if(hellDish.hasUse(ItemUseType.REVENANT_DISH)) {
+        if(hellDish.hasUse(ItemUseType.GUARD_WAVES)) {
             protectors = Collections.emptyList();
         } else {
             protectors = zone.getMetaBlocksWithItem(hellDish);

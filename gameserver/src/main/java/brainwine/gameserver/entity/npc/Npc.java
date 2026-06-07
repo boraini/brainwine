@@ -172,7 +172,7 @@ public class Npc extends Entity {
                     guards.remove(typeName);
 
                     if(guards.isEmpty()) {
-                        zone.getEntityManager().updateRevenantDish(guardBlock.getX(), guardBlock.getY(), false);
+                        zone.getEntityManager().updateGuardWaves(guardBlock.getX(), guardBlock.getY(), false);
                     }
                 }
             }

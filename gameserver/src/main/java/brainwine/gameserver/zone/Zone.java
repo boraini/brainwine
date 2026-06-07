@@ -1073,7 +1073,7 @@ public class Zone {
                             guardBlocks++;
                         }
 
-                        entityManager.updateRevenantDish(x, y, true);
+                        entityManager.updateGuardWaves(x, y, true);
                     }
 
                     if(dungeonId != null && (frontItem.getUse(ItemUseType.MINIGAME) instanceof Map && "group-dungeon".equals(((Map<?, ?>)frontItem.getUse(ItemUseType.MINIGAME)).get("type")) || allGroupDungeonItems.contains(frontItem))) {
@@ -1781,8 +1781,8 @@ public class Zone {
             
             for(int y = chunkY; y < chunkY + chunk.getHeight(); y++) {
                 // Spawn block-related entities
-                if(chunk.getBlock(x, y).getFrontItem().hasUse(ItemUseType.REVENANT_DISH)) {
-                    entityManager.updateRevenantDish(x, y, true);
+                if(chunk.getBlock(x, y).getFrontItem().hasUse(ItemUseType.GUARD_WAVES)) {
+                    entityManager.updateGuardWaves(x, y, true);
                 } else {
                     entityManager.trySpawnBlockEntity(x, y);
                 }

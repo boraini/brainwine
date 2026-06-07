@@ -34,6 +34,7 @@ import brainwine.gameserver.item.interactions.WorldMachineInteraction;
 import brainwine.gameserver.item.interactions.XpSignInteraction;
 import brainwine.gameserver.item.usetypeconfig.BatteryConfig;
 import brainwine.gameserver.item.usetypeconfig.ExtendedSteamableConfig;
+import brainwine.gameserver.item.usetypeconfig.GuardWavesConfig;
 import brainwine.gameserver.item.usetypeconfig.ItemUseTypeConfig;
 import brainwine.gameserver.item.usetypeconfig.Properties;
 import brainwine.gameserver.item.usetypeconfig.SteamSourceConfig;
@@ -59,6 +60,7 @@ public enum ItemUseType {
     EXTENDED_STEAMABLE(ExtendedSteamableConfig.class),
     GECK(new GeckInteraction()),
     GUARD,
+    GUARD_WAVES(GuardWavesConfig.class),
     CHANGE(new ChangeInteraction()),
     FERTILIZER(new FertilizerInteraction()),
     FIELDABLE,
@@ -77,7 +79,6 @@ public enum ItemUseType {
     POTENCY_BUMP,
     PROTECTED,
     PUBLIC,
-    REVENANT_DISH,
     QUIPPER(new QuipperInteraction()),
     RECYCLER(new RecyclerInteraction()),
     SMELTER(new ConvertItemInteraction("Forge", "smelt", Item::getSmelt)),
