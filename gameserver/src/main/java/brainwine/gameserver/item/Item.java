@@ -305,18 +305,19 @@ public class Item {
     }
 
     @JsonSetter("inventory")
-    public void setInventory(Object[] config) {
-        if(config.length != 2 || !(config[0] instanceof String) || !(config[1] instanceof Integer)) {
+    public void setInventory(Object obj) {
+        if (obj instanceof String) {
+            inventoryItem = new LazyItemGetter((String)obj);
+            return;
+        }
+
+        List<Object> list = (List)obj;
+        if(list.size() != 2 || !(list.get(0) instanceof String) || !(list.get(1) instanceof Integer)) {
             throw new IllegalArgumentException("Item inventory config must be an 2 element array of item id and quantity.");
         }
 
-        inventoryItem = new LazyItemGetter((String)config[0]);
-        inventoryQuantity = (int)config[1];
-    }
-
-    @JsonSetter("inventory")
-    public void setInventory(String string) {
-        inventoryItem = new LazyItemGetter(string);
+        inventoryItem = new LazyItemGetter((String)list.get(0));
+        inventoryQuantity = (int)list.get(1);
     }
 
     @JsonSetter("use")
