@@ -232,7 +232,7 @@ public class BlockMineRequest extends PlayerRequest {
             inventoryItem = item.getInventoryItem();
         }
         
-        int quantity = 1;
+        int quantity = item.getInventoryQuantity();
         player.getStatistics().trackItemMined(item);
 
         boolean trackQuest = false;

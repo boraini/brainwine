@@ -192,9 +192,10 @@ public class Item {
     
     @JsonProperty("membership")
     private boolean membership;
-    
-    @JsonProperty("inventory")
+
     private LazyItemGetter inventoryItem;
+
+    private int inventoryQuantity = 1;
     
     @JsonProperty("decay inventory")
     private LazyItemGetter decayInventoryItem;
@@ -301,6 +302,21 @@ public class Item {
             @JsonProperty(value = "code", required = true) int code) {
         this.id = id;
         this.code = code;
+    }
+
+    @JsonSetter("inventory")
+    public void setInventory(Object[] config) {
+        if(config.length != 2 || !(config[0] instanceof String) || !(config[1] instanceof Integer)) {
+            throw new IllegalArgumentException("Item inventory config must be an 2 element array of item id and quantity.");
+        }
+
+        inventoryItem = new LazyItemGetter((String)config[0]);
+        inventoryQuantity = (int)config[1];
+    }
+
+    @JsonSetter("inventory")
+    public void setInventory(String string) {
+        inventoryItem = new LazyItemGetter(string);
     }
 
     @JsonSetter("use")
@@ -675,6 +691,10 @@ public class Item {
     
     public Item getInventoryItem() {
         return inventoryItem == null ? this : inventoryItem.get();
+    }
+
+    public int getInventoryQuantity() {
+        return inventoryQuantity;
     }
     
     public Item getDecayInventoryItem() {
