@@ -15,6 +15,7 @@ import brainwine.gameserver.item.consumables.SkillResetConsumable;
 import brainwine.gameserver.item.consumables.StealthConsumable;
 import brainwine.gameserver.item.consumables.TeleportConsumable;
 import brainwine.gameserver.item.consumables.UnlockWorldConsumable;
+import brainwine.gameserver.item.consumables.WarmthConsumable;
 
 /**
  * Action types for items.
@@ -40,6 +41,7 @@ public enum Action {
     STEALTH(new StealthConsumable()),
     TELEPORT(new TeleportConsumable()),
     UNLOCK_WORLD(new UnlockWorldConsumable()),
+    WARMTH(new WarmthConsumable()),
     
     @JsonEnumDefaultValue
     NONE;

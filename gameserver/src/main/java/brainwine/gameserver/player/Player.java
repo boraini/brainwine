@@ -477,6 +477,10 @@ public class Player extends Entity implements CommandExecutor {
         }
     }
 
+    public double getCold() {
+        return cold;
+    }
+
     public void applyWarmth() {
         cold = 0.0;
         sendMessage(new StatMessage(PlayerStat.FREEZE, (float)cold));
