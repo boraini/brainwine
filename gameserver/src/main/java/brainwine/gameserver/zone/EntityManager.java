@@ -385,10 +385,8 @@ public class EntityManager {
 
     public void updateGuardWaves(int x, int y, boolean newlyLoaded) {
         MetaBlock metaBlock = zone.getMetaBlock(x, y);
-        GuardWavesConfig config = metaBlock.getItem().getStructuredUse(ItemUseType.GUARD_WAVES);
-        // Fall back to default
-        if(config == null) config = new GuardWavesConfig();
         if(metaBlock != null && metaBlock.getItem().hasUse(ItemUseType.GUARD_WAVES)) {
+            GuardWavesConfig config = metaBlock.getItem().getStructuredUse(ItemUseType.GUARD_WAVES);
             int wave;
             if(!metaBlock.hasProperty("w") || !metaBlock.hasProperty("!")) {
                 wave = config.getGuards().keySet().stream().max(Integer::compare).get() - 1;

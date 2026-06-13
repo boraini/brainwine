@@ -1072,8 +1072,6 @@ public class Zone {
                             addGuardianEntities(metadata, frontItem.getGuardLevel(), y + j, random);
                             guardBlocks++;
                         }
-
-                        entityManager.updateGuardWaves(x, y, true);
                     }
 
                     if(dungeonId != null && (frontItem.getUse(ItemUseType.MINIGAME) instanceof Map && "group-dungeon".equals(((Map<?, ?>)frontItem.getUse(ItemUseType.MINIGAME)).get("type")) || allGroupDungeonItems.contains(frontItem))) {
@@ -1122,6 +1120,11 @@ public class Zone {
                     }
                     
                     updateBlock(x + i + offset, y + j, Layer.FRONT, frontItem, frontMod, null, metadata);
+
+                    // After placing the block, prime the first guard wave
+                    if(frontItem.hasUse(ItemUseType.GUARD_WAVES)) {
+                        entityManager.updateGuardWaves(x, y, true);
+                    }
                 }
                 
                 // Update liquid item if any block isn't empty
