@@ -5,9 +5,8 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import brainwine.gameserver.GameServer;
@@ -27,7 +26,6 @@ import brainwine.gameserver.zone.Zone;
  *
  * <p>Ported from the canonical {@code models/guild.rb}.
  */
-@JsonAutoDetect(fieldVisibility = Visibility.ANY, getterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Guild {
 
@@ -95,6 +93,7 @@ public class Guild {
     /**
      * @return {@code true} if every visual field has been configured.
      */
+    @JsonIgnore
     public boolean isComplete() {
         return isPresent(name) && isPresent(shortName) && isPresent(color1) && isPresent(color2)
                 && isPresent(color3) && isPresent(color4) && isPresent(signColor) && isPresent(sign);
@@ -260,6 +259,30 @@ public class Guild {
 
     public Set<String> getMembers() {
         return members;
+    }
+
+    public String getColor1() {
+        return color1;
+    }
+
+    public String getColor2() {
+        return color2;
+    }
+
+    public String getColor3() {
+        return color3;
+    }
+
+    public String getColor4() {
+        return color4;
+    }
+
+    public String getSign() {
+        return sign;
+    }
+
+    public String getSignColor() {
+        return signColor;
     }
 
     private void persist(Player player) {
