@@ -49,6 +49,7 @@ public class PlayerConfigFile {
     private List<String> bookmarkedZones = new ArrayList<>();
     private Set<String> followees = new HashSet<>();
     private Set<String> followers = new HashSet<>();
+    private String guildId;
     private Set<String> lootCodes = new HashSet<>();
     private Set<Achievement> achievements = new HashSet<>();
     private Map<String, Integer> orders = new HashMap<>();
@@ -86,6 +87,7 @@ public class PlayerConfigFile {
         this.bookmarkedZones = player.getBookmarkedZones();
         this.followees = player.getFollowees();
         this.followers = player.getFollowers();
+        this.guildId = player.getGuildId();
         this.lootCodes = player.getLootCodes();
         this.achievements = player.getAchievements();
         this.orders = player.getOrders();
@@ -247,6 +249,10 @@ public class PlayerConfigFile {
     @JsonSetter(nulls = Nulls.SKIP, contentNulls = Nulls.SKIP)
     public Set<String> getFollowees() {
         return followees;
+    }
+
+    public String getGuildId() {
+        return guildId;
     }
     
     @JsonSetter(nulls = Nulls.SKIP, contentNulls = Nulls.SKIP)

@@ -8,6 +8,9 @@ import java.util.Map;
 
 import brainwine.gameserver.GameServer;
 import brainwine.gameserver.chat.PlayerProfanity;
+import brainwine.gameserver.dialog.DialogHelper;
+import brainwine.gameserver.guild.Guild;
+import brainwine.gameserver.guild.GuildManager;
 import brainwine.gameserver.entity.Entity;
 import brainwine.gameserver.item.Item;
 import brainwine.gameserver.item.Layer;
@@ -133,8 +136,48 @@ public class DialogInteraction implements ItemInteraction {
             metadata.put("cd", true);
         }
         
+        // Guild obelisks sync their dialog config to the player's guild
+        if(item.hasId("signs/guild")) {
+            applyGuildConfiguration(zone, player, x, y, item, metaBlock, metadata);
+            return;
+        }
+
         // Update meta block
         zone.setMetaBlock(x, y, item, player, metadata);
+    }
+
+    /**
+     * Applies a guild obelisk's dialog config to the player's guild, validating the
+     * name and short name for length and uniqueness. On success the guild is saved
+     * and members' badges are re-broadcast; on failure the obelisk reverts to its
+     * previous metadata.
+     */
+    private void applyGuildConfiguration(Zone zone, Player player, int x, int y, Item item, MetaBlock metaBlock,
+            Map<String, Object> metadata) {
+        GuildManager guildManager = GameServer.getInstance().getGuildManager();
+        Guild guild = player.getGuild();
+
+        // If the player somehow has no guild, just store the metadata generically
+        if(guild == null) {
+            zone.setMetaBlock(x, y, item, player, metadata);
+            return;
+        }
+
+        // Validate the candidate name/short name before mutating the guild
+        String name = metadata.containsKey("gn") ? String.valueOf(metadata.get("gn")) : guild.getName();
+        String shortName = metadata.containsKey("gsn") ? String.valueOf(metadata.get("gsn")) : guild.getShortName();
+        List<String> errors = guildManager.validateNames(guild, name, shortName);
+
+        if(errors.isEmpty()) {
+            guild.applyMetadata(metadata);
+            guildManager.saveGuild(guild);
+            zone.setMetaBlock(x, y, item, player, metadata);
+            guild.broadcastClientChanges();
+        } else {
+            player.showDialog(DialogHelper.messageDialog("Guild", String.join("\n", errors)));
+            Map<String, Object> previousData = metaBlock == null ? new HashMap<>() : new HashMap<>(metaBlock.getMetadata());
+            zone.setMetaBlock(x, y, item, player, previousData);
+        }
     }
 
     public boolean shouldFilterValue(Item item, String sectionKey) {

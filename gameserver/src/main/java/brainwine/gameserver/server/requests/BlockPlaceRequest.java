@@ -6,6 +6,8 @@ import java.util.UUID;
 import brainwine.gameserver.GameServer;
 import brainwine.gameserver.entity.EntityConfig;
 import brainwine.gameserver.entity.npc.Npc;
+import brainwine.gameserver.guild.Guild;
+import brainwine.gameserver.guild.GuildManager;
 import brainwine.gameserver.item.DamageType;
 import brainwine.gameserver.item.Item;
 import brainwine.gameserver.item.ItemGroup;
@@ -135,7 +137,18 @@ public class BlockPlaceRequest extends PlayerRequest {
             fail(player, "You can't place blocks in the tutorial world");
             return;
         }
-        
+
+        // A guild obelisk founds a new guild, so you can't place one if you're already in a guild
+        if(item.hasId("signs/guild") && player.getGuild() != null) {
+            Guild guild = player.getGuild();
+            String name = guild.getName();
+            String message = guild.isLeader(player.getDocumentId())
+                    ? (name == null ? "You already own a guild." : String.format("You already own the '%s' guild.", name))
+                    : (name == null ? "You are already a member of a guild." : String.format("You are already a member of the '%s' guild.", name));
+            fail(player, message);
+            return;
+        }
+
         if(layer == Layer.LIQUID) {
             mod = 5;
         } else if(item.getMod() == ModType.ROTATION && !item.isMirrorable()) {
@@ -477,11 +490,25 @@ public class BlockPlaceRequest extends PlayerRequest {
                     metaBlock.setProperty("$", "?");
                 }
                 break;
+            case "signs/guild":
+                processGuildObeliskPlacement(zone, player);
+                break;
             // No valid item; do nothing
             default: break;
         }
     }
-    
+
+    /**
+     * Creates a new guild led by the placer and mirrors its (initially empty)
+     * settings onto the obelisk's metadata, owned by the leader.
+     */
+    private void processGuildObeliskPlacement(Zone zone, Player player) {
+        GuildManager guildManager = GameServer.getInstance().getGuildManager();
+        Guild guild = guildManager.createGuild(player, zone.getDocumentId(), x, y);
+        zone.setMetaBlock(x, y, item, player, guild.constructMetadata());
+        player.notify("You've founded a guild! Use the obelisk to set its name, colors and crest.");
+    }
+
     private void fail(Player player, String reason) {
         player.notify(reason);
         Block block = player.getZone().getBlock(x, y);

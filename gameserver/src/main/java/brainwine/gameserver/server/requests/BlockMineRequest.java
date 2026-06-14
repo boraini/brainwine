@@ -3,8 +3,10 @@ package brainwine.gameserver.server.requests;
 import java.util.Deque;
 import java.util.Map;
 
+import brainwine.gameserver.GameServer;
 import brainwine.gameserver.command.CommandAccessLevel;
 import brainwine.gameserver.entity.Entity;
+import brainwine.gameserver.guild.Guild;
 import brainwine.gameserver.item.Action;
 import brainwine.gameserver.item.Fieldability;
 import brainwine.gameserver.item.Item;
@@ -184,6 +186,16 @@ public class BlockMineRequest extends PlayerRequest {
             if(item.hasUse(ItemUseType.GUARD)) {
                 String dungeonId = MapHelper.getString(metadata, "@");
                 zone.destroyGuardBlock(dungeonId, player);
+            }
+        }
+
+        // Clear the guild's home location if its obelisk is being mined
+        if(item.hasId("signs/guild")) {
+            Guild guild = player.getGuild();
+
+            if(guild != null) {
+                guild.clearLocation();
+                GameServer.getInstance().getGuildManager().saveGuild(guild);
             }
         }
         

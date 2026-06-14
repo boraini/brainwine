@@ -43,6 +43,7 @@ import brainwine.gameserver.entity.Entity;
 import brainwine.gameserver.entity.EntityAttack;
 import brainwine.gameserver.entity.EntityStatus;
 import brainwine.gameserver.entity.npc.Npc;
+import brainwine.gameserver.guild.Guild;
 import brainwine.gameserver.item.Action;
 import brainwine.gameserver.item.DamageType;
 import brainwine.gameserver.item.Item;
@@ -136,6 +137,7 @@ public class Player extends Entity implements CommandExecutor {
     private List<String> bookmarkedZones;
     private Set<String> followees;
     private Set<String> followers;
+    private String guildId;
     private Set<String> lootCodes;
     private Set<Achievement> achievements;
     private Map<String, Integer> orders = new HashMap<>();
@@ -218,6 +220,7 @@ public class Player extends Entity implements CommandExecutor {
         this.bookmarkedZones = config.getBookmarkedZones();
         this.followees = config.getFollowees();
         this.followers = config.getFollowers();
+        this.guildId = config.getGuildId();
         this.lootCodes = config.getLootCodes();
         this.achievements = config.getAchievements();
         this.orders = config.getOrders();
@@ -655,6 +658,19 @@ public class Player extends Entity implements CommandExecutor {
         sendMessage(new FollowMessage(followees.stream().map(playerManager::getPlayerById).filter(Objects::nonNull).collect(Collectors.toList()), 0));
         sendMessage(new FollowMessage(followers.stream().map(playerManager::getPlayerById).filter(Objects::nonNull).collect(Collectors.toList()), 1));
         sendMessage(new EventMessage("socialInfoReady", null));
+
+        // Send guild affiliation badges: broadcast ours to the zone, receive peers'
+        broadcastGuildAffiliation();
+
+        for(Player peer : zone.getPlayers()) {
+            if(peer != this) {
+                String peerShortName = peer.getGuildShortName();
+
+                if(peerShortName != null) {
+                    sendMessage(new EntityChangeMessage(peer.getId(), Collections.<String, Object>singletonMap("gn", peerShortName)));
+                }
+            }
+        }
         
         // Clear invalid bookmarks
         bookmarkedZones.removeIf(bookmark -> zoneManager.getZone(bookmark) == null || !zoneManager.getZone(bookmark).canJoin(this));
@@ -1316,6 +1332,39 @@ public class Player extends Entity implements CommandExecutor {
 
     public Set<String> getFollowees() {
         return Collections.unmodifiableSet(followees);
+    }
+
+    public String getGuildId() {
+        return guildId;
+    }
+
+    public void setGuildId(String guildId) {
+        this.guildId = guildId;
+    }
+
+    public Guild getGuild() {
+        return GameServer.getInstance().getGuildManager().getGuild(guildId);
+    }
+
+    /**
+     * @return The short name of this player's guild, or {@code null} if they aren't in one.
+     */
+    public String getGuildShortName() {
+        Guild guild = getGuild();
+        return guild == null ? null : guild.getShortName();
+    }
+
+    /**
+     * Broadcasts this player's guild short-name badge to everyone in their zone.
+     * An empty value clears the badge (e.g. after leaving a guild).
+     */
+    public void broadcastGuildAffiliation() {
+        if(zone == null) {
+            return;
+        }
+
+        String shortName = getGuildShortName();
+        zone.sendMessage(new EntityChangeMessage(id, Collections.<String, Object>singletonMap("gn", shortName == null ? "" : shortName)));
     }
 
     private void addFollower(Player player) {

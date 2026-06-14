@@ -25,6 +25,7 @@ import brainwine.gameserver.command.CommandExecutor;
 import brainwine.gameserver.command.CommandManager;
 import brainwine.gameserver.dailyreward.DailyRewardManager;
 import brainwine.gameserver.entity.EntityRegistry;
+import brainwine.gameserver.guild.GuildManager;
 import brainwine.gameserver.loot.LootManager;
 import brainwine.gameserver.minigame.Pandora;
 import brainwine.gameserver.player.NotificationType;
@@ -50,6 +51,7 @@ public class GameServer implements CommandExecutor {
     private final ZoneManager zoneManager;
     private final ZoneActivityManager zoneActivityManager;
     private final PlayerManager playerManager;
+    private final GuildManager guildManager;
     private final IpBans ipBans;
     private final DailyRewardManager dailyRewardManager;
     private final ProfanityManager profanityManager;
@@ -91,6 +93,7 @@ public class GameServer implements CommandExecutor {
         zoneManager.tryGenerateDefaultZone();
         zoneActivityManager = new ZoneActivityManager();
         playerManager = new PlayerManager();
+        guildManager = new GuildManager();
         ScrapMarket.getInstance().loadScrapMarketData();
         pusher = new DefaultPusher();
         NetworkRegistry.init();
@@ -122,6 +125,7 @@ public class GameServer implements CommandExecutor {
         if(lastSave + GLOBAL_SAVE_INTERVAL < System.currentTimeMillis()) {
             zoneManager.saveZones();
             playerManager.savePlayers();
+            guildManager.saveGuilds();
             ipBans.saveIpBans();
             dailyRewardManager.saveDailyRewards();
             AndroidShopPerIpHistory.getPurchaseInstance().save();
@@ -169,6 +173,8 @@ public class GameServer implements CommandExecutor {
         zoneManager.onShutdown();
         logger.info(SERVER_MARKER, "Saving player data ...");
         playerManager.savePlayers();
+        logger.info(SERVER_MARKER, "Saving guild data ...");
+        guildManager.saveGuilds();
         ipBans.saveIpBans();
         dailyRewardManager.saveDailyRewards();
         AndroidShopPerIpHistory.getPurchaseInstance().save();
@@ -202,6 +208,10 @@ public class GameServer implements CommandExecutor {
 
     public PlayerManager getPlayerManager() {
         return playerManager;
+    }
+
+    public GuildManager getGuildManager() {
+        return guildManager;
     }
 
     public Pusher getPusher() {
