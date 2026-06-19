@@ -31,9 +31,7 @@ public class GroupDungeonConfig {
                     new BlockState("mechanical/door-beefy", 0, null)
             )
     );
-    private List<BlockState> speakers = Arrays.asList(
-            new BlockState("mechanical/speaker", 0, null)
-    );
+    private List<BlockState> speakers = new ArrayList<>();
 
     private Map<Integer, List<Map<String, Integer>>> enemies = MapHelper.map(1, Arrays.asList(MapHelper.map(
             String.class, Integer.class,
