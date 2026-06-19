@@ -101,6 +101,10 @@ public class GroupDungeonConfig {
         return doors;
     }
 
+    public List<BlockState> getSpeakers() {
+        return speakers;
+    }
+
     @JsonIgnore
     public List<Item> getAllDoorItems() {
         return doors.stream()
@@ -114,9 +118,11 @@ public class GroupDungeonConfig {
     }
 
     public static class BlockState {
-        public Item item;
-        public int mod;
+        public Item item = Item.AIR;
+        public int mod = 0;
         public Map<String, Object> metadata;
+
+        public BlockState() {}
 
         public BlockState(@JsonSetter String itemId, @JsonSetter int mod, @JsonSetter Map<String, Object> metadata) {
             this(ItemRegistry.getItem(itemId), mod, metadata);
@@ -162,8 +168,10 @@ public class GroupDungeonConfig {
     }
 
     public static class DoorState {
-        private BlockState open;
-        private BlockState closed;
+        private BlockState open = new BlockState();
+        private BlockState closed = new BlockState();
+
+        public DoorState() {}
 
         public DoorState(@JsonSetter BlockState open, @JsonSetter BlockState closed) {
             this.open = open;
