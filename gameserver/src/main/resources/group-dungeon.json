@@ -1,0 +1,74 @@
+{
+  "grace_period": 120000,
+  "max_player_bumps": 4,
+  "max_total_bumps": 0,
+  "spawn_radius": 10,
+  "doors": {
+    "open": {
+      "item": "mechanical/door-beefy",
+      "mod": 1
+    },
+    "closed": {
+      "item": "mechanical/door-beefy",
+      "mod": 0
+    }
+  },
+  "speakers": [],
+  "enemies": {
+    "1": [
+      {
+        "creatures/crow-auto": 10
+      },
+      {
+        "creatures/roach-large": 10
+      },
+      {
+        "automata/tiny": 4,
+        "automata/small": 2
+      },
+      {
+        "revenant": 3
+      },
+      {
+        "terrapus/adult": 5,
+        "terrapus/fire": 1
+      },
+      {
+        "terrapus/fire": 4
+      },
+      {
+        "terrapus/frost": 4
+      }
+    ],
+    "4": [
+      {
+        "automata/tiny": 8,
+        "automata/small": 4
+      },
+      {
+        "brains/tiny-crawler": 3,
+        "brains/tiny-flyer": 3
+      },
+      {
+        "revenant": 4,
+        "dire-revenant": 1
+      },
+      {
+        "terrapus/adult": 8,
+        "terrapus/fire": 3
+      },
+      {
+        "terrapus/fire": 4,
+        "terrapus/frost": 4
+      },
+      {
+        "terrapus/fire": 3,
+        "brains/small": 1
+      },
+      {
+        "terrapus/skeleton": 4,
+        "terrapus/frost": 2
+      }
+    ]
+  }
+}
