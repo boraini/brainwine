@@ -185,6 +185,11 @@ public class BlockMineRequest extends PlayerRequest {
                 String dungeonId = MapHelper.getString(metadata, "@");
                 zone.destroyGuardBlock(dungeonId, player);
             }
+
+            // Handle mining the front block, which might be a competition protector
+            if(layer == Layer.FRONT && zone.hasCompetition()) {
+                zone.getCompetition().removeEntry(x, y);
+            }
         }
         
         if(item.shouldProcessTimerOnBreak()) {

@@ -22,6 +22,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import brainwine.gameserver.competition.Competition;
 import brainwine.gameserver.minigame.GroupDungeon;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -107,6 +108,7 @@ public class Zone {
     private WeatherMachineConfiguration weatherMachineConfiguration = new WeatherMachineConfiguration().setZone(this);
     private HolographConfiguration holographConfiguration = new HolographConfiguration().setZone(this);
     private ZoneRules rules = new ZoneRules();
+    private Competition competition;
     private final ChunkManager chunkManager;
     private final SteamManager steamManager;
     private final GrowthManager growthManager;
@@ -168,6 +170,7 @@ public class Zone {
         holographConfiguration = config.getHolographConfiguration().setZone(this);
         entityManager.updateSpawnRates();
         setRules(config.getRules());
+        setCompetition(config.getCompetition());
         lastActiveDate = config.getLastActiveDate();
     }
     
@@ -2263,6 +2266,21 @@ public class Zone {
             }
         } else {
             this.rules = rules;
+        }
+    }
+
+    public Competition getCompetition() {
+        return competition;
+    }
+
+    public boolean hasCompetition() {
+        return competition != null;
+    }
+
+    public void setCompetition(Competition competition) {
+        this.competition = competition;
+        if (competition != null) {
+            competition.setZone(this);
         }
     }
 

@@ -67,6 +67,10 @@ public class MetaBlock {
     public void setOwner(String owner) {
         this.owner = owner;
     }
+
+    public void clearOwner() {
+        this.owner = null;
+    }
     
     public boolean hasOwner() {
         return owner != null;

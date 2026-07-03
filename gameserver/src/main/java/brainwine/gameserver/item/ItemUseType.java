@@ -51,6 +51,7 @@ public enum ItemUseType {
     BUILDING_EXTENSION,
     BURST(new BurstInteraction()),
     COMPOSTER(new ComposterInteraction()),
+    COMPETITION,
     CONTAINER(new ContainerInteraction()),
     CREATE_DIALOG(new DialogInteraction(true)),
     DESTROY,

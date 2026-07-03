@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import brainwine.gameserver.competition.Competition;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -83,6 +84,9 @@ public class ZoneConfigFile {
     @JsonSetter(nulls = Nulls.SKIP)
     private ZoneRules rules = null;
 
+    @JsonSetter(nulls = Nulls.SKIP)
+    private Competition competition = null;
+
     @JsonCreator
     private ZoneConfigFile(@JsonProperty(value = "name", required = true) String name,
             @JsonProperty("tutorial") boolean tutorial,
@@ -119,6 +123,7 @@ public class ZoneConfigFile {
         this.weatherMachineConfiguration = zone.getWeatherMachineConfiguration();
         this.holographConfiguration = zone.getHolographConfiguration();
         this.rules = zone.getRules();
+        this.competition = zone.getCompetition();
         this.lastActiveDate = zone.getLastActiveDate();
     }
 
@@ -208,5 +213,9 @@ public class ZoneConfigFile {
 
     public ZoneRules getRules() {
         return rules;
+    }
+
+    public Competition getCompetition() {
+        return competition;
     }
 }
