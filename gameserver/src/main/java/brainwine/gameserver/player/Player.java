@@ -1179,8 +1179,13 @@ public class Player extends Entity implements CommandExecutor {
     }
     
     public double getPlacementRange() {
-        double accessoryBonus = getInventory().findAccessoryWithUse(ItemUseType.BUILDING_EXTENSION).isAir() ? 1.0 : 2.0;
-        return accessoryBonus * Math.ceil(MathUtils.lerp(5.0, 13.0, (double)getTotalSkillLevel(Skill.BUILDING) / MAX_SKILL_LEVEL));
+        double range = Math.ceil(MathUtils.lerp(5.0, 13.0, (double)getTotalSkillLevel(Skill.BUILDING) / MAX_SKILL_LEVEL));
+        
+        if(inventory.hasAccessoryWithUse(ItemUseType.BUILDING_EXTENSION)) {
+            range *= 2.0;
+        }
+        
+        return range;
     }
     
     public int getMaxTargetableEntities() {

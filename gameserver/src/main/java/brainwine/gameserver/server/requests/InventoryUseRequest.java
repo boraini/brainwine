@@ -77,6 +77,11 @@ public class InventoryUseRequest extends PlayerRequest {
                 }
             }
 
+            // v2 sends air when it stops using a tool, so we'll intercept that here
+            if(type == 0 && status == 2) {
+                item = player.getHeldItem();
+            }
+
             // Check exoskeleton part cooldown
             if(status == 1
                     && player.isV3()
