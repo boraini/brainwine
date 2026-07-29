@@ -220,6 +220,9 @@ public class Item {
     
     @JsonProperty("tool_bonus")
     private double toolBonus;
+
+    @JsonProperty("horticulture_tool_bonus")
+    private double horticultureToolBonus;
     
     @JsonProperty("mining_bonus")
     private MiningBonus miningBonus;
@@ -727,6 +730,10 @@ public class Item {
     
     public double getToolBonus() {
         return toolBonus;
+    }
+
+    public double getHorticultureToolBonus() {
+        return horticultureToolBonus;
     }
     
     public boolean hasMiningBonus() {
