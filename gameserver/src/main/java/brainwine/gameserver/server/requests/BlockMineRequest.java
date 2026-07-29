@@ -250,22 +250,6 @@ public class BlockMineRequest extends PlayerRequest {
         if(item.hasUse(ItemUseType.PILE)) {
             quantity = (block.getMod(layer) + 1) * (int)item.getUse(ItemUseType.PILE);
         }
-        
-        // Apply mining bonus if there is one
-        if(item.hasMiningBonus()) {
-            MiningBonus bonus = item.getMiningBonus();
-            if(Math.random() < player.getMiningBonusChance(bonus) && bonus.getMod() <= block.getMod(layer)) {
-                if(!bonus.computeItem(item).isAir()) {
-                    inventoryItem = bonus.computeItem(item);
-                }
-                
-                if(bonus.isDoubleLoot()) {
-                    quantity *= 2;
-                }
-                
-                player.notify(bonus.getNotification(), NotificationType.FANCY_EMOTE);
-            }
-        }
 
         zone.updateBlock(x, y, layer, 0, 0, player);
 
@@ -282,6 +266,19 @@ public class BlockMineRequest extends PlayerRequest {
                 QuestEvents.handleCollectItem(player, inventoryItem, quantity);
                 if(!item.equals(inventoryItem)) {
                     QuestEvents.handleCollectItem(player, item, 1);
+                }
+            }
+        }
+
+        // Apply mining bonus if there is one
+        if(item.hasMiningBonus() && block.getOwnerHash() == 0) {
+            MiningBonus bonus = item.getMiningBonus();
+            if(Math.random() < player.getMiningBonusChance(bonus) && bonus.getMod() <= block.getMod(layer)) {
+                Item bonusItem = bonus.computeItem(item);
+                if(!bonusItem.isAir()) {
+                    int bonusQuantity = bonus.isDoubleLoot() && Math.random() < 0.25 ? 2 : 1;
+                    player.getInventory().addItem(bonusItem, bonusQuantity, true);
+                    player.notify(bonus.getNotification(), NotificationType.FANCY_EMOTE);
                 }
             }
         }

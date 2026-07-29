@@ -47,7 +47,7 @@ public class MiningBonus {
 
     public Item computeItem(Item minedItem) {
         if(this.item == null) {
-            return Item.AIR;
+            return minedItem.getInventoryItem();
         }
         if(this.item.startsWith("-") && minedItem != null) {
             return ItemRegistry.getItem(minedItem.getId() + this.item);
