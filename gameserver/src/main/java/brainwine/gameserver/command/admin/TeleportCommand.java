@@ -135,7 +135,7 @@ public class TeleportCommand extends Command {
                 return false;
             }
 
-            if(player != subject) {
+            if(player != subject && !targetZone.getMassTeleporterConfiguration().getSummonOtherPlayerAccess().isPrivileged(player, targetZone)) {
                 player.notify("Only admins can teleport other players.");
                 return false;
             }
