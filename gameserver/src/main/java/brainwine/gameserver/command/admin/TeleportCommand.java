@@ -6,17 +6,15 @@ import brainwine.gameserver.command.CommandExecutor;
 import brainwine.gameserver.command.CommandInfo;
 import brainwine.gameserver.dialog.Dialog;
 import brainwine.gameserver.dialog.DialogSection;
-import brainwine.gameserver.item.ItemUseType;
+import brainwine.gameserver.item.ItemGroup;
 import brainwine.gameserver.player.Player;
-import brainwine.gameserver.player.PlayerManager;
 import brainwine.gameserver.util.MathUtils;
 import brainwine.gameserver.util.Vector2i;
+import brainwine.gameserver.zone.MassTeleporterConfiguration;
 import brainwine.gameserver.zone.MetaBlock;
 import brainwine.gameserver.zone.Zone;
-import brainwine.gameserver.zone.ZoneManager;
 
 import java.time.temporal.ChronoUnit;
-import java.util.Objects;
 
 import static brainwine.gameserver.player.NotificationType.SYSTEM;
 
@@ -29,119 +27,168 @@ public class TeleportCommand extends Command {
             return;
         }
 
-        Player player = (Player)executor;
-        PlayerManager playerManager = GameServer.getInstance().getPlayerManager();
-        ZoneManager zoneManager = GameServer.getInstance().getZoneManager();
+        TeleportCommandArguments arguments = TeleportCommandArguments.create(executor, args);
 
-        if(args.length == 1) {
-            teleportToPlayerOrPlaque(player, player, player.getZone(), args[0]);
-        } else if(args.length == 2) {
-            try {
-                int x = parseXCoordinate(args[0], player.getZone());
-                int y = parseYCoordinate(args[1], player.getZone());
-                teleportToCoordinates(player, player, player.getZone(), x, y);
-            } catch(NumberFormatException e) {
-                Player subject = playerManager.getPlayer(args[0]);
-                if(subject != null) {
-                    teleportToPlayerOrPlaque(player, subject, player.getZone(), args[1]);
+        if(arguments == null) {
+            // Executor is already notified.
+            return;
+        }
+
+        if(!validate(executor, arguments)) {
+            return;
+        }
+
+        Player subject = arguments.getPlayer();
+        Zone targetZone = arguments.getTargetZone();
+
+        final Runnable task = () -> {
+            if(!validate(executor, arguments)) {
+                return;
+            }
+            if(targetZone == subject.getZone()) {
+                if(arguments.getVariant() != TeleportVariant.ZONE) {
+                    subject.teleport(arguments.getX(), arguments.getY());
+                }
+            } else {
+                targetZone.giveTemporaryAccess(subject);
+                if(arguments.getVariant() != TeleportVariant.ZONE) {
+                    subject.changeZone(targetZone, arguments.getX(), arguments.getY());
                 } else {
-                    player.notify(String.format("Player '%s' not found.", args[0]));
+                    subject.changeZone(targetZone);
                 }
             }
-        } else if(args.length == 3) {
-            Zone targetZone = null;
-            Player subject = null;
-            int x = 0;
-            int y = 0;
-            boolean done = false;
+        };
 
-            if(!done) {
-                try {
-                    subject = playerManager.getPlayer(args[0]);
-                    Objects.requireNonNull(subject);
-                    targetZone = player.getZone();
-                    Objects.requireNonNull(targetZone);
-                    x = parseXCoordinate(args[1], targetZone);
-                    y = parseYCoordinate(args[2], targetZone);
-                    done = true;
-                } catch (Exception e){
-                }
-
-                if(done) {
-                    teleportToCoordinates(player, subject, targetZone, x, y);
-                    return;
-                }
-            }
-
-            if(!done) {
-                try {
-                    targetZone = zoneManager.getZoneByName(args[0]);
-                    Objects.requireNonNull(targetZone);
-                    x = parseXCoordinate(args[1], targetZone);
-                    y = parseYCoordinate(args[2], targetZone);
-                    subject = player;
-                    done = true;
-                } catch (Exception e){
-                }
-
-                if(done) {
-                    teleportToCoordinates(player, subject, targetZone, x, y);
-                    return;
-                }
-            }
-
-            if(!done) {
-                try {
-                    subject = playerManager.getPlayer(args[0]);
-                    Objects.requireNonNull(subject);
-                    targetZone = zoneManager.getZoneByName(args[1]);
-                    Objects.requireNonNull(targetZone);
-                    done = true;
-                } catch(Exception e) {
-                }
-
-                if(done) {
-                    teleportToPlayerOrPlaque(player, subject, targetZone, args[2]);
-                    return;
-                }
-            }
-
-            player.notify("Wrong arguments given.");
+        if(!(executor instanceof Player) || ((Player)executor).isGodMode() || subject.equals(executor)) {
+            task.run();
         } else {
-            try {
-                Player subject = playerManager.getPlayer(args[0]);
-                Objects.requireNonNull(subject);
-                Zone targetZone = zoneManager.getZoneByName(args[1]);
-                Objects.requireNonNull(targetZone);
-                int x = parseXCoordinate(args[2], targetZone);
-                int y = parseYCoordinate(args[3], targetZone);
-
-                teleportToCoordinates(player, subject, targetZone, x, y);
-            } catch(Exception e) {
-                player.notify("Wrong arguments given.");
+            if(subject.getZone().isActionOnCooldown("failed teleport request", 10, ChronoUnit.SECONDS)) {
+                executor.notify("Sorry, further teleport requests have been blocked for 10 seconds.", SYSTEM);
+                return;
             }
+
+            double distance = executor instanceof Player ? MathUtils.distance(arguments.getX(), arguments.getY(), ((Player)executor).getX(), ((Player)executor).getY()) : Double.POSITIVE_INFINITY;
+            String location = arguments.getVariant() == TeleportVariant.ZONE ? targetZone.getName() : targetZone.getReadableCoordinates(arguments.getX(), arguments.getY()) +
+                    (distance <= 5.0 ? " (near themselves)" : "") +
+                    (targetZone == subject.getZone()
+                            ? "."
+                            : " in " + targetZone.getName() + ".");
+            subject.showDialog(
+                    new Dialog()
+                            .setTitle("Teleport Request")
+                            .addSection(new DialogSection().setText(
+                                            ((Player)executor).getName() +
+                                            " wants to teleport you to " +
+                                            location +
+                                            " Click OK to accept."
+                            )),
+                    ans -> {
+                        if(ans.length >= 1 && "cancel".equals(ans[0])) {
+                            executor.notify(subject.getName() + " has dismissed your teleport request.", SYSTEM);
+                            subject.getZone().recordActionTime("failed teleport request");
+                        } else {
+                            task.run();
+                        }
+                    });
+            executor.notify("Your teleport request has been sent to " + subject.getName(), SYSTEM);
         }
     }
 
-    private boolean checkSubjectAndZone(Player player, Player subject, Zone targetZone) {
-        if(targetZone == null) {
-            player.notify("Sorry, the target world is null.");
+    private boolean validate(CommandExecutor executor, TeleportCommandArguments arguments) {
+        Player subject = arguments.getPlayer();
+        Zone targetZone = arguments.getTargetZone();
+
+        if(arguments.getVariant() == TeleportVariant.COORDINATES) {
+            if(!executor.isAdmin()) {
+                executor.notify("Only admins are allowed to teleport to exact coordinates.", SYSTEM);
+                return false;
+            }
+        }
+
+        if(executor instanceof Player) {
+            Player executorPlayer = (Player)executor;
+            if(arguments.getVariant() == TeleportVariant.PLAYER) {
+                Player targetPlayer = arguments.getTargetPlayer();
+                if(arguments.getPlayer() == executorPlayer && targetPlayer == executorPlayer) {
+                    executor.notify("You cannot teleport to yourself.", SYSTEM);
+                    return false;
+                }
+            }
+        }
+
+        if(arguments.getVariant() == TeleportVariant.PLAYER) {
+            if(arguments.getPlayer() == arguments.getTargetPlayer()) {
+                executor.notify("You cannot teleport a player to themselves.", SYSTEM);
+                return false;
+            }
+        }
+
+        if(executor instanceof Player && !executor.isAdmin()) {
+            Player executorPlayer = (Player)executor;
+            if(arguments.getVariant() != TeleportVariant.ZONE && executorPlayer.getZone() != arguments.getTargetZone()) {
+                executor.notify("Sorry, only admins can teleport players out of and across worlds.", SYSTEM);
+                return false;
+            }
+            if(!arguments.getTargetZone().canJoin(executorPlayer)) {
+                executor.notify("Sorry, but you cannot enter " + arguments.getTargetZone() + " yourself.", SYSTEM);
+                return false;
+            }
+            if(arguments.getVariant() != TeleportVariant.ZONE) {
+                MassTeleporterConfiguration config = targetZone.getMassTeleporterConfiguration();
+                if(!config.isEnabled()) {
+                    executorPlayer.notify("No mass teleportation machine is operational in this world.", SYSTEM);
+                    return false;
+                }
+                if(subject == executorPlayer && !config.getTeleportToPlayerAccess().isPrivileged(executor, targetZone)) {
+                    executorPlayer.notify("You are not allowed to teleport to players in the target world.", SYSTEM);
+                    return false;
+                }
+                if(subject.getZone() != targetZone && !config.getSummonOtherPlayerAccess().isPrivileged(executor, targetZone)) {
+                    executorPlayer.notify("You are not allowed to summon other players in this world.", SYSTEM);
+                    return false;
+                }
+                if(arguments.getVariant() == TeleportVariant.PLAQUE) {
+                    if(!config.getTeleportToPlaqueAccess().isPrivileged(executor, targetZone)) {
+                        executorPlayer.notify("You are not allowed to teleport to plaques in this world.", SYSTEM);
+                        return false;
+                    }
+                }
+            }
+        }
+
+        if(!subject.isOnline()) {
+            executor.notify(String.format("Player '%s' is not online.", subject.getName()), SYSTEM);
             return false;
         }
 
-        if(!player.isAdmin()) {
-            if(!targetZone.hasMassTeleporter()) {
-                player.notify("No mass teleportation machine is operational in this world.");
-                return false;
+        if(arguments.getVariant() != TeleportVariant.ZONE) {
+            int x = arguments.getX();
+            int y = arguments.getY();
+
+            if(!executor.isAdmin()) {
+                if(!targetZone.isAreaExplored(x, y)) {
+                    executor.notify("That area hasn't been explored yet.", SYSTEM);
+                    return false;
+                }
+
+                if(targetZone.isChunkLoaded(x, y) && (targetZone.isBlockSolid(x, y) || targetZone.isBlockSolid(x, y - 1))) {
+                    executor.notify("Teleportation destination is obstructed.", SYSTEM);
+                    return false;
+                }
+
+                if(executor instanceof Player) {
+                    Player executorPlayer = (Player)executor;
+                    // We don't consider single blocks to be protected against teleportation.
+                    if(!targetZone.getMassTeleporterConfiguration().getTeleportInProtectedAreaAccess().isPrivileged(executor, targetZone) && targetZone.isBlockProtected(x, y, executorPlayer, true)) {
+                        executor.notify("Sorry, you can't teleport to areas protected against you in this world.", SYSTEM);
+                        return false;
+                    }
+                }
             }
 
-            if(player != subject && !targetZone.getMassTeleporterConfiguration().getSummonOtherPlayerAccess().isPrivileged(player, targetZone)) {
-                player.notify("Only admins can teleport other players.");
-                return false;
-            }
-
-            if(subject.getZone() != targetZone || player.getZone() != targetZone) {
-                player.notify("Sorry, only admins can teleport players out of and across worlds.");
+            // Check if coordinates are in bounds
+            if(!targetZone.areCoordinatesInBounds(x, y)) {
+                executor.notify("Cannot teleport out of bounds!", SYSTEM);
                 return false;
             }
         }
@@ -149,146 +196,173 @@ public class TeleportCommand extends Command {
         return true;
     }
 
-    private void teleportToPlayerOrPlaque(Player player, Player subject, Zone targetZone, String name) {
-        if(!checkSubjectAndZone(player, subject, targetZone)) return;
-
-        Player target = GameServer.getInstance().getPlayerManager().getPlayer(name);
-        if(target != null) {
-            if(!targetZone.getMassTeleporterConfiguration().getTeleportToPlayerAccess().isPrivileged(player, targetZone)) {
-                player.notify("You are not allowed to teleport to players in the target world.");
-                return;
-            }
-
-            if(!target.isOnline()) {
-                player.notify(String.format("Player '%s' is not online.", target.getName()));
-                return;
-            }
-
-            if(subject.getZone() != target.getZone() && !targetZone.getMassTeleporterConfiguration().getSummonOtherPlayerAccess().isPrivileged(player, targetZone)) {
-                player.notify("You are not allowed to summon other players in this world.");
-                return;
-            }
-
-            if(subject == target) {
-                player.notify("You cannot teleport a player to themselves.");
-                return;
-            }
-
-            doTeleport(player, subject, target.getZone(), (int)target.getX(), (int)target.getY());
-            return;
-        }
-
-        Vector2i targetPosition = this.getLandmarkPosition(targetZone, name);
-        if(targetPosition != null) {
-            if(!targetZone.getMassTeleporterConfiguration().getTeleportToPlaqueAccess().isPrivileged(player, targetZone)) {
-                player.notify("You are not allowed to teleport to plaques in this world.");
-                return;
-            }
-            doTeleport(player, subject, targetZone, targetPosition.getX(), targetPosition.getY());
-            return;
-        }
-
-        player.notify(String.format("Player or landmark '%s' not found.", name));
+    @Override
+    public String getUsage(CommandExecutor executor) {
+        return "/tp [target description]";
     }
 
-    private void teleportToCoordinates(Player player, Player subject, Zone targetZone, int x, int y) {
-        if(!player.isAdmin()) {
-            player.notify("Only admins are allowed to teleport to exact coordinates.");
-            return;
-        }
+    @Override
+    public boolean useSmartArguments() {
+        return true;
+    }
+}
 
-        if(!checkSubjectAndZone(player, subject, targetZone)) return;
+enum TeleportVariant {
+    PLAYER,
+    PLAQUE,
+    ZONE,
+    COORDINATES,
+}
 
-        doTeleport(player, subject, targetZone, x, y);
+class TeleportCommandArguments {
+    private final TeleportVariant variant;
+    private final CommandExecutor executor;
+    private final Player player;
+    private final Zone targetZone;
+    private final Player targetPlayer;
+    private final MetaBlock targetPlaque;
+    private final int x;
+    private final int y;
+
+    private TeleportCommandArguments(TeleportVariant variant, CommandExecutor executor, Player player, Zone targetZone, Player targetPlayer, MetaBlock targetPlaque, int x, int y) {
+        this.variant = variant;
+        this.executor = executor;
+        this.player = player;
+        this.targetZone = targetZone;
+        this.targetPlayer = targetPlayer;
+        this.targetPlaque = targetPlaque;
+        this.x = x;
+        this.y = y;
     }
 
-    private void doTeleport(Player player, Player subject, Zone targetZone, int x, int y) {
-        if(!subject.isOnline()) {
-            player.notify(String.format("Player '%s' is not online.", subject.getName()));
-            return;
+    public static TeleportCommandArguments create(CommandExecutor executor, String[] args) {
+        if(args.length == 1) {
+            if(!(executor instanceof Player)) {
+                executor.notify("Only players can use a single argument.", SYSTEM);
+                return null;
+            }
+
+            Player p = player(args[0]);
+            if(p != null) {
+                return new TeleportCommandArguments(TeleportVariant.PLAYER, executor, (Player)executor, p.getZone(), p, null, (int)p.getX(), (int)p.getY());
+            }
+
+            Zone executorZone = ((Player)executor).getZone();
+
+            MetaBlock mb = plaque(executorZone, args[0]);
+            if(mb != null) {
+                return new TeleportCommandArguments(TeleportVariant.PLAQUE, executor, (Player)executor, executorZone, null, mb, mb.getX(), mb.getY());
+            }
+
+            Zone z = zone(args[0]);
+            if(z != null) {
+                return new TeleportCommandArguments(TeleportVariant.ZONE, executor, (Player)executor, z, null, null, 0, 0);
+            }
+
+            executor.notify(String.format("Player or landmark '%s' not found.", args[0]), SYSTEM);
+            return null;
         }
 
-        if(!player.isAdmin()) {
-            if(!targetZone.getMassTeleporterConfiguration().isEnabled()) {
-                player.notify(String.format("There is no mass teleporter enabled in %s.", targetZone.getName()));
-                return;
+        if(args.length == 2) {
+            Player teleported = player(args[0]);
+            if(teleported != null) {
+                Player p = player(args[1]);
+                if(p != null) {
+                    return new TeleportCommandArguments(TeleportVariant.PLAYER, executor, teleported, p.getZone(), p, null, (int)p.getX(), (int)p.getY());
+                }
+
+                if(executor instanceof Player) {
+                    Zone executorZone = ((Player)executor).getZone();
+                    MetaBlock mb = plaque(executorZone, args[1]);
+                    if(mb != null) {
+                        return new TeleportCommandArguments(TeleportVariant.PLAQUE, executor, teleported, executorZone, null, mb, mb.getX(), mb.getY());
+                    }
+                }
+
+                Zone z = zone(args[1]);
+                if(z != null) {
+                    return new TeleportCommandArguments(TeleportVariant.ZONE, executor, teleported, z, null, null, 0, 0);
+                }
             }
 
-            if(!targetZone.isAreaExplored(x, y)) {
-                player.notify("That area hasn't been explored yet.");
-                return;
+            if(executor instanceof Player) {
+                Zone targetZone = ((Player)executor).getZone();
+                if(targetZone == null) {
+                    executor.notify("Sorry, but you are not in a world right now.", SYSTEM);
+                }
+                Vector2i c = coords(targetZone, args[0], args[1]);
+                if(c != null) {
+                    return new TeleportCommandArguments(TeleportVariant.COORDINATES, executor, (Player)executor, targetZone, null, null, c.getX(), c.getY());
+                }
             }
 
-            if(targetZone.isChunkLoaded(x, y) && (targetZone.isBlockSolid(x, y) || targetZone.isBlockSolid(x, y - 1))) {
-                player.notify("Teleportation destination is obstructed.");
-                return;
-            }
+            executor.notify(String.format("Player '%s' not found.", args[0]), SYSTEM);
+            return null;
+        }
 
-            // We don't consider single blocks to be protected against teleportation.
-            if(!targetZone.getMassTeleporterConfiguration().getTeleportInProtectedAreaAccess().isPrivileged(player, targetZone) && targetZone.isBlockProtected(x, y, player, true)) {
-                player.notify("Sorry, you can't teleport to areas protected against you in this world.");
-                return;
+        if(args.length == 3) {
+            Player p = player(args[0]);
+            if(p != null && p.getZone() == null) {
+                executor.notify("Sorry, but " + p.getName() + " is not in a world right now.", SYSTEM);
+                return null;
+            }
+            if(p == null && !(executor instanceof Player)) {
+                executor.notify(String.format("Player '%s' not found.", args[0]), SYSTEM);
+                return null;
+            }
+            Zone targetZone = p != null ? p.getZone() : ((Player)executor).getZone();
+            if(targetZone == null) {
+                executor.notify(String.format("Player or world '%s' not found.", args[0]), SYSTEM);
+                return null;
+            }
+            Vector2i c = coords(targetZone, args[1], args[2]);
+            if(c != null) {
+                if(p != null) {
+                    return new TeleportCommandArguments(TeleportVariant.COORDINATES, executor, p, targetZone, null, null, c.getX(), c.getY());
+                } else {
+                    return new TeleportCommandArguments(TeleportVariant.COORDINATES, executor, (Player)executor, targetZone, null, null, c.getX(), c.getY());
+                }
             }
         }
 
-        // Check if coordinates are in bounds
-        if(!targetZone.areCoordinatesInBounds(x, y)) {
-            player.notify("Cannot teleport out of bounds!", SYSTEM);
-            return;
+        if(args.length == 4) {
+            Player p = player(args[0]);
+            if(p != null) {
+                Zone z = zone(args[1]);
+                if(z != null) {
+                    Vector2i c = coords(z, args[2], args[3]);
+                    if(c != null) {
+                        return new TeleportCommandArguments(TeleportVariant.COORDINATES, executor, p, z, null, null, c.getX(), c.getY());
+                    }
+
+                    executor.notify("Wrong coordinate arguments given.", SYSTEM);
+                    return null;
+                }
+
+                executor.notify(String.format("Zone '%s' not found.", args[1]), SYSTEM);
+                return null;
+            }
+
+            executor.notify(String.format("Player '%s' not found.", args[0]), SYSTEM);
+            return null;
         }
 
-        final Runnable task = () -> {
-            if(targetZone == subject.getZone()) {
-                subject.teleport(x, y);
-            } else {
-                targetZone.giveTemporaryAccess(subject);
-                subject.changeZone(targetZone, x, y);
-            }
-        };
+        executor.notify("Wrong arguments given.", SYSTEM);
+        return null;
+    }
 
-        if(player.isGodMode() || player.equals(subject)) {
-            task.run();
-        } else {
-            if(subject.getZone().isActionOnCooldown("failed teleport request", 10, ChronoUnit.SECONDS)) {
-                player.notify("Sorry, further teleport requests have been blocked for 10 seconds.", SYSTEM);
-                return;
-            }
-
-            double distance = MathUtils.distance(x, y, player.getX(), player.getY());
-            subject.showDialog(
-                    new Dialog()
-                            .setTitle("Teleport Request")
-                            .addSection(new DialogSection().setText(
-                                    player.getName() +
-                                    " wants to teleport you to " +
-                                    targetZone.getReadableCoordinates(x, y) +
-                                    (distance <= 5.0 ? " (near themselves)" : "") +
-                                    (targetZone == subject.getZone()
-                                            ? "."
-                                            : " in " + targetZone.getName() + ".") +
-                                    " Click OK to accept."
-                            )),
-                    ans -> {
-                        if(ans.length >= 1 && "cancel".equals(ans[0])) {
-                            player.notify(subject.getName() + " has dismissed your teleport request.", SYSTEM);
-                            subject.getZone().recordActionTime("failed teleport request");
-                        } else {
-                            task.run();
-                        }
-                    });
-            player.notify("Your teleport request has been sent to " + subject.getName(), SYSTEM);
+    static Vector2i coords(Zone targetZone, String xs, String ys) {
+        if(targetZone == null) return null;
+        try {
+            int x = parseNumberWithDirection(xs, targetZone.getWidth() / 2, new String[] { "left", "west", "l", "w" }, new String[] { "right", "east", "r", "e" } );
+            int y = parseNumberWithDirection(ys, targetZone.getGroundHeight(), new String[] { "above", "up", "a", "u" }, new String[] { "below", "down", "b", "d" } );
+            return new Vector2i(x, y);
+        } catch(Exception e) {
+            return null;
         }
     }
 
-    private int parseXCoordinate(String value, Zone targetZone) throws NumberFormatException {
-        return parseNumberWithDirection(value, targetZone.getWidth() / 2, new String[] { "left", "west", "l", "w" }, new String[] { "right", "east", "r", "e" } );
-    }
-
-    private int parseYCoordinate(String value, Zone targetZone) throws NumberFormatException {
-        return parseNumberWithDirection(value, targetZone.getGroundHeight(), new String[] { "above", "up", "a", "u" }, new String[] { "below", "down", "b", "d" } );
-    }
-
-    private int parseNumberWithDirection(String value, int offset, String[] lowerDirection, String[] upperDirection) throws NumberFormatException {
+    private static int parseNumberWithDirection(String value, int offset, String[] lowerDirection, String[] upperDirection) throws NumberFormatException {
         int direction = 0;
         int unitLength = 0;
 
@@ -315,42 +389,60 @@ public class TeleportCommand extends Command {
         }
     }
 
-    private Vector2i getLandmarkPosition(Zone zone, String name) {
-        String landmarkName = name.toLowerCase();
+    static Player player(String name) {
+        return GameServer.getInstance().getPlayerManager().getPlayer(name);
+    }
 
-        int x = -1;
-        int y = -1;
-        boolean found = false;
-        for(MetaBlock metaBlock : zone.getMetaBlocksWithUse(ItemUseType.LANDMARK)) {
-            boolean thisIsIt = false;
+    static MetaBlock plaque(Zone zone, String name) {
+        String wantedName = name.toLowerCase();
 
-            if(landmarkName.equalsIgnoreCase(metaBlock.getStringProperty("n"))) {
-                thisIsIt = true;
-            }
-
-            if(thisIsIt) {
-                x = metaBlock.getX();
-                y = metaBlock.getY();
-                found = true;
-                break;
+        for(MetaBlock metaBlock : zone.getGlobalMetaBlocks()) {
+            if(metaBlock.getItem().getGroup() == ItemGroup.PLAQUE) {
+                String n = metaBlock.getStringProperty("n");
+                if(n == null) continue;
+                String plaqueName = n.toLowerCase();
+                if(wantedName.equals(plaqueName)) {
+                    return metaBlock;
+                }
             }
         }
 
-        return found ? new Vector2i(x, y) : null;
+        return null;
     }
 
-    @Override
-    public String getUsage(CommandExecutor executor) {
-        return "/tp [target description]";
+    static Zone zone(String name) {
+        return GameServer.getInstance().getZoneManager().getZoneByName(name);
     }
 
-    @Override
-    public boolean canExecute(CommandExecutor executor) {
-        return executor instanceof Player;
+    public TeleportVariant getVariant() {
+        return variant;
     }
 
-    @Override
-    public boolean useSmartArguments() {
-        return true;
+    public CommandExecutor getExecutor() {
+        return executor;
+    }
+
+    public Player getPlayer() {
+        return player;
+    }
+
+    public Zone getTargetZone() {
+        return targetZone;
+    }
+
+    public Player getTargetPlayer() {
+        return targetPlayer;
+    }
+
+    public MetaBlock getTargetPlaque() {
+        return targetPlaque;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
     }
 }
