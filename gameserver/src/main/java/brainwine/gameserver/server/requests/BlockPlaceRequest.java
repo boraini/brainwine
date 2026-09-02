@@ -7,13 +7,13 @@ import brainwine.gameserver.GameServer;
 import brainwine.gameserver.entity.EntityConfig;
 import brainwine.gameserver.entity.npc.Npc;
 import brainwine.gameserver.item.DamageType;
+import brainwine.gameserver.item.InventoryType;
 import brainwine.gameserver.item.Item;
 import brainwine.gameserver.item.ItemGroup;
 import brainwine.gameserver.item.ItemRegistry;
 import brainwine.gameserver.item.ItemUseType;
 import brainwine.gameserver.item.Layer;
 import brainwine.gameserver.item.ModType;
-import brainwine.gameserver.item.interactions.WorldMachineInteraction;
 import brainwine.gameserver.player.Player;
 import brainwine.gameserver.player.Skill;
 import brainwine.gameserver.quest.QuestEvents;
@@ -62,8 +62,16 @@ public class BlockPlaceRequest extends PlayerRequest {
             fail(player, "You do not have enough of this item.");
             return;
         }
-        
-        if(!player.isGodMode() && !item.isPlacable()) {
+
+        String itemCategory = item.getCategory();
+        if(!player.isGodMode() && ItemRegistry.getPile(item).isAir() && (
+                !item.isPlacable()
+                || item.getInventoryType() == InventoryType.ACCESSORY
+                || item.getInventoryType() == InventoryType.HIDDEN
+                || "tools".equals(itemCategory)
+                || "consumables".equals(itemCategory)
+                || "accessories".equals(itemCategory)
+        )) {
             fail(player, "This item cannot be placed.");
             return;
         }
