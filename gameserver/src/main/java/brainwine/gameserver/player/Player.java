@@ -1556,11 +1556,9 @@ public class Player extends Entity implements CommandExecutor {
 
     public void resetAllSkills() {
         int pointsToRefund = 0;
-
         // Reset skill levels and calculate point refund total
-        for(Map.Entry<Skill, Integer> entry : getSkills().entrySet()) {
-            Skill skill = entry.getKey();
-            int level = entry.getValue();
+        for(Skill skill : new HashSet<Skill>(getSkills().keySet())) {
+            int current = getSkillLevel(skill);
             int leftover = 1;
 
             // Count skill bumps and don't reset those bumps
@@ -1570,13 +1568,12 @@ public class Player extends Entity implements CommandExecutor {
                 }
             }
 
-            // Skip if skill hasn't been upgraded at all
-            if(level <= leftover) {
-                continue;
+            // Update skill level if it has changed
+            if(leftover != current) {
+                setSkillLevel(skill, leftover); // Reset skill level
             }
 
-            pointsToRefund += level - leftover;
-            setSkillLevel(skill, leftover); // Reset skill level
+            pointsToRefund += current - leftover;
         }
 
         setSkillPoints(Math.min(getLevel() - 1, getSkillPoints() + pointsToRefund)); // Refund skill points
