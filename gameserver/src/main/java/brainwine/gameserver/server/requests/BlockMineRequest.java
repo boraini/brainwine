@@ -58,6 +58,7 @@ public class BlockMineRequest extends PlayerRequest {
         
         Block block = zone.getBlock(x, y);
         MetaBlock metaBlock = zone.getMetaBlock(x, y);
+        int layerMod = block.getMod(layer);
         
         if(block.getItem(layer) != item) {
             fail(player, "Could not find the item you're trying to mine.");
@@ -260,25 +261,29 @@ public class BlockMineRequest extends PlayerRequest {
             });
         }
 
-        if(!inventoryItem.isAir()) {
+        boolean giveInventoryItem = true;
+
+        // Apply mining bonus if there is one
+        if(item.hasMiningBonus() && block.getOwnerHash() == 0) {
+            MiningBonus bonus = item.getMiningBonus();
+            // Layer mod was read before the updateBlock call
+            if(Math.random() < player.getMiningBonusChance(bonus) && bonus.getMod() <= layerMod) {
+                Item bonusItem = bonus.computeItem(item);
+                if(!bonusItem.isAir()) {
+                    if(!bonus.isAdditive()) giveInventoryItem = false;
+                    int bonusQuantity = bonus.isDoubleLoot() && Math.random() < 0.25 ? 2 : 1;
+                    player.getInventory().addItem(bonusItem, bonusQuantity, true);
+                    player.notify(bonus.getNotification(), NotificationType.FANCY_EMOTE);
+                }
+            }
+        }
+
+        if(giveInventoryItem && !inventoryItem.isAir()) {
             player.getInventory().addItem(inventoryItem, quantity, true);
             if(trackQuest && layer == Layer.FRONT) {
                 QuestEvents.handleCollectItem(player, inventoryItem, quantity);
                 if(!item.equals(inventoryItem)) {
                     QuestEvents.handleCollectItem(player, item, 1);
-                }
-            }
-        }
-
-        // Apply mining bonus if there is one
-        if(item.hasMiningBonus() && block.getOwnerHash() == 0) {
-            MiningBonus bonus = item.getMiningBonus();
-            if(Math.random() < player.getMiningBonusChance(bonus) && bonus.getMod() <= block.getMod(layer)) {
-                Item bonusItem = bonus.computeItem(item);
-                if(!bonusItem.isAir()) {
-                    int bonusQuantity = bonus.isDoubleLoot() && Math.random() < 0.25 ? 2 : 1;
-                    player.getInventory().addItem(bonusItem, bonusQuantity, true);
-                    player.notify(bonus.getNotification(), NotificationType.FANCY_EMOTE);
                 }
             }
         }

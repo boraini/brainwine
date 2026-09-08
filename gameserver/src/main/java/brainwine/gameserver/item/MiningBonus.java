@@ -16,6 +16,7 @@ public class MiningBonus {
     private int mod = -1;
     private String item;
     private boolean doubleLoot;
+    private boolean additive;
     private String notification;
     
     @JsonCreator
@@ -58,6 +59,10 @@ public class MiningBonus {
     @JsonProperty("double")
     public boolean isDoubleLoot() {
         return doubleLoot;
+    }
+
+    public boolean isAdditive() {
+        return additive;
     }
     
     public String getNotification() {
