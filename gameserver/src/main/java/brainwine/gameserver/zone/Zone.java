@@ -1783,13 +1783,14 @@ public class Zone {
             }
             
             for(int y = chunkY; y < chunkY + chunk.getHeight(); y++) {
+                Block block = chunk.getBlock(x, y);
+
                 // Spawn block-related entities
-                if(chunk.getBlock(x, y).getFrontItem().hasUse(ItemUseType.GUARD_WAVES)) {
+                if(block.getFrontItem().hasUse(ItemUseType.GUARD_WAVES)) {
                     entityManager.updateGuardWaves(x, y, true);
                 } else {
                     entityManager.trySpawnBlockEntity(x, y);
                 }
-                Block block = chunk.getBlock(x, y);
                 
                 // Index front item
                 Item item = block.getFrontItem();
@@ -2337,7 +2338,7 @@ public class Zone {
     public List<String> getMembers() {
         return Collections.unmodifiableList(members);
     }
-    
+
     public OffsetDateTime getCreationDate() {
         return creationDate;
     }

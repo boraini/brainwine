@@ -389,6 +389,13 @@ public class EntityManager {
             GuardWavesConfig config = metaBlock.getItem().getStructuredUse(ItemUseType.GUARD_WAVES);
             int wave;
             if(!metaBlock.hasProperty("w") || !metaBlock.hasProperty("!")) {
+                if(!config.isAuto()) {
+                    Block block = zone.getBlockSafe(x, y);
+                    if(block == null || block.getFrontMod() < 1) {
+                        return;
+                    }
+                }
+
                 wave = config.getGuards().keySet().stream().max(Integer::compare).get() - 1;
                 startGuardWave(x, y, wave);
                 newlyLoaded = true;
@@ -412,16 +419,21 @@ public class EntityManager {
                 }
             }
 
-            if(newlyLoaded) trySpawnBlockEntity(x, y);
-
-            if(config.isExplode()) {
-                if(wave <= 0) {
-                    zone.updateBlock(x, y, Layer.FRONT, Item.AIR);
+            if(wave <= 0) {
+                if(config.isExplode()) {
+                    if(config.getChange() != null) {
+                        zone.updateBlock(x, y, Layer.FRONT, config.getChange());
+                    } else {
+                        zone.updateBlock(x, y, Layer.FRONT, Item.AIR);
+                    }
                     zone.spawnEffect(x, y, "bomb-electric", 5);
+                } else if (config.getChange() != null) {
+                    zone.updateBlock(x, y, Layer.FRONT, config.getChange());
                 }
-            } else if(config.getChange() != null) {
-                zone.updateBlock(x, y, Layer.FRONT, config.getChange());
+                return;
             }
+
+            if(newlyLoaded) trySpawnBlockEntity(x, y);
         }
     }
 
@@ -433,13 +445,14 @@ public class EntityManager {
         // Fall back to default
         if(config == null) config = new GuardWavesConfig();
         int totalWaves = config.getGuards().keySet().stream().max(Integer::compare).get() - 1;
-        // Waves start from totalWaves, go down to 1, and reach 0 which is when the infernal protector is destroyed.
-        Map.Entry<String, Integer> entry = config.getGuardsForWave(totalWaves - wave + 1).entrySet().stream().findFirst().get();
-        String type = entry.getKey();
-        int count = entry.getValue();
         List<String> guards = new ArrayList<>();
-        for(int i = 0; i < count; i++) {
-            guards.add(type);
+        // Waves start from totalWaves, go down to 1, and reach 0 which is when the infernal protector is destroyed.
+        for(Map.Entry<String, Integer> entry : config.getGuardsForWave(totalWaves - wave + 1).entrySet()) {
+            String type = entry.getKey();
+            int count = entry.getValue();
+            for(int i = 0; i < count; i++) {
+                guards.add(type);
+            }
         }
 
         MetaBlock metaBlock = zone.getMetaBlock(x, y);

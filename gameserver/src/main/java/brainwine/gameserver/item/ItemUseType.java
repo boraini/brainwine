@@ -14,6 +14,7 @@ import brainwine.gameserver.item.interactions.DialogInteraction;
 import brainwine.gameserver.item.interactions.ExpiatorInteraction;
 import brainwine.gameserver.item.interactions.FertilizerInteraction;
 import brainwine.gameserver.item.interactions.GeckInteraction;
+import brainwine.gameserver.item.interactions.GuardWavesInteraction;
 import brainwine.gameserver.item.interactions.ItemInteraction;
 import brainwine.gameserver.item.interactions.LandmarkInteraction;
 import brainwine.gameserver.item.interactions.MinigameInteraction;
@@ -60,7 +61,7 @@ public enum ItemUseType {
     EXTENDED_STEAMABLE(ExtendedSteamableConfig.class),
     GECK(new GeckInteraction()),
     GUARD,
-    GUARD_WAVES(GuardWavesConfig.class),
+    GUARD_WAVES(new GuardWavesInteraction(), GuardWavesConfig.class),
     CHANGE(new ChangeInteraction()),
     FERTILIZER(new FertilizerInteraction()),
     FIELDABLE,

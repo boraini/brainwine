@@ -10,6 +10,7 @@ import java.util.Optional;
 @Properties
 public class GuardWavesConfig extends ItemUseTypeConfig {
     private Map<Integer, Map<String, Integer>> guards = WaveType.REVENANTS.getGuards();
+    private boolean auto = true;
     private boolean explode = true;
     private String change = null;
 
@@ -28,6 +29,11 @@ public class GuardWavesConfig extends ItemUseTypeConfig {
     }
 
     @JsonSetter
+    public boolean isAuto() {
+        return auto;
+    }
+
+    @JsonSetter
     public boolean isExplode() {
         return explode;
     }
@@ -38,7 +44,7 @@ public class GuardWavesConfig extends ItemUseTypeConfig {
     }
 
     public Map<String, Integer> getGuardsForWave(int wave) {
-        Optional<Integer> effective = guards.keySet().stream().filter(x -> x < wave).max(Integer::compare);
+        Optional<Integer> effective = guards.keySet().stream().filter(x -> x <= wave).max(Integer::compare);
         return guards.get(effective.orElse(1));
     }
 
