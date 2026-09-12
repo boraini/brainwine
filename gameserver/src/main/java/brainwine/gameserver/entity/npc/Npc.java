@@ -172,6 +172,9 @@ public class Npc extends Entity {
                     guards.remove(typeName);
 
                     if(guards.isEmpty()) {
+                        if(cause.getAttacker() != null && cause.getAttacker().isPlayer()) {
+                            metaBlock.setProperty("k", ((Player)cause.getAttacker()).getDocumentId());
+                        }
                         zone.getEntityManager().updateGuardWaves(guardBlock.getX(), guardBlock.getY(), false);
                     }
                 }

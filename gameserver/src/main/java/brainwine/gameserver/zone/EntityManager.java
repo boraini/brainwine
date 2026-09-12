@@ -16,8 +16,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
+import brainwine.gameserver.GameServer;
 import brainwine.gameserver.anticheat.AfkEntitySpawn;
 import brainwine.gameserver.anticheat.AnticheatManager;
+import brainwine.gameserver.dialog.Dialog;
+import brainwine.gameserver.dialog.DialogHelper;
+import brainwine.gameserver.dialog.DialogSection;
+import brainwine.gameserver.dialog.DialogType;
 import brainwine.gameserver.item.ItemUseType;
 import brainwine.gameserver.item.usetypeconfig.GuardWavesConfig;
 import brainwine.gameserver.player.NotificationType;
@@ -420,15 +425,34 @@ public class EntityManager {
             }
 
             if(wave <= 0) {
-                if(config.isExplode()) {
-                    if(config.getChange() != null) {
-                        zone.updateBlock(x, y, Layer.FRONT, config.getChange());
-                    } else {
-                        zone.updateBlock(x, y, Layer.FRONT, Item.AIR);
+                String lastKillerId = metaBlock.getStringProperty("k");
+                if(lastKillerId != null) {
+                    Player lastKiller = GameServer.getInstance().getPlayerManager().getPlayerById(lastKillerId);
+                    if(lastKiller != null) {
+                        if(config.hasReward()) {
+                            config.getReward().forEach((item,  quantity) -> {
+                                lastKiller.getInventory().addItem(item, quantity, true);
+                            });
+                            if(lastKiller.isOnline()) {
+                                String rewardMessage = config.getRewardMessage() != null ? config.getRewardMessage() : "You have successfully confined the " + metaBlock.getItem().getTitle() + "!";
+                                DialogSection rewardSection = DialogHelper.itemListSection(lastKiller, null, config.getReward());
+                                Dialog rewardDialog = new Dialog().setTitle(rewardMessage).addSection(rewardSection);
+                                if(lastKiller.isV3()) {
+                                    lastKiller.showDialog(rewardDialog.setType(DialogType.LOOT_MECH));
+                                } else {
+                                    lastKiller.notify(rewardDialog, NotificationType.REWARD);
+                                }
+                            }
+                        }
                     }
+                }
+                if(config.isExplode()) {
                     zone.spawnEffect(x, y, "bomb-electric", 5);
-                } else if (config.getChange() != null) {
+                }
+                if(config.getChange() != null) {
                     zone.updateBlock(x, y, Layer.FRONT, config.getChange());
+                } else {
+                    zone.updateBlock(x, y, Layer.FRONT, Item.AIR);
                 }
                 return;
             }

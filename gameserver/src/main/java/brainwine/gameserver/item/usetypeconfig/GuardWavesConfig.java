@@ -1,5 +1,7 @@
 package brainwine.gameserver.item.usetypeconfig;
 
+import brainwine.gameserver.item.Item;
+import brainwine.gameserver.item.ItemRegistry;
 import brainwine.gameserver.util.MapHelper;
 import com.fasterxml.jackson.annotation.JsonSetter;
 
@@ -13,6 +15,8 @@ public class GuardWavesConfig extends ItemUseTypeConfig {
     private boolean auto = true;
     private boolean explode = true;
     private String change = null;
+    private Map<Item, Integer> reward = new HashMap<>();
+    private String rewardMessage = null;
 
     @JsonSetter
     public void setGuards(String guardsPreset) {
@@ -22,6 +26,16 @@ public class GuardWavesConfig extends ItemUseTypeConfig {
     @JsonSetter
     public void setGuards(Map<Integer, Map<String, Integer>> customGuards) {
         guards = customGuards;
+    }
+
+    @JsonSetter
+    public void setReward(Map<String, Integer> rewardIds) {
+        for(Map.Entry<String, Integer> entry : rewardIds.entrySet()) {
+            Item rewardItem = ItemRegistry.getItem(entry.getKey());
+            if(!rewardItem.isAir() && entry.getValue() > 0) {
+                reward.put(rewardItem, entry.getValue());
+            }
+        }
     }
 
     public Map<Integer, Map<String, Integer>> getGuards() {
@@ -41,6 +55,19 @@ public class GuardWavesConfig extends ItemUseTypeConfig {
     @JsonSetter
     public String getChange() {
         return change;
+    }
+
+    public boolean hasReward() {
+        return !reward.isEmpty();
+    }
+
+    public Map<Item, Integer> getReward() {
+        return reward;
+    }
+
+    @JsonSetter
+    public String getRewardMessage() {
+        return rewardMessage;
     }
 
     public Map<String, Integer> getGuardsForWave(int wave) {
@@ -69,6 +96,24 @@ public class GuardWavesConfig extends ItemUseTypeConfig {
                 return result;
             }
         }.evaluate()),
+        AUTOMATA(new Object() {
+            Map<Integer, Map<String, Integer>> evaluate() {
+                Map<Integer, Map<String, Integer>> result = new HashMap<>();
+                result.put(1, MapHelper.map("automata/small-minion", 15));
+                result.put(2, MapHelper.map("automata/medium-minion", 10));
+                result.put(3, MapHelper.map("automata/large-minion", 5));
+                result.put(4, MapHelper.map("terrapus/adult", 0));
+                return result;
+            }
+        }.evaluate()),
+        ONE_REVENANT(new Object() {
+            Map<Integer, Map<String, Integer>> evaluate() {
+                Map<Integer, Map<String, Integer>> result = new HashMap<>();
+                result.put(1, MapHelper.map("revenant", 1));
+                result.put(2, MapHelper.map("terrapus/adult", 0));
+                return result;
+            }
+        }.evaluate())
         ;
         private final Map<Integer, Map<String, Integer>> guards;
         WaveType(Map<Integer, Map<String, Integer>> guards) {
