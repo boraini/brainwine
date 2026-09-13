@@ -1,13 +1,14 @@
 package brainwine.gameserver.item.usetypeconfig;
 
 import brainwine.gameserver.item.Item;
-import brainwine.gameserver.item.ItemRegistry;
+import brainwine.gameserver.item.LazyItemGetter;
 import brainwine.gameserver.util.MapHelper;
 import com.fasterxml.jackson.annotation.JsonSetter;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Properties
 public class GuardWavesConfig extends ItemUseTypeConfig {
@@ -15,7 +16,7 @@ public class GuardWavesConfig extends ItemUseTypeConfig {
     private boolean auto = true;
     private boolean explode = true;
     private String change = null;
-    private Map<Item, Integer> reward = new HashMap<>();
+    private Map<LazyItemGetter, Integer> reward = new HashMap<>();
     private String rewardMessage = null;
 
     @JsonSetter
@@ -31,9 +32,8 @@ public class GuardWavesConfig extends ItemUseTypeConfig {
     @JsonSetter
     public void setReward(Map<String, Integer> rewardIds) {
         for(Map.Entry<String, Integer> entry : rewardIds.entrySet()) {
-            Item rewardItem = ItemRegistry.getItem(entry.getKey());
-            if(!rewardItem.isAir() && entry.getValue() > 0) {
-                reward.put(rewardItem, entry.getValue());
+            if(entry.getValue() > 0) {
+                reward.put(new LazyItemGetter(entry.getKey()), entry.getValue());
             }
         }
     }
@@ -58,11 +58,13 @@ public class GuardWavesConfig extends ItemUseTypeConfig {
     }
 
     public boolean hasReward() {
-        return !reward.isEmpty();
+        return !getReward().isEmpty();
     }
 
     public Map<Item, Integer> getReward() {
-        return reward;
+        return reward.entrySet().stream()
+                .filter(entry -> !entry.getKey().get().isAir())
+                .collect(Collectors.toMap(entry -> entry.getKey().get(), Map.Entry::getValue));
     }
 
     @JsonSetter
