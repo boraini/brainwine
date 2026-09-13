@@ -1969,12 +1969,12 @@ public class Zone {
             return false;
         }
 
-        float currentOverallExplorationProgress = getOverallExplorationProgress();
+        float currentExplorationProgress = getExplorationProgress();
 
         if(explorer != null && AnticheatManager.getConfig().getExploration().shouldTrackStats(this, x, y)) {
             explorer.getStatistics().trackAreaExplored();
         }
-        
+
         chunksExploredCount++;
         if(isChunkUndergroundXY(x, y)) {
             undergroundChunksExploredCount++;
@@ -1983,13 +1983,14 @@ public class Zone {
         // Reward players who have explored the whole XL world
         final int SMALL_MEDIUM_THRESHOLD = 1000 * 500;
         final int MEDIUM_LARGE_THRESHOLD = 2000 * 1000;
-        if(currentOverallExplorationProgress < 0.999 && getOverallExplorationProgress() >= 0.999 && explorer != null && getRules().isCanGetExplorationReward()) {
+        if(currentExplorationProgress < 0.999 && getExplorationProgress() >= 0.999 && explorer != null && getRules().isCanGetExplorationReward()) {
             Item reward = Item.AIR;
 
             if(getWidth() * getHeight() >= MEDIUM_LARGE_THRESHOLD) reward = ItemRegistry.getItem("furniture/obelisk-" + biome.getId());
             else if(getWidth() * getHeight() >= SMALL_MEDIUM_THRESHOLD) reward = ItemRegistry.getItem("furniture/flag-" + biome.getId());
 
             if(!reward.isAir()) {
+                explorer.getInventory().addItem(reward, true);
                 explorer.notify("You receive "
                         + (reward.getTitle().toLowerCase().matches("^[aeiou]") ? "an" : "a")
                         + " "
