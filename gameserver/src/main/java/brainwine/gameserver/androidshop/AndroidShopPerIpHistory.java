@@ -167,21 +167,21 @@ public class AndroidShopPerIpHistory {
                 }
                 ipIdx++;
                 hardwareIdIdx++;
-            }
-
-            // Process the earliest purchase left
-            boolean processIp = hardwareIdDate == null || ipDate != null && ipDate.isBefore(hardwareIdDate);
-
-            if(processIp) {
-                if(item.equals(ipPurchases.get(ipIdx).getItem())) {
-                    count += ipPurchases.get(ipIdx).getQuantity();
-                }
-                ipIdx++;
             } else {
-                if(item.equals(hardwareIdPurchases.get(hardwareIdIdx).getItem())) {
-                    count += hardwareIdPurchases.get(hardwareIdIdx).getQuantity();
+                // Process the earliest purchase left
+                boolean processIp = hardwareIdDate == null || ipDate != null && ipDate.isBefore(hardwareIdDate);
+
+                if(processIp) {
+                    if(item.equals(ipPurchases.get(ipIdx).getItem())) {
+                        count += ipPurchases.get(ipIdx).getQuantity();
+                    }
+                    ipIdx++;
+                } else {
+                    if(item.equals(hardwareIdPurchases.get(hardwareIdIdx).getItem())) {
+                        count += hardwareIdPurchases.get(hardwareIdIdx).getQuantity();
+                    }
+                    hardwareIdIdx++;
                 }
-                hardwareIdIdx++;
             }
         }
 
