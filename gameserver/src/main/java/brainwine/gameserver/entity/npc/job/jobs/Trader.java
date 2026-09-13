@@ -4,7 +4,6 @@ import brainwine.gameserver.GameConfiguration;
 import brainwine.gameserver.androidshop.AndroidShop;
 import brainwine.gameserver.androidshop.AndroidShopPerIpHistory;
 import brainwine.gameserver.androidshop.AndroidShopSession;
-import brainwine.gameserver.anticheat.IpAddressVsHardwareId;
 import brainwine.gameserver.dialog.Dialog;
 import brainwine.gameserver.dialog.DialogHelper;
 import brainwine.gameserver.dialog.DialogListItem;
@@ -24,7 +23,6 @@ import brainwine.gameserver.scrapmarket.SpecialRequestRegistry;
 import brainwine.gameserver.scrapmarket.SpecialRequestSession;
 import brainwine.gameserver.util.MapHelper;
 
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -149,10 +147,6 @@ public class Trader extends DialoguerJob {
             soFar = Math.max(soFar, AndroidShopPerIpHistory.getSaleInstance().getPurchases(player, item));
 
             playerHas = possible - soFar;
-        }
-
-        if(player.isActionOnCooldown(IpAddressVsHardwareId.violationActionKey, IpAddressVsHardwareId.MIN_VIOLATIONS_INTERVAL, ChronoUnit.MILLIS)) {
-            playerHas = 0;
         }
 
         Consumer<Object[]> scrapMarketOnlyHandler = ans -> acceptItemHandleScrapMarket(me, player, item, ans);
