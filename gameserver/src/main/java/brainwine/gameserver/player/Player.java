@@ -1198,7 +1198,7 @@ public class Player extends Entity implements CommandExecutor {
         }
 
         double accessoryBonus = bonus.getAccessory() == null || getInventory().findAccessoryWithUse(bonus.getAccessory()).isAir() ? 1.0 : 2.0;
-        double toolBonus = bonus.getSkill() == Skill.HORTICULTURE && heldItem.getHorticultureToolBonus() > 0.0
+        double toolBonus = bonus.getSkill() == Skill.HORTICULTURE
                 ? heldItem.getHorticultureToolBonus()
                 : heldItem.getToolBonus();
         return bonus.getChance() * getNormalizedSkill(bonus.getSkill()) * toolBonus * accessoryBonus;
