@@ -271,7 +271,7 @@ public class BlockMineRequest extends PlayerRequest {
                 Item bonusItem = bonus.computeItem(item);
                 if(!bonusItem.isAir()) {
                     if(!bonus.isAdditive()) giveInventoryItem = false;
-                    int bonusQuantity = bonus.isDoubleLoot() && Math.random() < 0.25 ? 2 : 1;
+                    int bonusQuantity = bonus.isDoubleLoot() ? 2 : 1;
                     player.getInventory().addItem(bonusItem, bonusQuantity, true);
                     player.notify(bonus.getNotification(), NotificationType.FANCY_EMOTE);
                 }
