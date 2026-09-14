@@ -306,22 +306,28 @@ class TeleportCommandArguments {
                 executor.notify("Sorry, but " + p.getName() + " is not in a world right now.", SYSTEM);
                 return null;
             }
-            if(p == null && !(executor instanceof Player)) {
+
+            Zone z = p == null ? zone(args[0]) : null;
+            Player subject = p != null ? p : (executor instanceof Player ? (Player)executor : null);
+
+            if(p == null && z == null) {
+                executor.notify(String.format("Player or world '%s' not found.", args[0]), SYSTEM);
+                return null;
+            }
+
+            if(subject == null) {
                 executor.notify(String.format("Player '%s' not found.", args[0]), SYSTEM);
                 return null;
             }
-            Zone targetZone = p != null ? p.getZone() : ((Player)executor).getZone();
+
+            Zone targetZone = p != null ? p.getZone() : z;
             if(targetZone == null) {
                 executor.notify(String.format("Player or world '%s' not found.", args[0]), SYSTEM);
                 return null;
             }
             Vector2i c = coords(targetZone, args[1], args[2]);
             if(c != null) {
-                if(p != null) {
-                    return new TeleportCommandArguments(TeleportVariant.COORDINATES, executor, p, targetZone, null, null, c.getX(), c.getY());
-                } else {
-                    return new TeleportCommandArguments(TeleportVariant.COORDINATES, executor, (Player)executor, targetZone, null, null, c.getX(), c.getY());
-                }
+                return new TeleportCommandArguments(TeleportVariant.COORDINATES, executor, subject, targetZone, null, null, c.getX(), c.getY());
             }
         }
 
