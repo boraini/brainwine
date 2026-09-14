@@ -414,7 +414,22 @@ public class Zone {
      * @param type The display type.
      */
     public void sendChatMessage(Player sender, String text, ChatType type) {
-        sendMessage(new ChatMessage(sender.getId(), text, type));
+        String nameColor = type == ChatType.CHAT ? sender.getOrderChatColor() : null;
+
+        if(nameColor == null) {
+            sendMessage(new ChatMessage(sender.getId(), text, type));
+        } else {
+            String coloredMessage = String.format("<color=%s>%s</color>: %s", nameColor, sender.getName(), text);
+
+            for(Player peer : getPlayers()) {
+                if(peer.isV3()) {
+                    peer.sendMessage(new ChatMessage(0, coloredMessage, type));
+                } else {
+                    peer.sendMessage(new ChatMessage(sender.getId(), text, type));
+                }
+            }
+        }
+
         QuestEvents.handleChat(sender);
         GameServer.getInstance().notify(String.format("%s: %s", sender.getName(), text), NotificationType.CHAT);
     }

@@ -15,6 +15,7 @@ import brainwine.gameserver.scrapmarket.SpecialRequestRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import brainwine.gameserver.order.OrderColors;
 import brainwine.gameserver.order.OrderManager;
 import brainwine.gameserver.server.DefaultPusher;
 import brainwine.gameserver.server.IpBans;
@@ -70,6 +71,7 @@ public class GameServer implements CommandExecutor {
         GameConfiguration.init();
         AchievementManager.loadAchievements();
         OrderManager.loadOrders();
+        OrderColors.load();
         EntityRegistry.init();
         EntityManager.loadEntitySpawns();
         GrowthManager.loadGrowthData();

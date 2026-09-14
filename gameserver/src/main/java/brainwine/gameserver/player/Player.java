@@ -53,6 +53,7 @@ import brainwine.gameserver.item.MiningBonus;
 import brainwine.gameserver.item.Tradeability;
 import brainwine.gameserver.item.consumables.Consumable;
 import brainwine.gameserver.loot.Loot;
+import brainwine.gameserver.order.OrderColors;
 import brainwine.gameserver.order.OrderManager;
 import brainwine.gameserver.quest.DailyQuests;
 import brainwine.gameserver.quest.PlayerQuests;
@@ -140,6 +141,7 @@ public class Player extends Entity implements CommandExecutor {
     private Set<Achievement> achievements;
     private Map<String, Integer> orders = new HashMap<>();
     private String displayedOrder = null;
+    private boolean orderColorEnabled = true;
     private Map<String, Float> ignoredHints;
     private Map<Skill, Integer> skills;
     private Map<Item, List<Skill>> bumpedSkills;
@@ -208,6 +210,7 @@ public class Player extends Entity implements CommandExecutor {
         this.karma = config.getKarma();
         this.crowns = config.getCrowns();
         this.displayedOrder = config.getDisplayedOrder();
+        this.orderColorEnabled = config.isOrderColorEnabled();
         this.inventory = config.getInventory();
         this.statistics = config.getStatistics();
         this.authTokens = config.getAuthTokens();
@@ -1731,6 +1734,28 @@ public class Player extends Entity implements CommandExecutor {
 
     public void setDisplayedOrder(String displayedOrder) {
         this.displayedOrder = displayedOrder;
+    }
+
+    public boolean isOrderColorEnabled() {
+        return orderColorEnabled;
+    }
+
+    public void setOrderColorEnabled(boolean orderColorEnabled) {
+        this.orderColorEnabled = orderColorEnabled;
+    }
+    
+    public String getOrderChatColor() {
+        if(!orderColorEnabled) {
+            return null;
+        }
+
+        int tier = orders.getOrDefault("crow", 0);
+
+        if(tier <= 0) {
+            return null;
+        }
+
+        return OrderColors.getColor(tier);
     }
 
     public void randomizeAppearance() {

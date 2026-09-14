@@ -39,6 +39,7 @@ public class PlayerConfigFile {
     private int karma;
     private int crowns;
     private String displayedOrder = null;
+    private boolean orderColorEnabled = true;
     private Inventory inventory = new Inventory();
     private PlayerStatistics statistics = new PlayerStatistics();
     private List<String> authTokens = new ArrayList<>();
@@ -90,6 +91,7 @@ public class PlayerConfigFile {
         this.achievements = player.getAchievements();
         this.orders = player.getOrders();
         this.displayedOrder = player.getDisplayedOrder();
+        this.orderColorEnabled = player.isOrderColorEnabled();
         this.ignoredHints = player.getIgnoredHints();
         this.skills = player.getSkills();
         this.bumpedSkills = player.getBumpedSkills();
@@ -232,6 +234,10 @@ public class PlayerConfigFile {
 
     public String getDisplayedOrder() {
         return displayedOrder;
+    }
+
+    public boolean isOrderColorEnabled() {
+        return orderColorEnabled;
     }
 
     @JsonSetter(nulls = Nulls.SKIP)
